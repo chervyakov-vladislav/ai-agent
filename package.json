@@ -2,17 +2,9 @@
   "name": "ai-agent",
   "version": "0.0.1",
   "description": "AI-powered Code Review Agent with RAG and Jira integration",
-  "main": "index.js",
-  "scripts": {
-    "dev": "tsx watch --env-file=.env src/main.ts",
-    "build": "vite build",
-    "start": "node --env-file=.env dist/main.js",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "typecheck": "tsc"
-  },
   "author": "Vladislav Chervyakov <chervyakovve@mail.ru>",
   "license": "MIT",
+  "homepage": "https://github.com/chervyakov-vladislav/ai-agent#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chervyakov-vladislav/ai-agent.git"
@@ -20,7 +12,6 @@
   "bugs": {
     "url": "https://github.com/chervyakov-vladislav/ai-agent/issues"
   },
-  "homepage": "https://github.com/chervyakov-vladislav/ai-agent#readme",
   "keywords": [
     "ai",
     "code-review",
@@ -31,7 +22,16 @@
     "langchain",
     "automation"
   ],
+  "main": "dist/index.js",
   "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/main.ts",
+    "build": "vite build",
+    "start": "node --env-file=.env dist/index.js",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "axios": "^1.16.0",
     "express": "^5.2.1",
