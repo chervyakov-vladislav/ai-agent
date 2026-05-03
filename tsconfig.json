@@ -12,7 +12,9 @@
     "resolveJsonModule": true,
     "paths": {
       "*": ["./src/*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@config/*": ["./src/config/*"],
+      "@shared/*": ["./src/shared/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"],
