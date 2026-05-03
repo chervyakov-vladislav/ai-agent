@@ -30,7 +30,8 @@
     "start": "node --env-file=.env dist/index.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "localtunnel": "npx localtunnel --port 3000"
   },
   "dependencies": {
     "axios": "^1.16.0",
