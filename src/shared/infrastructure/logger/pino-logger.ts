@@ -7,10 +7,23 @@ class PinoLogger {
   constructor() {
     const isDev = env.NODE_ENV !== 'production';
 
+    const redactConfig = {
+      paths: [
+        'err.config.headers.Authorization',
+        'context.headers.Authorization',
+        'headers.authorization',
+        '*.headers.Authorization',
+        'Authorization',
+        'token',
+        'apiKey',
+      ],
+      placeholder: '[REDACTED]',
+    };
+
     const transport = isDev
       ? pino.transport({
           target: 'pino-pretty',
-          level: env.LOG_LEVEl || 'info',
+          level: env.LOG_LEVEl,
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
@@ -23,7 +36,7 @@ class PinoLogger {
           targets: [
             {
               target: 'pino-roll', // заменить потом на другой транспорт для отправки в Loki или Elasticsearch
-              level: env.LOG_LEVEl || 'info',
+              level: env.LOG_LEVEl,
               options: {
                 file: './logs/app',
                 extension: '.log',
@@ -37,7 +50,13 @@ class PinoLogger {
           ],
         });
 
-    this.logger = pino(transport);
+    this.logger = pino(
+      {
+        level: env.LOG_LEVEl,
+        redact: redactConfig,
+      },
+      transport,
+    );
   }
 
   info(msg: string, context?: object) {
