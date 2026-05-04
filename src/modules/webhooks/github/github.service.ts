@@ -1,5 +1,10 @@
-import { githubProvider, githubDiffProvider } from '@shared/infrastructure/axios/github-client';
+import {
+  githubProvider,
+  githubDiffProvider,
+  getGitHubError,
+} from '@shared/infrastructure/axios/github-client';
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
+import { pinoLogger } from '../../../shared/infrastructure/logger/pino-logger';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
   const { data } = await githubDiffProvider.get(prUrl);
@@ -65,9 +70,30 @@ export const createPullRequestReview = async (
     side: 'RIGHT',
   }));
 
-  await githubProvider.post(`${prUrl}/reviews`, {
-    body: review.summary,
-    event: eventMap[review.verdict],
-    comments: comments.length > 0 ? comments : undefined,
-  });
+  try {
+    await githubProvider.post(`${prUrl}/reviews`, {
+      body: review.summary,
+      event: eventMap[review.verdict],
+      comments: comments.length > 0 ? comments : undefined,
+    });
+  } catch (error) {
+    const ghError = getGitHubError(error);
+
+    if (ghError?.isValidationError) {
+      pinoLogger.warn(
+        '⚠️ GitHub отклонил точечные комментарии (строки вне диффа). Отправляю fallback-ревью.',
+      );
+
+      const summaryWithComments = [
+        review.summary,
+        '\n\n### 💡 Детальные замечания:',
+        ...review.comments.map((c: any) => `* **${c.path}:${c.line}**: ${c.body}`),
+      ].join('\n');
+
+      return await githubProvider.post(`${prUrl}/reviews`, {
+        event: eventMap[review.verdict],
+        body: summaryWithComments,
+      });
+    }
+  }
 };
