@@ -1,6 +1,7 @@
 import { geminiService } from '@/modules/llm-gemini/gemini.service';
 import { AiServiceError } from '@shared/errors/AiServiceError';
 import { AIReviewResponse } from '@shared/types/review-context.types';
+import { withRetry } from '@shared/infrastructure/axios/axios-utils';
 import * as githubService from '../github.service';
 
 export const analyzePullRequestUseCase = async (
@@ -27,7 +28,7 @@ export const analyzePullRequestUseCase = async (
     })),
   };
 
-  const result = await geminiService.review(context);
+  const result = await withRetry(() => geminiService.review(context));
 
   if (!result.summary) {
     throw new AiServiceError('Empty summary', 'EMPTY_SUMMARY');

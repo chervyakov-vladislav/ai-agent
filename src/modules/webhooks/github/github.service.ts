@@ -1,10 +1,7 @@
-import {
-  githubProvider,
-  githubDiffProvider,
-  getGitHubError,
-} from '@shared/infrastructure/axios/github-client';
+import { githubProvider, githubDiffProvider } from '@shared/infrastructure/axios/github-client';
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
-import { pinoLogger } from '../../../shared/infrastructure/logger/pino-logger';
+import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
+import { getGitHubError } from '@shared/infrastructure/axios/axios-utils';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
   const { data } = await githubDiffProvider.get(prUrl);
@@ -81,7 +78,7 @@ export const createPullRequestReview = async (
 
     if (ghError?.isValidationError) {
       pinoLogger.warn(
-        '⚠️ GitHub отклонил точечные комментарии (строки вне диффа). Отправляю fallback-ревью.',
+        'GitHub rejected line-specific comments (lines out of diff). Sending fallback review.',
       );
 
       const summaryWithComments = [
