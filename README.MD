@@ -37,6 +37,7 @@
 | `npm run lint`        | Проверка стиля кода (ESLint + Prettier)                         |
 | `npm run typecheck`   | Проверка типов TypeScript (`tsc --noEmit`)                      |
 | `npm run localtunnel` | Публичный доступ к localhost (для webhook’ов через localtunnel) |
+| `npm run sshtunnel`   | Стучаться через VPS + SSH туннель на локальное приложение       |
 
 ---
 

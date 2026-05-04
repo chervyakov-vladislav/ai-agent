@@ -31,7 +31,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc",
-    "localtunnel": "npx localtunnel --port 3000"
+    "localtunnel": "npx localtunnel --port 3000",
+    "sshtunnel": "ssh -R 3000:localhost:3000 root@46.32.185.128"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
