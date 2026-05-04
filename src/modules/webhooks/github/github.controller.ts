@@ -19,16 +19,9 @@ export const githubController = async (
       (normalizedData.action === GithubAction.Opened ||
         normalizedData.action === GithubAction.Synchronize)
     ) {
-      analyzePullRequestUseCase(normalizedData.url, normalizedData.repoUrl)
-        .then((result) => {
-          console.log('🚀 Анализ завершен успешно:', result.summary);
-          console.log('🚀 Анализ завершен успешно:', result.isSafe);
-          console.log('🚀 Анализ завершен успешно:', result.verdict);
-          console.log('🚀 Анализ завершен успешно:', result.reviews);
-        })
-        .catch((err) => {
-          console.error('❌ Фоновая ошибка в AI Agent:', err);
-        });
+      analyzePullRequestUseCase(normalizedData.url, normalizedData.repoUrl).catch((err) => {
+        console.error('❌ Фоновая ошибка в AI Agent:', err);
+      });
     }
 
     res.status(202).send({ status: 'accepted' });

@@ -1,8 +1,8 @@
 import { AppError } from 'shared/errors/AppError';
 import { NextFunction, Request, Response } from 'express';
-import { PinoLogger } from '@/shared/infrastructure/logger/pino-logger';
+import { pinoLogger as logger } from '@/shared/infrastructure/logger/pino-logger';
 
-export const createErrorFilter = (logger: PinoLogger) => {
+export const createErrorFilter = () => {
   return (err: unknown, req: Request, res: Response, _next: NextFunction) => {
     const isAppError = err instanceof AppError;
 

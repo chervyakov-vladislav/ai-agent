@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import envConfig from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from '@shared/errors/AiServiceError';
+import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 
 const ai = new GoogleGenAI({
@@ -30,7 +31,7 @@ export const geminiService = {
     try {
       return JSON.parse(text) as AIReviewResponse;
     } catch (e) {
-      console.error('Raw Gemini JSON error:', text);
+      pinoLogger.error('Raw Gemini JSON error:', text);
       throw e;
     }
   },

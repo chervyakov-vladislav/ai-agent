@@ -1,11 +1,9 @@
 import { App } from './interface/http/app';
-import { PinoLogger } from './shared/infrastructure/logger/pino-logger';
+import { pinoLogger as logger } from './shared/infrastructure/logger/pino-logger';
 import env from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
 
 async function bootstrap() {
-  const logger = new PinoLogger();
-
   process.on('uncaughtException', (err) => {
     logger.error('Uncaught Exception', err.stack);
 
@@ -24,7 +22,7 @@ async function bootstrap() {
   try {
     const rootRouter = createRootRouter();
 
-    const app = new App(rootRouter, logger);
+    const app = new App(rootRouter);
     const port = env.PORT || 3000;
     const server = app.listen(port);
 
@@ -48,6 +46,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Fatal error during application start:', err);
+  logger.error('Fatal error during application start:', err);
   process.exit(1);
 });

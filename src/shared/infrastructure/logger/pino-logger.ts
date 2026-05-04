@@ -1,7 +1,7 @@
 import pino from 'pino';
 import env from '@config/env-config';
 
-export class PinoLogger {
+class PinoLogger {
   public readonly logger: pino.Logger;
 
   constructor() {
@@ -62,3 +62,5 @@ export class PinoLogger {
     );
   }
 }
+
+export const pinoLogger = new PinoLogger();

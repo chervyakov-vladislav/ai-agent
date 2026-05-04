@@ -33,12 +33,28 @@ export const analyzePullRequestUseCase = async (
     throw new AiServiceError('Empty summary', 'EMPTY_SUMMARY');
   }
 
+  const changedFilesNames = new Set(files.map((f) => f.filename));
+
+  const validLineReviews = result.reviews
+    .filter((r) => typeof r.line === 'number')
+    .filter((r) => changedFilesNames.has(r.file))
+    .filter((r): r is typeof r & { line: number } => r.line !== undefined);
+
+  const extraReviews = result.reviews.filter(
+    (r) => typeof r.line !== 'number' || !changedFilesNames.has(r.file),
+  );
+
+  const extendedSummary =
+    extraReviews.length > 0
+      ? `${result.summary}\n\n### 📝 Вне контекста строк:\n${extraReviews.map((r) => `* **${r.file}**: ${r.comment}`).join('\n')}`
+      : result.summary;
+
   await githubService.createPullRequestReview(prUrl, {
-    verdict: result.verdict,
-    summary: result.summary,
-    comments: result.reviews.map((r) => ({
+    verdict: 'COMMENT',
+    summary: extendedSummary,
+    comments: validLineReviews.map((r) => ({
       file: r.file,
-      line: r.line || 1,
+      line: r.line,
       comment: r.comment,
     })),
   });

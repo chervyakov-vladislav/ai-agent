@@ -2,16 +2,14 @@ import express, { Application, Router } from 'express';
 import { Server } from 'http';
 import { createHttpLogger } from '@shared/infrastructure/logger/http-logger';
 import { createErrorFilter } from './middlewares/error-filter';
-import { PinoLogger } from '@/shared/infrastructure/logger/pino-logger';
+import { pinoLogger } from '@/shared/infrastructure/logger/pino-logger';
 
 export class App {
   private readonly app: Application = express();
   private server?: Server;
+  private logger = pinoLogger;
 
-  constructor(
-    private readonly rootRouter: Router,
-    private readonly logger: PinoLogger,
-  ) {
+  constructor(private readonly rootRouter: Router) {
     this.setupMiddlewares();
     this.setupRoutes();
     this.setupErrorHandling();
@@ -20,7 +18,7 @@ export class App {
   private setupMiddlewares(): void {
     this.app.disable('x-powered-by');
     this.app.use(express.json());
-    this.app.use(createHttpLogger(this.logger));
+    this.app.use(createHttpLogger());
   }
 
   private setupRoutes(): void {
@@ -28,7 +26,7 @@ export class App {
   }
 
   private setupErrorHandling(): void {
-    this.app.use(createErrorFilter(this.logger));
+    this.app.use(createErrorFilter());
   }
 
   public listen(port: number | string): Server {
