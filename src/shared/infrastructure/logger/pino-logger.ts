@@ -20,8 +20,9 @@ class PinoLogger {
       placeholder: '[REDACTED]',
     };
 
-    const transport = isDev
-      ? pino.transport({
+    const getTransport = () => {
+      if (isDev) {
+        return pino.transport({
           target: 'pino-pretty',
           level: env.LOG_LEVEL,
           options: {
@@ -29,33 +30,21 @@ class PinoLogger {
             translateTime: 'HH:MM:ss Z',
             messageFormat: '{msg}',
             singleLine: true,
-            ignore: 'pid,hostname',
           },
-        })
-      : pino.transport({
-          targets: [
-            {
-              target: 'pino-roll', // заменить потом на другой транспорт для отправки в Loki или Elasticsearch
-              level: env.LOG_LEVEL,
-              options: {
-                file: './logs/app',
-                extension: '.log',
-                frequency: 'daily',
-                dateFormat: 'yyyy-MM-dd',
-                size: '10k',
-                interval: '1d',
-                mkdir: true,
-              },
-            },
-          ],
         });
+      }
+    };
 
     this.logger = pino(
       {
         level: env.LOG_LEVEL,
         redact: redactConfig,
+        base: {
+          env: env.NODE_ENV,
+          service: 'ai-reviewer',
+        },
       },
-      transport,
+      getTransport(),
     );
   }
 

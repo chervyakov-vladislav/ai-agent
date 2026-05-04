@@ -47,7 +47,7 @@
 
 ### А. Интеграция с VCS (Bitbucket)
 
-- [ ] **Прием Webhooks**: Обработка `POST` запросов при создании/обновлении PR.
+- [ ] **Прием Webhooks**: Обработка `POST` запросов при создании PR.
 - [ ] **Webhook на Merge**: Триггер при слиянии в `master/main` для финальной отчетности.
 - [ ] **Чтение Diff**: Скачивание изменений кода через API для точечного анализа.
 - [ ] **Публикация комментариев**: Автоматическая отправка замечаний в PR к конкретным строкам.
@@ -99,16 +99,17 @@
 
 ## 🗺 План реализации (Roadmap)
 
-### Этап 1: "Инфраструктура и Скелет" 🦴
+### Этап 1: "Инфраструктура и MVP" 🦴
 
-- [ ] Настройка `docker-compose.yml` с образами из корпоративного реестра.
-- [ ] Создание структуры папок Clean Architecture.
-- [ ] Базовая маршрутизация в `main.ts` (Composition Root).
+- [x] Local Environment: Развертывание Node.js окружения и конфигурация личного GitHub-аккаунта.
+- [x] Webhook Handler: Настройка сервера для приема и обработки событий pull_request.opened.
+- [x] Modular Architecture: Организация структуры проекта (Module Architecture) для изоляции логики ИИ от инфраструктуры.
+- [x] Gemini Integration: Реализация базового сервиса для взаимодействия с Google AI SDK.
+- [x] PR Feedback Loop: Автоматическая публикация результатов ревью в виде комментариев напрямую в GitHub Pull Request
 
 ### Этап 2: "Память и Правила" (Local RAG) 🧠
 
-- [ ] Реализация `SplittingStrategy` в Domain (умная нарезка кодовой базы).
-- [ ] Настройка **LangChain + Ollama + Qdrant** в слое Infrastructure.
+- [ ] Настройка **LangChain + Ollama + Qdrant**
 - [ ] Механизм отслеживания и перезаписи правил из файлов `.agents`.
 
 ### Этап 3: "Анализ" (VCS + Qwen) 🚀
@@ -122,50 +123,53 @@
 - [ ] Генерация Summary через Qwen после события `merged`.
 - [ ] Интеграция с Jira REST API для публикации отчетов.
 
-## 🏛 Схема директорий
+## 📂 Схема директорий
 
-### `src/domain/` — Сердце приложения
-
-Содержит чистую бизнес-логику. Здесь нет упоминаний библиотек (Express, Axios, Qdrant).
-
-- **entities/**: Основные объекты системы с логикой (например, `CodeFile` знает, как проверить свой размер, `CodeChunk`).
-- **value-objects/**: Неизменяемые объекты (`Vector` — обертка над массивом чисел, `FilePath`, `Hash`).
-- **services/**: Доменные сервисы. Например, `SplittingStrategy` — алгоритм того, как именно мы режем код (по строкам, по AST-дереву).
-- **repositories/**: Интерфейсы (контракты) для хранения данных. Здесь лежат только `interface IVectorDb`, реализация будет в инфраструктуре.
-
-### `src/application/` — Сценарии использования
-
-Оркестрация работы. Соединяет домен с внешним миром через интерфейсы.
-
-- **services/**: Высокоуровневые координаторы (`ReviewService` вызывает загрузку diff, поиск контекста и запрос к LLM).
-- **use-cases/**: Конкретные действия системы (`IndexRepository`, `ProcessBitbucketWebhook`).
-- **dtos/**: Data Transfer Objects. Объекты, которые описывают, в каком виде данные приходят в приложение и уходят из него.
-
-### `src/infrastructure/` — Технические детали
-
-Реализация всех внешних связей и тяжелых библиотек.
-
-- **clients/**: Конфигурация HTTP-клиентов (Axios) для работы с корпоративным Qwen, Bitbucket API и Ollama.
-- **persistence/**: Конкретные реализации баз данных. Здесь лежит `QdrantVectorDb` (использующий LangChain/Qdrant SDK).
-- **monitoring/**: Логика сбора метрик и расширенное логирование (Pino, Prometheus).
-
-### `src/interface/` — Входные точки (Адаптеры)
-
-Отвечает за то, как внешние системы общаются с нашим агентом.
-
-- **http/**: Контроллеры Express, маршруты.
-- **webhooks/**: Специфическая логика парсинга вебхуков (Bitbucket, Jira). Преобразует сырой JSON от Bitbucket в наш внутренний DTO.
-- **presenters/**: Логика форматирования ответов перед отправкой пользователю или в VCS.
-
-### `src/main.ts` — Точка сборки
-
-**Composition Root**. Здесь создаются экземпляры всех классов, прокидываются зависимости (Dependency Injection) и запускается сервер.
-
----
-
-## 🛠 Ключевые принципы
-
-1.  **Независимость от БД**: Мы можем заменить Qdrant на ChromaDB, поправив только папку `infrastructure/persistence`.
-2.  **Независимость от Framework**: Express можно заменить на Fastify без изменений в `application` и `domain`.
-3.  **Тестируемость**: Бизнес-логику в `domain` можно покрыть Unit-тестами без поднятия Docker-контейнеров.
-4.  **Единый язык**: Имена в `domain` должны соответствовать терминам, которыми пользуются разработчики (PR, Diff, Chunk, Embedding).
+```text
+src/
+├── modules/                        # Бизнес-логика приложения
+│   ├── llm-gemini/                 # Модуль взаимодействия с Google Gemini
+│   │   ├── prompts/                # Системные и динамические промпты
+│   │   │   └── review.prompt.ts
+│   │   ├── ai-review-output.schema.ts  # Zod-схемы валидации (ранее validator.ts)
+│   │   ├── gemini.constants.ts
+│   │   └── gemini.service.ts       # Сервис вызова моделей и логика fallback
+│   │
+│   ├── webhooks/                   # Прием внешних событий
+│   │   └── github/
+│   │       ├── use-cases/          # Сценарии обработки конкретных событий
+│   │       ├── github.controller.ts
+│   │       ├── github.service.ts
+│   │       ├── github.mapper.ts    # Трансформация данных GitHub в ReviewContext
+│   │       ├── github.types.ts
+│   │       ├── github.constants.ts
+│   │       └── webhook.router.ts
+│   │
+│   ├── processing/                 # Оркестрация процесса анализа
+│   ├── repo-query/                 # Работа с кодовой базой
+│   ├── vectorstore/                # Индексация для RAG (если применимо)
+│   └── health/                     # Проверка состояния сервиса
+│
+├── shared/                         # Общий код (Shared Kernel)
+│   ├── errors/                     # Централизованная обработка ошибок
+│   │   ├── AiServiceError.ts
+│   │   ├── AppError.ts
+│   │   └── BadRequestError.ts
+│   │
+│   ├── infrastructure/             # Техническая реализация (внешние API/инструменты)
+│   │   ├── axios/                  # Настройка HTTP-клиента и утилиты (withRetry)
+│   │   │   ├── axios-utils.ts
+│   │   │   └── github-client.ts
+│   │   └── logger/                 # Логирование (Pino)
+│   │       ├── pino-logger.ts      # Основной логгер с Redact секретов
+│   │       └── http-logger.ts
+│   │
+│   └── types/                      # Общие TypeScript интерфейсы и энамы
+│       ├── action.enums.ts
+│       └── review-context.types.ts
+│
+├── config/                         # Конфигурация окружения
+│   └── env-config.ts               # Типизированный конфиг из .env
+│
+└── main.ts                         # Точка входа приложения
+```
