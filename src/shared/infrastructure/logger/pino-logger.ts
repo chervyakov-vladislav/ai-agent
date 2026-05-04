@@ -1,16 +1,29 @@
 import pino from 'pino';
 import env from '@config/env-config';
 
-export class PinoLogger {
+class PinoLogger {
   public readonly logger: pino.Logger;
 
   constructor() {
     const isDev = env.NODE_ENV !== 'production';
 
+    const redactConfig = {
+      paths: [
+        'err.config.headers.Authorization',
+        'context.headers.Authorization',
+        'headers.authorization',
+        '*.headers.Authorization',
+        'Authorization',
+        'token',
+        'apiKey',
+      ],
+      placeholder: '[REDACTED]',
+    };
+
     const transport = isDev
       ? pino.transport({
           target: 'pino-pretty',
-          level: env.LOG_LEVEl || 'info',
+          level: env.LOG_LEVEL,
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
@@ -23,7 +36,7 @@ export class PinoLogger {
           targets: [
             {
               target: 'pino-roll', // заменить потом на другой транспорт для отправки в Loki или Elasticsearch
-              level: env.LOG_LEVEl || 'info',
+              level: env.LOG_LEVEL,
               options: {
                 file: './logs/app',
                 extension: '.log',
@@ -37,7 +50,13 @@ export class PinoLogger {
           ],
         });
 
-    this.logger = pino(transport);
+    this.logger = pino(
+      {
+        level: env.LOG_LEVEL,
+        redact: redactConfig,
+      },
+      transport,
+    );
   }
 
   info(msg: string, context?: object) {
@@ -62,3 +81,5 @@ export class PinoLogger {
     );
   }
 }
+
+export const pinoLogger = new PinoLogger();

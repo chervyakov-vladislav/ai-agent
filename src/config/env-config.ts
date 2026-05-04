@@ -1,6 +1,10 @@
 export default {
-  LOG_LEVEl: process.env.LOG_LEVEL || 'info',
+  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   NODE_ENV: process.env.NODE_ENV || 'development',
   PORT: process.env.PORT || 3000,
-  APP_VERSION: process.env.APP_VERSION,
+  APP_VERSION: process.env.APP_VERSION || '0.0.0',
+  HOST: process.env.HOST || '',
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '123',
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  RETRY_DELAY: process.env.RETRY_DELAY || 2000,
 } as const;

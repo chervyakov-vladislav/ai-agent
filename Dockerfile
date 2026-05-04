@@ -8,7 +8,7 @@ FROM base AS checker
 RUN npm run lint
 RUN npm run typecheck
 
-FROM tester AS builder
+FROM checker AS builder
 RUN npm run build
 
 FROM node:24-alpine AS runner
@@ -17,10 +17,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist
 
-USER node
 EXPOSE 3000
 
 CMD ["npm", "start"]
