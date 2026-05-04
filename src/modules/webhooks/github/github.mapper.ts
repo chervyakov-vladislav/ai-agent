@@ -1,10 +1,13 @@
-import { GithubPullRequestEvent } from './github.types';
+import { GithubAction, GithubPullRequestEvent } from './github.types';
 
 export interface NormalizedPR {
   id: number;
+  number: number;
   title: string;
   author: string;
-  action: 'opened' | 'updated' | 'merged' | 'closed';
+  action: GithubAction;
+  url: string;
+  repoUrl: string;
   diffUrl: string;
   branch: string;
 }
@@ -16,22 +19,31 @@ export const mapGithubToPR = (
   if (event !== 'pull_request') return null;
 
   const pr = payload.pull_request;
+  const repo = payload.repository;
 
-  let action: NormalizedPR['action'] | null = null;
+  const actionMap: Record<string, GithubAction> = {
+    opened: GithubAction.Opened,
+    reopened: GithubAction.Opened,
+    synchronize: GithubAction.Synchronize,
+  };
 
-  if (payload.action === 'opened') action = 'opened';
-  else if (payload.action === 'synchronize') action = 'updated';
-  else if (payload.action === 'closed') {
-    action = pr.merged ? 'merged' : 'closed';
-  }
+  const action =
+    payload.action === 'closed'
+      ? pr.merged
+        ? GithubAction.Merged
+        : GithubAction.Closed
+      : actionMap[payload.action];
 
   if (!action) return null;
 
   return {
     id: pr.id,
+    number: pr.number,
     title: pr.title,
     author: pr.user.login,
     action,
+    url: pr.url,
+    repoUrl: repo.url || `https://api.github.com/repos/${repo.full_name}`,
     diffUrl: pr.diff_url,
     branch: pr.head.ref,
   };

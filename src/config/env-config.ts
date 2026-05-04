@@ -4,4 +4,5 @@ export default {
   PORT: process.env.PORT || 3000,
   APP_VERSION: process.env.APP_VERSION || '0.0.0',
   HOST: process.env.HOST || '',
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '123',
 } as const;
