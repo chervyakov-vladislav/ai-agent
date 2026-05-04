@@ -1,10 +1,4 @@
-export enum GithubAction {
-  Opened = 'opened',
-  Synchronize = 'synchronize',
-  Closed = 'closed',
-  Reopened = 'reopened',
-  Merged = 'merged',
-}
+import { GithubFileStatus } from '@shared/types/action.enums';
 
 export interface GithubPullRequestEvent {
   action: string;
@@ -41,15 +35,6 @@ export interface RepositoryMetadata {
   description: string | null;
   topics: string[];
   language: string | null;
-}
-
-export enum GithubFileStatus {
-  Added = 'added',
-  Removed = 'removed',
-  Modified = 'modified',
-  Renamed = 'renamed',
-  Copied = 'copied',
-  Changed = 'changed',
 }
 
 export interface GithubFileResponse {

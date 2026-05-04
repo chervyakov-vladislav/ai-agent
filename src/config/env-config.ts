@@ -5,4 +5,5 @@ export default {
   APP_VERSION: process.env.APP_VERSION || '0.0.0',
   HOST: process.env.HOST || '',
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '123',
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
 } as const;

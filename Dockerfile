@@ -8,7 +8,7 @@ FROM base AS checker
 RUN npm run lint
 RUN npm run typecheck
 
-FROM tester AS builder
+FROM checker AS builder
 RUN npm run build
 
 FROM node:24-alpine AS runner

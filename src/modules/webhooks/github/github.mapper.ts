@@ -1,4 +1,5 @@
-import { GithubAction, GithubPullRequestEvent } from './github.types';
+import { GithubAction } from '@shared/types/action.enums';
+import { GithubPullRequestEvent } from './github.types';
 
 export interface NormalizedPR {
   id: number;

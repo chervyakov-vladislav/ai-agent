@@ -1,6 +1,12 @@
+import { geminiService } from '@/modules/llm-gemini/gemini.service';
+import { AiServiceError } from '@shared/errors/AiServiceError';
+import { AIReviewResponse } from '@shared/types/review-context.types';
 import * as githubService from '../github.service';
 
-export const analyzePullRequestUseCase = async (prUrl: string, repoUrl: string) => {
+export const analyzePullRequestUseCase = async (
+  prUrl: string,
+  repoUrl: string,
+): Promise<AIReviewResponse> => {
   const [diff, files, repoInfo] = await Promise.all([
     githubService.getPullRequestDiff(prUrl),
     githubService.getChangedFiles(prUrl),
@@ -21,5 +27,11 @@ export const analyzePullRequestUseCase = async (prUrl: string, repoUrl: string) 
     })),
   };
 
-  return context;
+  const result = await geminiService.review(context);
+
+  if (!result.summary) {
+    throw new AiServiceError('Empty summary', 'EMPTY_SUMMARY');
+  }
+
+  return result;
 };

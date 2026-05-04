@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
+import { GithubAction } from '@shared/types/action.enums';
 import { mapGithubToPR } from './github.mapper';
-import { GithubPullRequestEvent, GithubAction } from './github.types';
+import { GithubPullRequestEvent } from './github.types';
 import { analyzePullRequestUseCase } from './use-cases/analyze-pr.use-case';
 
 export const githubController = async (
@@ -19,12 +20,14 @@ export const githubController = async (
         normalizedData.action === GithubAction.Synchronize)
     ) {
       analyzePullRequestUseCase(normalizedData.url, normalizedData.repoUrl)
-        .then((_context) => {
-          console.log(`✅ Context for PR #${normalizedData.number} collected successfully`);
-          // await geminiService.review(context)
+        .then((result) => {
+          console.log('🚀 Анализ завершен успешно:', result.summary);
+          console.log('🚀 Анализ завершен успешно:', result.isSafe);
+          console.log('🚀 Анализ завершен успешно:', result.verdict);
+          console.log('🚀 Анализ завершен успешно:', result.reviews);
         })
         .catch((err) => {
-          next(err);
+          console.error('❌ Фоновая ошибка в AI Agent:', err);
         });
     }
 
