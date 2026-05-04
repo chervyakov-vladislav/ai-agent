@@ -127,49 +127,43 @@
 
 ```text
 src/
+├── interface/
+│   └── http/
+│       ├── middlewares/            # Прослойки (логирование, ошибки, auth)
+│       │   └── error-filter.ts     # Глобальный обработчик ошибок
+│       ├── app.ts                  # Конфигурация Express
+│       └── root-router.ts          # Главный роутер, объединяющий роутеры модулей
+│
 ├── modules/                        # Бизнес-логика приложения
 │   ├── llm-gemini/                 # Модуль взаимодействия с Google Gemini
-│   │   ├── prompts/                # Системные и динамические промпты
-│   │   │   └── review.prompt.ts
-│   │   ├── ai-review-output.schema.ts  # Zod-схемы валидации (ранее validator.ts)
-│   │   ├── gemini.constants.ts
-│   │   └── gemini.service.ts       # Сервис вызова моделей и логика fallback
+│   │   ├── prompts/
+│   │   ├── ai-review-output.schema.ts
+│   │   └── gemini.service.ts
 │   │
 │   ├── webhooks/                   # Прием внешних событий
 │   │   └── github/
 │   │       ├── use-cases/          # Сценарии обработки конкретных событий
 │   │       ├── github.controller.ts
 │   │       ├── github.service.ts
-│   │       ├── github.mapper.ts    # Трансформация данных GitHub в ReviewContext
+│   │       ├── github.mapper.ts
 │   │       ├── github.types.ts
 │   │       ├── github.constants.ts
 │   │       └── webhook.router.ts
 │   │
 │   ├── processing/                 # Оркестрация процесса анализа
 │   ├── repo-query/                 # Работа с кодовой базой
-│   ├── vectorstore/                # Индексация для RAG (если применимо)
+│   ├── vectorstore/                # Индексация для RAG
 │   └── health/                     # Проверка состояния сервиса
 │
-├── shared/                         # Общий код (Shared Kernel)
-│   ├── errors/                     # Централизованная обработка ошибок
-│   │   ├── AiServiceError.ts
-│   │   ├── AppError.ts
-│   │   └── BadRequestError.ts
-│   │
-│   ├── infrastructure/             # Техническая реализация (внешние API/инструменты)
-│   │   ├── axios/                  # Настройка HTTP-клиента и утилиты (withRetry)
-│   │   │   ├── axios-utils.ts
-│   │   │   └── github-client.ts
+├── shared/                         # Общий код
+│   ├── errors/                     # Централизованные классы ошибок
+│   ├── infrastructure/             # Техническая реализация (Axios, DB Clients)
+│   │   ├── axios/
 │   │   └── logger/                 # Логирование (Pino)
-│   │       ├── pino-logger.ts      # Основной логгер с Redact секретов
-│   │       └── http-logger.ts
-│   │
-│   └── types/                      # Общие TypeScript интерфейсы и энамы
-│       ├── action.enums.ts
-│       └── review-context.types.ts
+│   └── types/                      # Общие TS интерфейсы
 │
 ├── config/                         # Конфигурация окружения
-│   └── env-config.ts               # Типизированный конфиг из .env
+│   └── env-config.ts               # Валидация .env
 │
-└── main.ts                         # Точка входа приложения
+└── main.ts                         # Точка входа
 ```

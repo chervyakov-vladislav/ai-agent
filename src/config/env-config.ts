@@ -1,10 +1,23 @@
-export default {
-  LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: process.env.PORT || 3000,
-  APP_VERSION: process.env.APP_VERSION || '0.0.0',
-  HOST: process.env.HOST || '',
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN || '123',
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-  RETRY_DELAY: process.env.RETRY_DELAY || 2000,
-} as const;
+import { z } from 'zod';
+
+const envSchema = z.object({
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+  NODE_ENV: z.enum(['development', 'production']).default('development'),
+  PORT: z.coerce.number().default(3000),
+  APP_VERSION: z.string().default('0.0.0'),
+  GITHUB_TOKEN: z.string().min(1, 'GITHUB_TOKEN is required'),
+  GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
+  RETRY_DELAY: z.coerce.number().default(2000),
+});
+
+const _env = envSchema.safeParse(process.env);
+
+if (!_env.success) {
+  console.error('Invalid environment variables:');
+  console.error(_env.error.issues);
+  process.exit(1);
+}
+
+export const envConfig = _env.data;
+
+export type EnvConfig = z.infer<typeof envSchema>;

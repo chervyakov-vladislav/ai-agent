@@ -1,11 +1,11 @@
 import pino from 'pino';
-import env from '@config/env-config';
+import { envConfig } from '@config/env-config';
 
 class PinoLogger {
   public readonly logger: pino.Logger;
 
   constructor() {
-    const isDev = env.NODE_ENV !== 'production';
+    const isDev = envConfig.NODE_ENV !== 'production';
 
     const redactConfig = {
       paths: [
@@ -24,7 +24,7 @@ class PinoLogger {
       if (isDev) {
         return pino.transport({
           target: 'pino-pretty',
-          level: env.LOG_LEVEL,
+          level: envConfig.LOG_LEVEL,
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
@@ -37,10 +37,10 @@ class PinoLogger {
 
     this.logger = pino(
       {
-        level: env.LOG_LEVEL,
+        level: envConfig.LOG_LEVEL,
         redact: redactConfig,
         base: {
-          env: env.NODE_ENV,
+          env: envConfig.NODE_ENV,
           service: 'ai-reviewer',
         },
       },

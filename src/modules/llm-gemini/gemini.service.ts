@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import envConfig from '@config/env-config';
+import { envConfig } from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from '@shared/errors/AiServiceError';
 import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import envConfig from '@config/env-config';
+import { envConfig } from '@config/env-config';
 import { pinoLogger } from '../logger/pino-logger';
 
 interface GitHubErrorResponse {

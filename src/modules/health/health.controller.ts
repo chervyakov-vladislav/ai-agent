@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import env from '@/config/env-config';
+import { envConfig } from '@/config/env-config';
 
 const createHealthRouter = (): Router => {
   const router = Router();
@@ -9,7 +9,7 @@ const createHealthRouter = (): Router => {
       status: 'ok',
       timestamp: new Date().toISOString(),
       node_version: process.version,
-      app_version: env.APP_VERSION,
+      app_version: envConfig.APP_VERSION,
     });
   });
 

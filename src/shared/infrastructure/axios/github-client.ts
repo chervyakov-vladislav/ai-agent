@@ -1,6 +1,6 @@
 import https from 'node:https';
 import axios from 'axios';
-import env from '@config/env-config';
+import { envConfig } from '@config/env-config';
 
 export const commonConfig = {
   baseURL: 'https://api.github.com',
@@ -12,7 +12,7 @@ export const commonConfig = {
     scheduling: 'lifo',
   }),
   headers: {
-    Authorization: `Bearer ${env.GITHUB_TOKEN}`,
+    Authorization: `Bearer ${envConfig.GITHUB_TOKEN}`,
     'User-Agent': 'AI-Agent-App',
   },
 };
