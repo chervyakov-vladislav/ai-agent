@@ -95,5 +95,7 @@ export const createPullRequestReview = async (
         body: summaryWithComments,
       });
     }
+
+    throw error;
   }
 };
