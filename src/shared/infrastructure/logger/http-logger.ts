@@ -12,8 +12,8 @@ export const createHttpLogger = (pinoLogger: PinoLogger) => {
   return pinoHttp({
     logger: pinoLogger.logger,
     serializers: {
-      req: (req: IncomingMessage) => {
-        const expressReq = req as ExpressRequest;
+      req: (req: ExpressRequest) => {
+        const expressReq = req;
 
         return {
           method: expressReq.method,

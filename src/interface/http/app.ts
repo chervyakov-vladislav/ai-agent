@@ -18,6 +18,7 @@ export class App {
   }
 
   private setupMiddlewares(): void {
+    this.app.disable('x-powered-by');
     this.app.use(express.json());
     this.app.use(createHttpLogger(this.logger));
   }

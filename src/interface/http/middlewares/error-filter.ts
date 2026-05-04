@@ -1,4 +1,4 @@
-import { AppError } from 'shared/domain/errors/AppError';
+import { AppError } from 'shared/errors/AppError';
 import { NextFunction, Request, Response } from 'express';
 import { PinoLogger } from '@/shared/infrastructure/logger/pino-logger';
 

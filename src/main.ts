@@ -1,8 +1,7 @@
-import { Router } from 'express';
 import { App } from './interface/http/app';
 import { PinoLogger } from './shared/infrastructure/logger/pino-logger';
 import env from './config/env-config';
-import { AppError } from './shared/domain/errors/AppError';
+import { createRootRouter } from './interface/http/root-router';
 
 async function bootstrap() {
   const logger = new PinoLogger();
@@ -23,32 +22,7 @@ async function bootstrap() {
   });
 
   try {
-    const rootRouter = Router();
-    rootRouter.get('/error-app', async () => {
-      throw new AppError('Custom Error', 400);
-    });
-
-    rootRouter.get('/error-common', () => {
-      throw new Error('500 error');
-    });
-
-    rootRouter.get('/error-promise', () => {
-      void Promise.reject(new Error('unhandled rejection'));
-    });
-
-    rootRouter.get('/error-fatal', () => {
-      setTimeout(() => {
-        throw new Error('dasdad');
-      }, 100);
-    });
-    rootRouter.get('/health', (_req, res) => {
-      res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        node_version: process.version,
-        app_version: env.APP_VERSION,
-      });
-    });
+    const rootRouter = createRootRouter();
 
     const app = new App(rootRouter, logger);
     const port = env.PORT || 3000;
