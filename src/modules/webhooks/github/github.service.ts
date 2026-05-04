@@ -87,7 +87,7 @@ export const createPullRequestReview = async (
       const summaryWithComments = [
         review.summary,
         '\n\n### 💡 Детальные замечания:',
-        ...review.comments.map((c: any) => `* **${c.path}:${c.line}**: ${c.body}`),
+        ...review.comments.map((c) => `* **${c.file}:${c.line}**: ${c.comment}`),
       ].join('\n');
 
       return await githubProvider.post(`${prUrl}/reviews`, {
