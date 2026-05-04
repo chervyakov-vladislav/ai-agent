@@ -33,5 +33,15 @@ export const analyzePullRequestUseCase = async (
     throw new AiServiceError('Empty summary', 'EMPTY_SUMMARY');
   }
 
+  await githubService.createPullRequestReview(prUrl, {
+    verdict: result.verdict,
+    summary: result.summary,
+    comments: result.reviews.map((r) => ({
+      file: r.file,
+      line: r.line || 1,
+      comment: r.comment,
+    })),
+  });
+
   return result;
 };

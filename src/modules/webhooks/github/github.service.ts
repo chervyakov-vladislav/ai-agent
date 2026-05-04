@@ -31,22 +31,6 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
       };
     }),
   );
-
-  /* 
-  // если поломаю гитхаб через promise.all
-  const results: ChangedFile[] = [];
-  for (const file of filteredFiles) {
-    const { data: content } = await githubProvider.get<string>(file.contents_url, {
-      headers: { Accept: 'application/vnd.github.v3.raw' },
-    });
-    results.push({
-      filename: file.filename,
-      status: file.status,
-      content: String(content),
-    });
-  }
-  return results;
-  */
 };
 
 export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMetadata> => {
@@ -58,4 +42,32 @@ export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMeta
     topics: data.topics,
     language: data.language,
   };
+};
+
+export const createPullRequestReview = async (
+  prUrl: string,
+  review: {
+    verdict: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
+    summary: string;
+    comments: { file: string; line: number; comment: string }[];
+  },
+): Promise<void> => {
+  const eventMap = {
+    APPROVE: 'APPROVE',
+    REQUEST_CHANGES: 'REQUEST_CHANGES',
+    COMMENT: 'COMMENT',
+  };
+
+  const comments = review.comments.map((c) => ({
+    path: c.file,
+    line: c.line,
+    body: c.comment,
+    side: 'RIGHT',
+  }));
+
+  await githubProvider.post(`${prUrl}/reviews`, {
+    body: review.summary,
+    event: eventMap[review.verdict],
+    comments: comments.length > 0 ? comments : undefined,
+  });
 };
