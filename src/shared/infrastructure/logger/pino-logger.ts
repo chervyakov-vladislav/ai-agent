@@ -23,7 +23,7 @@ class PinoLogger {
     const transport = isDev
       ? pino.transport({
           target: 'pino-pretty',
-          level: env.LOG_LEVEl,
+          level: env.LOG_LEVEL,
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
@@ -36,7 +36,7 @@ class PinoLogger {
           targets: [
             {
               target: 'pino-roll', // заменить потом на другой транспорт для отправки в Loki или Elasticsearch
-              level: env.LOG_LEVEl,
+              level: env.LOG_LEVEL,
               options: {
                 file: './logs/app',
                 extension: '.log',
@@ -52,7 +52,7 @@ class PinoLogger {
 
     this.logger = pino(
       {
-        level: env.LOG_LEVEl,
+        level: env.LOG_LEVEL,
         redact: redactConfig,
       },
       transport,

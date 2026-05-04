@@ -10,14 +10,15 @@ RUN npm run typecheck
 
 FROM checker AS builder
 RUN npm run build
+RUN npm prune --production
 
 FROM node:24-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json /app/package-lock.json ./
-RUN npm ci --omit=dev
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000

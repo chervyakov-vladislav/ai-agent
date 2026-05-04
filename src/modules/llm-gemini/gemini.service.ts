@@ -47,7 +47,8 @@ export const geminiService = {
         }
 
         if (error instanceof SyntaxError) {
-          pinoLogger.error('Failed to parse Gemini response as JSON');
+          pinoLogger.error('Failed to parse Gemini response', error);
+          throw error;
         }
 
         throw error;
