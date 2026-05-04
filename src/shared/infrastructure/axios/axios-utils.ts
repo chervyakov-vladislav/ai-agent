@@ -1,4 +1,5 @@
 import axios from 'axios';
+import envConfig from '@config/env-config';
 import { pinoLogger } from '../logger/pino-logger';
 
 interface GitHubErrorResponse {
@@ -37,16 +38,20 @@ export const hasStatus = (error: unknown): error is ErrorWithStatus =>
 export const withRetry = async <T>(
   fn: () => Promise<T>,
   retries = 3,
-  delay = 60000,
+  baseDelay = Number(envConfig.RETRY_DELAY) || 2000,
 ): Promise<T> => {
   try {
     return await fn();
   } catch (error: unknown) {
-    pinoLogger.warn(`Rate limit exceeded. Retrying in ${delay}ms... (Attempts left: ${retries})`);
-
     if (retries > 0 && hasStatus(error) && error.status === 429) {
-      await new Promise((resolve) => setTimeout(resolve, delay));
-      return withRetry(fn, retries - 1, delay);
+      const currentDelay = baseDelay * (4 - retries);
+
+      pinoLogger.warn(
+        `Rate limit exceeded. Retrying in ${currentDelay}ms... (Attempts left: ${retries})`,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, currentDelay));
+      return withRetry(fn, retries - 1, baseDelay);
     }
 
     throw error;

@@ -6,4 +6,5 @@ export default {
   HOST: process.env.HOST || '',
   GITHUB_TOKEN: process.env.GITHUB_TOKEN || '123',
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  RETRY_DELAY: process.env.RETRY_DELAY || 2000,
 } as const;
