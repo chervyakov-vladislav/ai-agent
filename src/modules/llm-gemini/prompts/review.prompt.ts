@@ -50,7 +50,7 @@ export const GEMINI_SYSTEM_INSTRUCTION = `
 `;
 export const getReviewPrompt = (context: ReviewContext) => `
   Проанализируй Pull Request для проекта: ${context.project.name}
-  Важное вводное сообщение(УЧТИ ЭТО): ${context.project.description}
+  Описание: ${context.project.description}
   Стек технологий, о котором нужно помнить: ${context.project.techStack?.join(', ')}
 
   ### ИЗМЕНЕНИЯ:
