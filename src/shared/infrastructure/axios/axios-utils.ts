@@ -28,7 +28,7 @@ interface ErrorWithStatus {
   status: number;
 }
 
-const hasStatus = (error: unknown): error is ErrorWithStatus =>
+export const hasStatus = (error: unknown): error is ErrorWithStatus =>
   typeof error === 'object' &&
   error !== null &&
   'status' in error &&

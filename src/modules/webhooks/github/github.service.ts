@@ -2,6 +2,7 @@ import { githubProvider, githubDiffProvider } from '@shared/infrastructure/axios
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
 import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from '@shared/infrastructure/axios/axios-utils';
+import { IGNORED_EXTENSIONS, IGNORED_FILES } from './github.constants';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
   const { data } = await githubDiffProvider.get(prUrl);
@@ -10,9 +11,6 @@ export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
 
 export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => {
   const { data: allFiles } = await githubProvider.get<GithubFileResponse[]>(`${prUrl}/files`);
-
-  const IGNORED_EXTENSIONS = ['.png', '.jpg', '.lock', '.json', '.svg'];
-  const IGNORED_FILES = ['package-lock.json'];
 
   const filteredFiles = allFiles.filter((file) => {
     const isIgnoredExt = IGNORED_EXTENSIONS.some((ext) => file.filename.endsWith(ext));

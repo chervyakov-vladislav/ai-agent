@@ -3,18 +3,18 @@ import envConfig from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from '@shared/errors/AiServiceError';
 import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
+import { withRetry, hasStatus } from '@/shared/infrastructure/axios/axios-utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
+import { MODEL_FALLBACKS } from './gemini.constants';
 
 const ai = new GoogleGenAI({
   apiKey: envConfig.GEMINI_API_KEY,
 });
 
 export const geminiService = {
-  review: async (context: ReviewContext): Promise<AIReviewResponse> => {
-    const prompt = getReviewPrompt(context);
-
+  async _callModel(modelName: string, prompt: string): Promise<string> {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: modelName,
       contents: prompt,
       config: {
         systemInstruction: GEMINI_SYSTEM_INSTRUCTION,
@@ -22,17 +22,41 @@ export const geminiService = {
       },
     });
 
-    const text = response.text;
-
-    if (!text) {
-      throw new AiServiceError('Gemini returned an empty response', 'GEMINI_EMPTY_RESPONSE');
+    if (!response.text) {
+      throw new AiServiceError(
+        `Model ${modelName} returned an empty response`,
+        'GEMINI_EMPTY_RESPONSE',
+      );
     }
 
-    try {
-      return JSON.parse(text) as AIReviewResponse;
-    } catch (e) {
-      pinoLogger.error('Raw Gemini JSON error:', text);
-      throw e;
+    return response.text;
+  },
+
+  review: async (context: ReviewContext): Promise<AIReviewResponse> => {
+    const prompt = getReviewPrompt(context);
+
+    for (const modelName of MODEL_FALLBACKS) {
+      try {
+        const text = await withRetry(() => geminiService._callModel(modelName, prompt), 1, 2000);
+
+        return JSON.parse(text) as AIReviewResponse;
+      } catch (error: unknown) {
+        if (hasStatus(error) && error.status === 429) {
+          pinoLogger.warn(`Model ${modelName} rate limited. Trying next available model...`);
+          continue;
+        }
+
+        if (error instanceof SyntaxError) {
+          pinoLogger.error('Failed to parse Gemini response as JSON');
+        }
+
+        throw error;
+      }
     }
+
+    throw new AiServiceError(
+      'All Gemini models exhausted their rate limits',
+      'ALL_MODELS_RATE_LIMITED',
+    );
   },
 };
