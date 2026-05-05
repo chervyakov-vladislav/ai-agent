@@ -16,6 +16,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+COPY --from=builder /app/.env* ./
 COPY --from=builder /app/package.json /app/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=builder /app/dist ./dist
