@@ -31,6 +31,8 @@ async function bootstrap() {
         logger.info('Server stopped.');
         process.exit(0);
       });
+
+      setTimeout(() => process.exit(1), 5000);
     };
 
     process.on('SIGTERM', shutdown);

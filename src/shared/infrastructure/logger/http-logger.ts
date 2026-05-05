@@ -20,6 +20,9 @@ export const createHttpLogger = () => {
           url: expressReq.url,
           query: expressReq.query,
           body: expressReq.body,
+          ip: expressReq.socket?.remoteAddress,
+          userAgent: expressReq.headers['user-agent'],
+          referer: expressReq.headers['referer'],
         };
       },
     },
