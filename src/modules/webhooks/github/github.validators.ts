@@ -13,6 +13,12 @@ export const aiReviewResponseSchema = z.object({
   reviews: z.array(rawReviewCommentSchema),
 });
 
+interface ValidLineReview {
+  file: string;
+  line: number;
+  comment: string;
+}
+
 export const validateAndFormatReview = (rawData: unknown, changedFiles: Set<string>) => {
   const parseResult = aiReviewResponseSchema.safeParse(rawData);
 
@@ -22,11 +28,15 @@ export const validateAndFormatReview = (rawData: unknown, changedFiles: Set<stri
     throw new AiServiceError('Invalid AI response structure');
   }
 
-  const parsed = parseResult.data;
-  const validLineReviews: { file: string; line: number; comment: string }[] = [];
-  const extraReviews: { file: string; comment: string }[] = [];
+  const { summary, reviews } = parseResult.data;
+  const validLineReviews = reviews.filter(
+    (r): r is ValidLineReview => typeof r.line === 'number' && changedFiles.has(r.file),
+  );
+  const extraReviews = reviews.filter(
+    (r) => typeof r.line !== 'number' || !changedFiles.has(r.file),
+  );
 
-  for (const review of parsed.reviews) {
+  for (const review of reviews) {
     if (typeof review.line === 'number' && changedFiles.has(review.file)) {
       validLineReviews.push(review as { file: string; line: number; comment: string });
     } else {
@@ -36,10 +46,10 @@ export const validateAndFormatReview = (rawData: unknown, changedFiles: Set<stri
 
   const extendedSummary =
     extraReviews.length > 0
-      ? `${parsed.summary}\n\n### 📝 Вне контекста строк:\n${extraReviews
+      ? `${summary}\n\n### 📝 Вне контекста строк:\n${extraReviews
           .map((r) => `* **${r.file}**: ${r.comment}`)
           .join('\n')}`
-      : parsed.summary;
+      : summary;
 
   return {
     summary: extendedSummary,
