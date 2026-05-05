@@ -41,7 +41,8 @@ class PinoLogger {
         redact: redactConfig,
         base: {
           env: envConfig.NODE_ENV,
-          service: 'ai-reviewer',
+          service: envConfig.SERVICE_NAME,
+          current_log_level: envConfig.LOG_LEVEL,
         },
       },
       getTransport(),
