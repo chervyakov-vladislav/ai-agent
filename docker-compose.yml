@@ -38,12 +38,12 @@ services:
       resources:
         limits:
           memory: 2048M
-        # если карта не nvidia, то закомментировать
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+        # Раскомментируйте, если есть доступный GPU nvidia
+        # reservations:
+        #   devices:
+        #     - driver: nvidia
+        #       count: 1
+        #       capabilities: [gpu]
     environment:
       - OLLAMA_KEEP_ALIVE=2m
       - OLLAMA_NUM_PARALLEL=1

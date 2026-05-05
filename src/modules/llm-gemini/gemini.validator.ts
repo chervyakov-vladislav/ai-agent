@@ -16,8 +16,7 @@ export const aiReviewSchema = z.object({
 export const safeJsonParse = (val: unknown) => {
   if (typeof val !== 'string') return val;
   try {
-    const cleaned = val.replace(/```json|```/g, '').trim();
-    return JSON.parse(cleaned);
+    return JSON.parse(val);
   } catch {
     return undefined;
   }
