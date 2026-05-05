@@ -6,12 +6,30 @@
 
 ## 🛠 Технологический стек
 
-- **Runtime:** Node.js 24
-- **Language:** TypeScript 6
-- **Bundler:** Vite 8
-- **Dev Tooling:** tsx
-- **CI/CD:** Jenkins + Docker (Multi-stage builds)
-- **Logger:** Pino + Pino-pretty
+### 🚀 Core Runtime
+
+- **Runtime:** [Node.js 24](https://nodejs.org/)
+- **Language:** [TypeScript 6](https://www.typescriptlang.org/)
+- **Bundler:** [Vite 8](https://vitejs.dev/)
+- **Dev Tooling:** `tsx`
+
+### 🧠 AI & Data Integrity
+
+- **AI Engine:** [@google/genai](https://www.npmjs.com/package/@google/genai)
+- **Validation:** [Zod](https://zod.dev/)
+
+### 🌐 Infrastructure & Networking
+
+- **Server:** [Express 5](https://expressjs.com/)
+- **HTTP Client:** [Axios](https://axios-http.com/) + кастомная логика ретраев (`withRetry`) для стабильного взаимодействия с GitHub API.
+- **CI/CD:** Jenkins + Docker
+- **Logging:** [Pino](https://getpino.io/) + `pino-pretty`
+
+### 💎 Development & Quality
+
+- **Linting:** ESLint 10 + Prettier
+- **Type Checking:** TSC
+- **Tunneling:** `localtunnel` / SSH-tunnel — проброс портов для тестирования GitHub Webhooks в локальном окружении.
 
 ---
 
@@ -38,6 +56,8 @@
 | `npm run typecheck`   | Проверка типов TypeScript (`tsc --noEmit`)                      |
 | `npm run localtunnel` | Публичный доступ к localhost (для webhook’ов через localtunnel) |
 | `npm run sshtunnel`   | Стучаться через VPS + SSH туннель на локальное приложение       |
+| `docker:up:local`     | Запуск базы данных и ИИ-движка в фоновом режиме                 |
+| `docker:clean`        | Остановка контейнеров и очистка volume                          |
 
 ---
 
@@ -80,14 +100,34 @@
 - **Orchestration**: **LangChain** для цепочек RAG.
 - **Container Registry**: Использование корпоративного GitLab Registry для всех образов (Ollama, Qdrant, App).
 
-### Б. Архитектура (Clean Architecture)
+### 🧱 Архитектура (Modular Architecture)
 
-Проект строится по слоям для независимости бизнес-логики:
+Проект организован по **модульному принципу**, что обеспечивает изоляцию функциональных блоков и упрощает поддержку системы. Каждый модуль инкапсулирует свою логику и предоставляет четкие интерфейсы для взаимодействия.
 
-1.  **Domain**: Сущности (CodeFile, Chunk), логика нарезки и интерфейсы репозиториев.
-2.  **Application**: Сценарии использования (ReviewService, IndexingService).
-3.  **Infrastructure**: Реализация клиентов (Axios, Qdrant, LangChain).
-4.  **Interface**: Контроллеры вебхуков и HTTP адаптеры.
+#### 📂 Основные слои и модули
+
+1.  **`modules/webhooks/github` (Бизнес-логика)**
+    - **UseCases**: Сценарии использования (например, анализ PR).
+    - **Validators**: Zod-схемы для парсинга ответов AI и фильтрации данных.
+    - Клиент для взаимодействия с GitHub REST API. Получение диффов и публикация результатов ревью.
+2.  **`modules/llm-gemini` (AI-сервис)**
+    - Интеграция с SDK `@google/genai`.
+    - Управление промптами и контекстом модели Gemini 3 Flash.
+3.  **`shared/` (Общий слой)**
+    - **Infrastructure**: Конфигурация логгера (Pino), HTTP-клиента (Axios) и логика повторных запросов (`retry`).
+    - **Errors**: Глобальные классы ошибок (например, `AiServiceError`).
+    - **Types**: Общие интерфейсы и типы данных.
+
+#### 🔄 Поток обработки данных
+
+Система следует строгому пайплайну обработки данных:
+
+1.  **Webhook Interface**: Прием события от GitHub.
+2.  **UseCase**: Координация процесса (сбор данных PR, вызов AI).
+3.  **Zod Validation (Input)**: Проверка структуры входящих данных.
+4.  **AI Service**: Генерация обзора кода.
+5.  **Zod Validation (Output)**: Валидация ответа AI и очистка от галлюцинаций.
+6.  **GitHub Publish**: Публикация финального ревью в репозиторий.
 
 ### В. Качество и CI/CD
 
@@ -166,4 +206,56 @@ src/
 │   └── env-config.ts               # Валидация .env
 │
 └── main.ts                         # Точка входа
+```
+
+---
+
+## 🛠 Разработка на Localhost
+
+Для локальной разработки используйте следующие переменные окружения, чтобы приложение «видело» контейнеры:
+
+| Сервис         | Переменная в .env | Значение для Localhost   |
+| :------------- | :---------------- | :----------------------- |
+| **Qdrant API** | `QDRANT_URL`      | `http://localhost:6333`  |
+| **Ollama API** | `OLLAMA_URL`      | `http://localhost:11434` |
+
+---
+
+### Графический интерфейс
+
+Для управления коллекциями и просмотра векторов используйте встроенный Dashboard http://localhost:6333/dashboard
+Конфигурация: При создании коллекций вручную через UI обязательно указывайте Size: 768 и Distance: Cosine для совместимости с моделью Nomic
+
+---
+
+## ⚙️ Настройка ресурсов (WSL 2)
+
+Для предотвращения чрезмерного потребления оперативной памяти процессом `vmmem` (Docker/WSL), необходимо ограничить выделяемые ресурсы.
+
+1. Перейдите в папку вашего пользователя Windows: `%USERPROFILE%` (обычно это `C:\Users\ИмяПользователя`).
+2. Создайте там текстовый файл с названием `.wslconfig` (убедитесь, что у него нет расширения `.txt`).
+3. Вставьте в него следующую конфигурацию:
+
+```ini
+[wsl2]
+# Максимальный объем RAM, который может занять вся подсистема WSL 2
+memory=4GB
+
+# Количество ядер процессора
+processors=2
+```
+
+После сохранения файла перезапустите WSL. В терминале (PowerShell) выполните:
+
+```bash
+wsl --shutdown
+```
+
+## Инициализация Ollama (Важно!)
+
+После первого запуска контейнера необходимо вручную загрузить модель для генерации векторов. Без этой модели сервис эмбеддингов работать не будет
+
+```bash
+# Скачивание модели nomic-embed-text (размерность 768)
+docker exec -it ollama ollama pull nomic-embed-text
 ```

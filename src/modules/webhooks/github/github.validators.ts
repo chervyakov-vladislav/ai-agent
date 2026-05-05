@@ -36,14 +36,6 @@ export const validateAndFormatReview = (rawData: unknown, changedFiles: Set<stri
     (r) => typeof r.line !== 'number' || !changedFiles.has(r.file),
   );
 
-  for (const review of reviews) {
-    if (typeof review.line === 'number' && changedFiles.has(review.file)) {
-      validLineReviews.push(review as { file: string; line: number; comment: string });
-    } else {
-      extraReviews.push({ file: review.file, comment: review.comment });
-    }
-  }
-
   const extendedSummary =
     extraReviews.length > 0
       ? `${summary}\n\n### 📝 Вне контекста строк:\n${extraReviews

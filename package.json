@@ -25,14 +25,16 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch --env-file=.env src/main.ts",
+    "dev": "tsx watch --env-file=.env.development src/main.ts",
     "build": "vite build",
     "start": "node --env-file=.env dist/index.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc",
     "localtunnel": "npx localtunnel --port 3000",
-    "sshtunnel": "ssh -R 3000:localhost:3000 veesp"
+    "sshtunnel": "ssh -R 3000:localhost:3000 veesp",
+    "docker:clean": "docker compose down -v",
+    "docker:up:local": "docker compose up -d qdrant ollama"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",

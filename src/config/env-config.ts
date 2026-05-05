@@ -10,6 +10,10 @@ const envSchema = z.object({
   GITHUB_TOKEN: z.string().min(1, 'GITHUB_TOKEN is required'),
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   RETRY_DELAY: z.coerce.number().default(2000),
+  QDRANT_URL: z.url().min(1),
+  OLLAMA_URL: z.url().min(1),
+  EMBEDDING_MODEL: z.string().default('nomic-embed-text'),
+  QDRANT_COLLECTION_PREFIX: z.string().default('ai-code-index'),
 });
 
 const _env = envSchema.safeParse(process.env);
