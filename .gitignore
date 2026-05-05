@@ -1,5 +1,6 @@
 node_modules
 .env
+.env.development
 dist
 *.log
 qdrant_storage/

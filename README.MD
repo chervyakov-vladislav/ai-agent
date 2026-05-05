@@ -6,12 +6,30 @@
 
 ## 🛠 Технологический стек
 
-- **Runtime:** Node.js 24
-- **Language:** TypeScript 6
-- **Bundler:** Vite 8
-- **Dev Tooling:** tsx
-- **CI/CD:** Jenkins + Docker (Multi-stage builds)
-- **Logger:** Pino + Pino-pretty
+### 🚀 Core Runtime
+
+- **Runtime:** [Node.js 24](https://nodejs.org/)
+- **Language:** [TypeScript 6](https://www.typescriptlang.org/)
+- **Bundler:** [Vite 8](https://vitejs.dev/)
+- **Dev Tooling:** `tsx`
+
+### 🧠 AI & Data Integrity
+
+- **AI Engine:** [@google/genai](https://www.npmjs.com/package/@google/genai)
+- **Validation:** [Zod](https://zod.dev/)
+
+### 🌐 Infrastructure & Networking
+
+- **Server:** [Express 5](https://expressjs.com/)
+- **HTTP Client:** [Axios](https://axios-http.com/) + кастомная логика ретраев (`withRetry`) для стабильного взаимодействия с GitHub API.
+- **CI/CD:** Jenkins + Docker
+- **Logging:** [Pino](https://getpino.io/) + `pino-pretty`
+
+### 💎 Development & Quality
+
+- **Linting:** ESLint 10 + Prettier
+- **Type Checking:** TSC
+- **Tunneling:** `localtunnel` / SSH-tunnel — проброс портов для тестирования GitHub Webhooks в локальном окружении.
 
 ---
 
@@ -80,14 +98,34 @@
 - **Orchestration**: **LangChain** для цепочек RAG.
 - **Container Registry**: Использование корпоративного GitLab Registry для всех образов (Ollama, Qdrant, App).
 
-### Б. Архитектура (Clean Architecture)
+### 🧱 Архитектура (Modular Architecture)
 
-Проект строится по слоям для независимости бизнес-логики:
+Проект организован по **модульному принципу**, что обеспечивает изоляцию функциональных блоков и упрощает поддержку системы. Каждый модуль инкапсулирует свою логику и предоставляет четкие интерфейсы для взаимодействия.
 
-1.  **Domain**: Сущности (CodeFile, Chunk), логика нарезки и интерфейсы репозиториев.
-2.  **Application**: Сценарии использования (ReviewService, IndexingService).
-3.  **Infrastructure**: Реализация клиентов (Axios, Qdrant, LangChain).
-4.  **Interface**: Контроллеры вебхуков и HTTP адаптеры.
+#### 📂 Основные слои и модули
+
+1.  **`modules/webhooks/github` (Бизнес-логика)**
+    - **UseCases**: Сценарии использования (например, анализ PR).
+    - **Validators**: Zod-схемы для парсинга ответов AI и фильтрации данных.
+    - Клиент для взаимодействия с GitHub REST API. Получение диффов и публикация результатов ревью.
+2.  **`modules/llm-gemini` (AI-сервис)**
+    - Интеграция с SDK `@google/genai`.
+    - Управление промптами и контекстом модели Gemini 3 Flash.
+3.  **`shared/` (Общий слой)**
+    - **Infrastructure**: Конфигурация логгера (Pino), HTTP-клиента (Axios) и логика повторных запросов (`retry`).
+    - **Errors**: Глобальные классы ошибок (например, `AiServiceError`).
+    - **Types**: Общие интерфейсы и типы данных.
+
+#### 🔄 Поток обработки данных
+
+Система следует строгому пайплайну обработки данных:
+
+1.  **Webhook Interface**: Прием события от GitHub.
+2.  **UseCase**: Координация процесса (сбор данных PR, вызов AI).
+3.  **Zod Validation (Input)**: Проверка структуры входящих данных.
+4.  **Gemini Service**: Генерация обзора кода.
+5.  **Zod Validation (Output)**: Валидация ответа AI и очистка от галлюцинаций.
+6.  **GitHub Publish**: Публикация финального ревью в репозиторий.
 
 ### В. Качество и CI/CD
 
