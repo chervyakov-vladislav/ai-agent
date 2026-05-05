@@ -15,11 +15,7 @@ export const githubController = async (
     const payload = req.body;
     const normalizedData = mapGithubToPR(event, payload);
 
-    if (
-      normalizedData &&
-      (normalizedData.action === GithubAction.Opened ||
-        normalizedData.action === GithubAction.Synchronize)
-    ) {
+    if (normalizedData && normalizedData.action === GithubAction.Opened) {
       analyzePullRequestUseCase(normalizedData.url, normalizedData.repoUrl).catch((err) => {
         pinoLogger.error('Background error in AI Agent:', err);
       });

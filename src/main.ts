@@ -1,6 +1,6 @@
 import { App } from './interface/http/app';
 import { pinoLogger as logger } from './shared/infrastructure/logger/pino-logger';
-import env from './config/env-config';
+import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
 
 async function bootstrap() {
@@ -21,9 +21,8 @@ async function bootstrap() {
 
   try {
     const rootRouter = createRootRouter();
-
     const app = new App(rootRouter);
-    const port = env.PORT || 3000;
+    const port = envConfig.PORT || 3000;
     const server = app.listen(port);
 
     const shutdown = () => {

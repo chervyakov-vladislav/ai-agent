@@ -1,11 +1,11 @@
 import pino from 'pino';
-import env from '@config/env-config';
+import { envConfig } from '@config/env-config';
 
 class PinoLogger {
   public readonly logger: pino.Logger;
 
   constructor() {
-    const isDev = env.NODE_ENV !== 'production';
+    const isDev = envConfig.NODE_ENV !== 'production';
 
     const redactConfig = {
       paths: [
@@ -20,42 +20,32 @@ class PinoLogger {
       placeholder: '[REDACTED]',
     };
 
-    const transport = isDev
-      ? pino.transport({
+    const getTransport = () => {
+      if (isDev) {
+        return pino.transport({
           target: 'pino-pretty',
-          level: env.LOG_LEVEL,
+          level: envConfig.LOG_LEVEL,
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
             messageFormat: '{msg}',
             singleLine: true,
-            ignore: 'pid,hostname',
           },
-        })
-      : pino.transport({
-          targets: [
-            {
-              target: 'pino-roll', // заменить потом на другой транспорт для отправки в Loki или Elasticsearch
-              level: env.LOG_LEVEL,
-              options: {
-                file: './logs/app',
-                extension: '.log',
-                frequency: 'daily',
-                dateFormat: 'yyyy-MM-dd',
-                size: '10k',
-                interval: '1d',
-                mkdir: true,
-              },
-            },
-          ],
         });
+      }
+    };
 
     this.logger = pino(
       {
-        level: env.LOG_LEVEL,
+        level: envConfig.LOG_LEVEL,
         redact: redactConfig,
+        base: {
+          env: envConfig.NODE_ENV,
+          service: envConfig.SERVICE_NAME,
+          current_log_level: envConfig.LOG_LEVEL,
+        },
       },
-      transport,
+      getTransport(),
     );
   }
 

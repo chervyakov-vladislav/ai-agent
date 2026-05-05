@@ -1,8 +1,8 @@
 import { geminiService } from '@/modules/llm-gemini/gemini.service';
-import { AiServiceError } from '@shared/errors/AiServiceError';
 import { AIReviewResponse } from '@shared/types/review-context.types';
 import { withRetry } from '@shared/infrastructure/axios/axios-utils';
 import * as githubService from '../github.service';
+import { validateAndFormatReview } from '../github.validators';
 
 export const analyzePullRequestUseCase = async (
   prUrl: string,
@@ -29,35 +29,13 @@ export const analyzePullRequestUseCase = async (
   };
 
   const result = await withRetry(() => geminiService.review(context));
-
-  if (!result.summary) {
-    throw new AiServiceError('Empty summary', 'EMPTY_SUMMARY');
-  }
-
   const changedFilesNames = new Set(files.map((f) => f.filename));
-
-  const validLineReviews = result.reviews
-    .filter((r) => typeof r.line === 'number')
-    .filter((r) => changedFilesNames.has(r.file))
-    .filter((r): r is typeof r & { line: number } => r.line !== undefined);
-
-  const extraReviews = result.reviews.filter(
-    (r) => typeof r.line !== 'number' || !changedFilesNames.has(r.file),
-  );
-
-  const extendedSummary =
-    extraReviews.length > 0
-      ? `${result.summary}\n\n### 📝 Вне контекста строк:\n${extraReviews.map((r) => `* **${r.file}**: ${r.comment}`).join('\n')}`
-      : result.summary;
+  const { summary, comments } = validateAndFormatReview(result, changedFilesNames);
 
   await githubService.createPullRequestReview(prUrl, {
     verdict: 'COMMENT',
-    summary: extendedSummary,
-    comments: validLineReviews.map((r) => ({
-      file: r.file,
-      line: r.line,
-      comment: r.comment,
-    })),
+    summary,
+    comments,
   });
 
   return result;

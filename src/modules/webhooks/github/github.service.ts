@@ -52,12 +52,6 @@ export const createPullRequestReview = async (
     comments: { file: string; line: number; comment: string }[];
   },
 ): Promise<void> => {
-  const eventMap = {
-    APPROVE: 'APPROVE',
-    REQUEST_CHANGES: 'REQUEST_CHANGES',
-    COMMENT: 'COMMENT',
-  };
-
   const comments = review.comments.map((c) => ({
     path: c.file,
     line: c.line,
@@ -68,7 +62,7 @@ export const createPullRequestReview = async (
   try {
     await githubProvider.post(`${prUrl}/reviews`, {
       body: review.summary,
-      event: eventMap[review.verdict],
+      event: review.verdict,
       comments: comments.length > 0 ? comments : undefined,
     });
   } catch (error) {
@@ -86,7 +80,7 @@ export const createPullRequestReview = async (
       ].join('\n');
 
       return await githubProvider.post(`${prUrl}/reviews`, {
-        event: eventMap[review.verdict],
+        event: review.verdict,
         body: summaryWithComments,
       });
     }

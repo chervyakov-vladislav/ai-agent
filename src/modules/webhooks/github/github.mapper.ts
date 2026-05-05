@@ -22,18 +22,7 @@ export const mapGithubToPR = (
   const pr = payload.pull_request;
   const repo = payload.repository;
 
-  const actionMap: Record<string, GithubAction> = {
-    opened: GithubAction.Opened,
-    reopened: GithubAction.Opened,
-    synchronize: GithubAction.Synchronize,
-  };
-
-  const action =
-    payload.action === 'closed'
-      ? pr.merged
-        ? GithubAction.Merged
-        : GithubAction.Closed
-      : actionMap[payload.action];
+  const action = payload.action === GithubAction.Opened ? GithubAction.Opened : false;
 
   if (!action) return null;
 
