@@ -21,7 +21,6 @@ async function bootstrap() {
 
   try {
     const rootRouter = createRootRouter();
-
     const app = new App(rootRouter);
     const port = envConfig.PORT || 3000;
     const server = app.listen(port);

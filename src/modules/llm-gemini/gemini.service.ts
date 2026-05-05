@@ -6,7 +6,7 @@ import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
 import { withRetry, hasStatus } from '@/shared/infrastructure/axios/axios-utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
-import { aiReviewResponseSchema } from './ai-review-output.validator';
+import { aiReviewResponseSchema } from './gemini.validator';
 
 const ai = new GoogleGenAI({
   apiKey: envConfig.GEMINI_API_KEY,
