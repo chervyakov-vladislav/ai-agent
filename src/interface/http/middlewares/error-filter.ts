@@ -1,24 +1,30 @@
 import { AppError } from 'shared/errors/AppError';
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '@/shared/infrastructure/logger/pino-logger';
+import { InternalServerError } from '@shared/errors/InternalServerError';
 
 export const createErrorFilter = () => {
   return (err: unknown, req: Request, res: Response, _next: NextFunction) => {
-    const isAppError = err instanceof AppError;
+    let error: AppError;
 
-    const status = isAppError ? err.statusCode : 500;
-    const message = isAppError ? err.message : 'Internal Server Error';
+    if (err instanceof AppError) {
+      error = err;
+    } else {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      error = new InternalServerError(message);
+    }
 
-    logger.error(message, err instanceof Error ? err : undefined, {
+    logger.error(error.message, error, {
       requestId: req.id,
       method: req.method,
       url: req.url,
-      details: !isAppError ? String(err) : undefined,
+      code: error.code,
+      details: !(err instanceof AppError) ? String(err) : undefined,
     });
 
-    res.status(status).json({
+    res.status(error.statusCode).json({
       status: 'error',
-      message,
+      ...error.toJSON(),
     });
   };
 };

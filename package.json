@@ -32,12 +32,15 @@
     "format": "prettier --write .",
     "typecheck": "tsc",
     "localtunnel": "npx localtunnel --port 3000",
-    "sshtunnel": "ssh -R 3005:localhost:3000 veesp",
+    "sshtunnel": "ssh -R 3005:localhost:3005 veesp",
     "docker:clean": "docker compose down -v",
     "docker:up:local": "docker compose up -d qdrant ollama"
   },
   "dependencies": {
     "@google/genai": "^1.51.0",
+    "@langchain/ollama": "^1.2.7",
+    "@langchain/qdrant": "^1.0.2",
+    "@qdrant/js-client-rest": "^1.17.0",
     "axios": "^1.16.0",
     "express": "^5.2.1",
     "pino": "^10.3.1",

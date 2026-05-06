@@ -2,24 +2,18 @@ import { App } from './interface/http/app';
 import { logger } from './shared/infrastructure/logger/pino-logger';
 import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
+import { initQdrant } from './modules/vectorstore/qdrant.service';
+import { setupProcessHandlers } from './shared/infrastructure/process-handlers';
 
 async function bootstrap() {
-  process.on('uncaughtException', (err) => {
-    logger.error('Uncaught Exception', err.stack);
-
-    setTimeout(() => {
-      process.exit(1);
-    }, 1000);
-  });
-
-  process.on('unhandledRejection', (reason: unknown) => {
-    const stack = reason instanceof Error ? reason.stack : undefined;
-    const message = reason instanceof Error ? reason.message : String(reason);
-
-    logger.error(`Unhandled Rejection: ${message}`, stack);
-  });
+  setupProcessHandlers();
 
   try {
+    logger.info('Starting AI-Agent initialization...');
+
+    await initQdrant();
+    logger.info('Vector Database initialized successfully');
+
     const rootRouter = createRootRouter();
     const app = new App(rootRouter);
     const port = envConfig.PORT || 3000;
