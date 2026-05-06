@@ -1,4 +1,4 @@
-import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
+import { qdrantClient, pingQdrantApi } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 
 const COLLECTION_NAME = 'code_base';
@@ -27,16 +27,18 @@ export const initQdrant = async () => {
   }
 };
 
-const timeout = (ms: number) =>
-  new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
-
-export const checkQdrantHealth = async (): Promise<boolean> => {
+export const checkQdrantHealth = async () => {
   try {
-    await Promise.race([qdrantClient.getCollections(), timeout(HEALTH_CHECK_TIMEOUT_MS)]);
+    const response = await pingQdrantApi(HEALTH_CHECK_TIMEOUT_MS);
+
+    if (!response.ok) {
+      logger.error(`Qdrant health check failed with status: ${response.status}`);
+      return false;
+    }
 
     return true;
   } catch (error: unknown) {
-    if (error instanceof Error && error.message === 'Timeout') {
+    if (error instanceof Error && error.name === 'AbortError') {
       logger.error(`Qdrant health check timed out after ${HEALTH_CHECK_TIMEOUT_MS}ms`);
     } else {
       logger.error('Qdrant health check failed', error);
