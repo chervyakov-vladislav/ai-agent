@@ -88,3 +88,25 @@ export const createPullRequestReview = async (
     throw error;
   }
 };
+
+export const getRepositoryReadme = async (repoUrl: string): Promise<string | null> => {
+  try {
+    const { data } = await githubProvider.get<{ content: string }>(`${repoUrl}/readme`);
+
+    if (data.content) {
+      return Buffer.from(data.content, 'base64').toString('utf-8');
+    }
+
+    return null;
+  } catch (error) {
+    const ghError = getGitHubError(error);
+
+    if (ghError?.status === 404) {
+      logger.info(`No README found for repository: ${repoUrl}`);
+      return null;
+    }
+
+    logger.error(`Error fetching README from ${repoUrl}`, error);
+    throw error;
+  }
+};

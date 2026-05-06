@@ -61,6 +61,9 @@ export const getReviewPrompt = (context: ReviewContext) => `
   ### ИЗМЕНЕННИЯ ПУЛЛ РЕКВЕСТА(git diff):
   ${JSON.stringify(context.diff)}
 
+  ### README:
+  ${context.readme ? JSON.stringify(context.readme) : ''}
+
   ### ИНСТРУКЦИЯ ПО КОММЕНТАРИЯМ:
   1. Твой комментарий должен быть лаконичным (до 4-5 предложений).
   2. **Пример кода**:

@@ -15,6 +15,7 @@ export interface ProjectInfo {
 export interface ReviewContext {
   project: ProjectInfo;
   diff: string;
+  readme?: string | null;
   files: ReviewFile[];
 }
 
