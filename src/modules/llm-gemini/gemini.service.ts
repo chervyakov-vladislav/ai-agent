@@ -3,7 +3,7 @@ import { envConfig } from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from '@shared/errors/AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { withRetry, hasStatus } from '@/shared/infrastructure/axios/axios-utils';
+import { withRetry, hasStatus } from 'shared/infrastructure/clients/axios-utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
 import { aiReviewResponseSchema } from './gemini.validator';
