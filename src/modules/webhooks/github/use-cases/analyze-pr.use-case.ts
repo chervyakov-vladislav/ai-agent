@@ -8,10 +8,11 @@ export const analyzePullRequestUseCase = async (
   prUrl: string,
   repoUrl: string,
 ): Promise<AIReviewResponse> => {
-  const [diff, files, repoInfo] = await Promise.all([
+  const [diff, files, repoInfo, readme] = await Promise.all([
     githubService.getPullRequestDiff(prUrl),
     githubService.getChangedFiles(prUrl),
     githubService.getRepositoryInfo(repoUrl),
+    githubService.getRepositoryReadme(repoUrl),
   ]);
 
   const context = {
@@ -20,6 +21,7 @@ export const analyzePullRequestUseCase = async (
       description: repoInfo.description,
       techStack: repoInfo.topics,
     },
+    readme,
     diff,
     files: files.map((f) => ({
       name: f.filename,
