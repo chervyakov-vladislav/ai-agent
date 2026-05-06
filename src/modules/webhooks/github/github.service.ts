@@ -1,7 +1,7 @@
 import { githubProvider, githubDiffProvider } from 'shared/infrastructure/clients/github-client';
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { getGitHubError } from 'shared/infrastructure/clients/axios-utils';
+import { getGitHubError } from 'shared/utils/axios-utils';
 import {
   IGNORED_DIRECTORIES,
   IGNORED_EXTENSIONS,

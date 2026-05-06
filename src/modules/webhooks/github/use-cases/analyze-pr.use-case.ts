@@ -1,6 +1,6 @@
 import { geminiService } from '@/modules/llm-gemini/gemini.service';
 import { AIReviewResponse } from '@shared/types/review-context.types';
-import { withRetry } from 'shared/infrastructure/clients/axios-utils';
+import { withRetry } from 'shared/utils/axios-utils';
 import * as githubService from '../github.service';
 import { validateAndFormatReview } from '../github.validators';
 
