@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pinoLogger } from '../shared/infrastructure/logger/pino-logger';
+import { logger } from '../shared/infrastructure/logger/pino-logger';
 
 const envSchema = z.object({
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('debug'),
@@ -19,7 +19,7 @@ const envSchema = z.object({
 const _env = envSchema.safeParse(process.env);
 
 if (!_env.success) {
-  pinoLogger.error('Invalid environment variables:', _env.error.issues);
+  logger.error('Invalid environment variables:', _env.error.issues);
   process.exit(1);
 }
 

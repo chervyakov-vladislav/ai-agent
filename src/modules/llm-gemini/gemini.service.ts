@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { envConfig } from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from '@shared/errors/AiServiceError';
-import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
+import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { withRetry, hasStatus } from '@/shared/infrastructure/axios/axios-utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
@@ -43,7 +43,7 @@ export const geminiService = {
         const validation = aiReviewResponseSchema.safeParse(text);
 
         if (!validation.success) {
-          pinoLogger.error('LLM returned invalid JSON structure', {
+          logger.error('LLM returned invalid JSON structure', {
             model: modelName,
             errors: validation.error.issues,
             rawOutput: text,
@@ -54,12 +54,12 @@ export const geminiService = {
         return validation.data;
       } catch (error: unknown) {
         if (hasStatus(error) && error.status === 429) {
-          pinoLogger.warn(`Model ${modelName} rate limited. Trying next available model...`);
+          logger.warn(`Model ${modelName} rate limited. Trying next available model...`);
           continue;
         }
 
         if (error instanceof SyntaxError) {
-          pinoLogger.error('Failed to parse Gemini response', error);
+          logger.error('Failed to parse Gemini response', error);
           throw error;
         }
 

@@ -55,8 +55,11 @@ export const getReviewPrompt = (context: ReviewContext) => `
   Описание: ${context.project.description}
   Стек технологий, о котором нужно помнить: ${context.project.techStack?.join(', ')}
 
-  ### ИЗМЕНЕНИЯ:
+  ### ИЗМЕНЕННЫЕ ФАЙЛЫ:
   ${JSON.stringify(context.files)}
+
+  ### ИЗМЕНЕННИЯ ПУЛЛ РЕКВЕСТА(git diff):
+  ${JSON.stringify(context.diff)}
 
   ### ИНСТРУКЦИЯ ПО КОММЕНТАРИЯМ:
   1. Твой комментарий должен быть лаконичным (до 4-5 предложений).

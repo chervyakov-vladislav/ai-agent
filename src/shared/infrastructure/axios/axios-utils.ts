@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { envConfig } from '@config/env-config';
-import { pinoLogger } from '../logger/pino-logger';
+import { logger } from '../logger/pino-logger';
 
 interface GitHubErrorResponse {
   message: string;
@@ -46,7 +46,7 @@ export const withRetry = async <T>(
     if (retries > 0 && hasStatus(error) && error.status === 429) {
       const currentDelay = baseDelay * (4 - retries);
 
-      pinoLogger.warn(
+      logger.warn(
         `Rate limit exceeded. Retrying in ${currentDelay}ms... (Attempts left: ${retries})`,
       );
 

@@ -1,5 +1,5 @@
 import { App } from './interface/http/app';
-import { pinoLogger as logger } from './shared/infrastructure/logger/pino-logger';
+import { logger } from './shared/infrastructure/logger/pino-logger';
 import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
 
@@ -32,7 +32,10 @@ async function bootstrap() {
         process.exit(0);
       });
 
-      setTimeout(() => process.exit(1), 5000);
+      setTimeout(() => {
+        logger.warn('Force shutting down after timeout');
+        process.exit(1);
+      }, 5000);
     };
 
     process.on('SIGTERM', shutdown);

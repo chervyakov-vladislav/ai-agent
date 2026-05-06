@@ -72,4 +72,4 @@ class PinoLogger {
   }
 }
 
-export const pinoLogger = new PinoLogger();
+export const logger = new PinoLogger();

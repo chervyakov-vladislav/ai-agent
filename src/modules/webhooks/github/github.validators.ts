@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
+import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { AiServiceError } from '@shared/errors/AiServiceError';
 
 const rawReviewCommentSchema = z.object({
@@ -23,7 +23,7 @@ export const validateAndFormatReview = (rawData: unknown, changedFiles: Set<stri
   const parseResult = aiReviewResponseSchema.safeParse(rawData);
 
   if (!parseResult.success) {
-    pinoLogger.debug(parseResult.error.message);
+    logger.debug(parseResult.error.message);
 
     throw new AiServiceError('Invalid AI response structure');
   }

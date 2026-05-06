@@ -1,6 +1,6 @@
 import { pinoHttp, ReqId } from 'pino-http';
 import { IncomingMessage, ServerResponse } from 'http';
-import { pinoLogger } from '@/shared/infrastructure/logger/pino-logger';
+import { logger } from '@/shared/infrastructure/logger/pino-logger';
 
 interface ExpressRequest extends IncomingMessage {
   id: ReqId;
@@ -10,7 +10,7 @@ interface ExpressRequest extends IncomingMessage {
 
 export const createHttpLogger = () => {
   return pinoHttp({
-    logger: pinoLogger.logger,
+    logger: logger.logger,
     serializers: {
       req: (req: ExpressRequest) => {
         const expressReq = req;

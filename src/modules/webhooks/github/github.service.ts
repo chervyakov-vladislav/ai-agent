@@ -1,6 +1,6 @@
 import { githubProvider, githubDiffProvider } from '@shared/infrastructure/axios/github-client';
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
-import { pinoLogger } from '@shared/infrastructure/logger/pino-logger';
+import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from '@shared/infrastructure/axios/axios-utils';
 import { IGNORED_EXTENSIONS, IGNORED_FILES } from './github.constants';
 
@@ -69,7 +69,7 @@ export const createPullRequestReview = async (
     const ghError = getGitHubError(error);
 
     if (ghError?.isValidationError) {
-      pinoLogger.warn(
+      logger.warn(
         'GitHub rejected line-specific comments (lines out of diff). Sending fallback review.',
       );
 
