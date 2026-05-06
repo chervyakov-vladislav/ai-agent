@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { logger } from '../shared/infrastructure/logger/pino-logger';
+import { logger } from '@shared/infrastructure/logger/pino-logger';
 
 const envSchema = z.object({
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('debug'),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000),
+  PORT: z.coerce.number().default(3005),
   APP_VERSION: z.string().default('0.0.0'),
   SERVICE_NAME: z.string().default('ai-reviewer'),
   GITHUB_TOKEN: z.string().min(1, 'GITHUB_TOKEN is required'),
@@ -13,7 +13,6 @@ const envSchema = z.object({
   QDRANT_URL: z.url().min(1),
   OLLAMA_URL: z.url().min(1),
   EMBEDDING_MODEL: z.string().default('nomic-embed-text'),
-  QDRANT_COLLECTION_PREFIX: z.string().default('ai-code-index'),
 });
 
 const _env = envSchema.safeParse(process.env);
