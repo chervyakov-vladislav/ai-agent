@@ -93,11 +93,22 @@ export const getRepositoryReadme = async (repoUrl: string): Promise<string | nul
   try {
     const { data } = await githubProvider.get<{ content: string }>(`${repoUrl}/readme`);
 
-    if (data.content) {
-      return Buffer.from(data.content, 'base64').toString('utf-8');
+    if (!data?.content) {
+      return null;
     }
 
-    return null;
+    const fullReadme = Buffer.from(data.content, 'base64').toString('utf-8');
+
+    const START_MARKER = '<!-- AI_CONTEXT_START -->';
+    const END_MARKER = '<!-- AI_CONTEXT_END -->';
+
+    if (fullReadme.includes(START_MARKER) && fullReadme.includes(END_MARKER)) {
+      const parts = fullReadme.split(START_MARKER);
+      const targetPart = parts[1].split(END_MARKER)[0];
+      return targetPart.trim();
+    }
+
+    return fullReadme.trim();
   } catch (error) {
     const ghError = getGitHubError(error);
 
