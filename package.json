@@ -32,7 +32,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc",
     "localtunnel": "npx localtunnel --port 3000",
-    "sshtunnel": "ssh -R 3000:localhost:3000 veesp",
+    "sshtunnel": "ssh -R 3005:localhost:3000 veesp",
     "docker:clean": "docker compose down -v",
     "docker:up:local": "docker compose up -d qdrant ollama"
   },

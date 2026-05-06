@@ -1,6 +1,6 @@
 import { AppError } from 'shared/errors/AppError';
 import { NextFunction, Request, Response } from 'express';
-import { pinoLogger as logger } from '@/shared/infrastructure/logger/pino-logger';
+import { logger } from '@/shared/infrastructure/logger/pino-logger';
 
 export const createErrorFilter = () => {
   return (err: unknown, req: Request, res: Response, _next: NextFunction) => {

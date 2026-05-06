@@ -2,12 +2,11 @@ import express, { Application, Router } from 'express';
 import { Server } from 'http';
 import { createHttpLogger } from '@shared/infrastructure/logger/http-logger';
 import { createErrorFilter } from './middlewares/error-filter';
-import { pinoLogger } from '@/shared/infrastructure/logger/pino-logger';
+import { logger } from '@/shared/infrastructure/logger/pino-logger';
 
 export class App {
   private readonly app: Application = express();
   private server?: Server;
-  private logger = pinoLogger;
 
   constructor(private readonly rootRouter: Router) {
     this.setupMiddlewares();
@@ -31,7 +30,7 @@ export class App {
 
   public listen(port: number | string): Server {
     this.server = this.app.listen(port, () => {
-      this.logger.info(`AI-Agent is running on port ${port}`);
+      logger.info(`AI-Agent is running on port ${port}`);
     });
     return this.server;
   }
