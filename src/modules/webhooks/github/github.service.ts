@@ -153,8 +153,9 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
 
       const isInIgnoredDir = IGNORED_DIRECTORIES.some((dir) => path.includes(dir));
       const hasIgnoredExt = IGNORED_EXTENSIONS.some((ext) => path.endsWith(ext));
+      const isIgnoredFile = IGNORED_FILES.some((file) => path === file.toLowerCase());
 
-      return !isInIgnoredDir && !hasIgnoredExt;
+      return !isInIgnoredDir && !hasIgnoredExt && !isIgnoredFile;
     })
     .map((item) => ({
       path: item.path,

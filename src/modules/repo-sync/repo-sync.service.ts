@@ -2,6 +2,7 @@ import { syncFullRepositoryUseCase } from '@/shared/infrastructure/registry/repo
 import { logger } from '@/shared/infrastructure/logger/pino-logger';
 import { parseRepoFullName } from '../webhooks/github/github.utils';
 
+// создать очередь на чистом js. либо добавить очередь через bullMQ + redis
 let isSyncInProgress = false;
 
 export const isBusy = () => isSyncInProgress;

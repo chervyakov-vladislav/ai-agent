@@ -28,7 +28,16 @@ export const IGNORED_EXTENSIONS = [
   '.db',
 ];
 
-export const IGNORED_FILES = ['package-lock.json'];
+export const IGNORED_FILES = [
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  'gradle-wrapper.properties',
+  '.DS_Store',
+  'thumbs.db',
+  'LICENSE',
+  'authors',
+];
 
 export const IGNORED_DIRECTORIES = [
   'node_modules/',

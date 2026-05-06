@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { BadRequestError } from '@shared/errors/BadRequestError';
 import * as repoSyncService from './repo-sync.service';
-import { ServiceUnavailableError } from '../../shared/errors/ServiceUnavailableError';
+import { ServiceUnavailableError } from '@shared/errors/ServiceUnavailableError';
+import { syncSchema } from './repo-sync.validator';
 
 export const repoSyncController = (req: Request, res: Response) => {
-  const { repoUrl } = req.body;
+  const { repoUrl } = syncSchema.parse(req.body);
 
   if (!repoUrl) {
     throw new BadRequestError('repoUrl is required');
