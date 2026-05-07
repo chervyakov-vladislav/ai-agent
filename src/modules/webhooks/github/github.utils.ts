@@ -46,8 +46,8 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
       const toPath = f.to === '/dev/null' ? '/dev/null' : `b/${f.to}`;
       const fileDiffString = [
         `diff --git ${fromPath} ${toPath}`,
-        `--- ${fromPath}`,
-        `+++ ${toPath}`,
+        `--- ${f.from === '/dev/null' ? '/dev/null' : 'a/' + f.from}`,
+        `+++ ${f.to === '/dev/null' ? '/dev/null' : 'b/' + f.to}`,
         ...f.chunks.map((c) => [c.content, ...c.changes.map((ch) => ch.content)].join('\n')),
       ].join('\n');
       const promptData = `FILE: ${path}\n\`\`\`diff\n${fileDiffString}\n\`\`\``;

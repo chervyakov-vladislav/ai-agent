@@ -28,8 +28,7 @@ export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDepend
     };
 
     const result = await withRetry(() => llm.review(context));
-    const changedFilesNames = new Set(files.map((f) => f.filename));
-    const { summary, comments } = validateAndFormatReview(result, changedFilesNames);
+    const { summary, comments } = validateAndFormatReview(result, diff);
 
     await github.createPullRequestReview(prUrl, {
       verdict: 'COMMENT',
