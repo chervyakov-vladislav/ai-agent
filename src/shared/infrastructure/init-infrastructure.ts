@@ -1,4 +1,4 @@
-import { InternalServerError } from '../errors/InternalServerError';
+import { InternalServerError } from '../errors/500.InternalServerError';
 import { checkRedisHealth } from './clients/bullmq-client';
 import { checkQdrantHealth } from './clients/qdrant-client';
 import { logger } from './logger';

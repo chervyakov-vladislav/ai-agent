@@ -22,7 +22,10 @@ export const mapGithubToPR = (
   const pr = payload.pull_request;
   const repo = payload.repository;
 
-  const action = payload.action === GithubAction.Opened ? GithubAction.Opened : false;
+  const action =
+    payload.action === GithubAction.Opened || payload.action === GithubAction.Synchronize
+      ? payload.action
+      : false;
 
   if (!action) return null;
 

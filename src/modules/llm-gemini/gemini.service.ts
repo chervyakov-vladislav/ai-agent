@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { envConfig } from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
-import { AiServiceError } from '@shared/errors/AiServiceError';
+import { AiServiceError } from 'shared/errors/502.AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { withRetry, hasStatus } from 'shared/utils/axios-utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';

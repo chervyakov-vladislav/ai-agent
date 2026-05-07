@@ -8,7 +8,7 @@ import {
   IGNORED_FILES,
   MAX_FILE_SIZE,
 } from './github.constants';
-import { PayloadTooLargeError } from '@shared/errors/PayloadTooLargeError';
+import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
   const { data } = await githubDiffProvider.get(prUrl);
