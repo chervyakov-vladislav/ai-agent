@@ -44,7 +44,7 @@ export const githubDiffProvider = axios.create({
 
 const setupLoggingInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use((config) => {
-    (config as any).metadata = { startTime: Date.now() };
+    (config as CustomAxiosConfig).metadata = { startTime: Date.now() };
 
     logger.debug(`[GitHub API] Request: ${config.method?.toUpperCase()} ${config.url}`, {
       params: config.params,

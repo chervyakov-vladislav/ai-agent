@@ -1,3 +1,4 @@
+import { InternalServerError } from '../errors/InternalServerError';
 import { checkRedisHealth } from './clients/bullmq-client';
 import { checkQdrantHealth } from './clients/qdrant-client';
 import { logger } from './logger';
@@ -8,11 +9,11 @@ export const initInfrastructure = async () => {
   const [redisOk, qdrantOk] = await Promise.all([checkRedisHealth(), checkQdrantHealth()]);
 
   if (!redisOk) {
-    throw new Error('Infrastructure initialization failed: Redis is unreachable');
+    throw new InternalServerError('Redis (BullMQ) is unreachable', 'REDIS_CONNECTION_FAILED');
   }
 
   if (!qdrantOk) {
-    throw new Error('Infrastructure initialization failed: Qdrant is unreachable');
+    throw new InternalServerError('Qdrant Vector Store is unreachable', 'QDRANT_CONNECTION_FAILED');
   }
 
   logger.info('Infrastructure connections established successfully');
