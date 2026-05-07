@@ -24,4 +24,6 @@ export const initQdrant = async () => {
     logger.error('Failed to initialize Qdrant collection', error);
     throw error;
   }
+
+  logger.info('Vector Database initialized successfully');
 };

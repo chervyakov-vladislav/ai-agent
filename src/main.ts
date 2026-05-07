@@ -4,7 +4,7 @@ import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
 import { initQdrant } from './modules/vectorstore/qdrant.service';
 import { setupProcessHandlers } from './shared/infrastructure/process-handlers';
-import { repoSyncQueue } from './shared/infrastructure/clients/bullmq-client';
+import { initInfrastructure } from './shared/infrastructure/init-infrastructure';
 
 async function bootstrap() {
   setupProcessHandlers();
@@ -12,12 +12,8 @@ async function bootstrap() {
   try {
     logger.info('Starting AI-Agent initialization...');
 
+    await initInfrastructure();
     await initQdrant();
-    logger.info('Vector Database initialized successfully');
-
-    const redisClient = await repoSyncQueue.client;
-    await redisClient.ping();
-    logger.info('Redis (BullMQ) connected successfully');
 
     const rootRouter = createRootRouter();
     const app = new App(rootRouter);
