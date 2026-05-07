@@ -59,6 +59,11 @@ export interface FilteredFileDiff {
   rawDiff: string;
   promptData: string;
   chunksCount: number;
+  chunks: {
+    header: string;
+    content: string;
+    searchQuery: string;
+  }[];
 }
 
 export interface ReviewComment {
