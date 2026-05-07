@@ -1,3 +1,4 @@
+import { FilteredFileDiff } from '@/modules/webhooks/github/github.types';
 import { GithubFileStatus } from './action.enums';
 
 export interface ReviewFile {
@@ -14,7 +15,7 @@ export interface ProjectInfo {
 
 export interface ReviewContext {
   project: ProjectInfo;
-  diff: string;
+  diff: FilteredFileDiff[];
   readme?: string | null;
   files: ReviewFile[];
 }

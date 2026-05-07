@@ -27,6 +27,7 @@ export const createSyncFullRepositoryUseCase = ({
     const metadata = await github.getRepositoryInfo(`/repos/${repoId}`);
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
 
+    // нельзя логировать в use-case. убрать потом
     logger.debug(JSON.stringify(filePaths));
 
     // Нарезаем на чанки LangChain

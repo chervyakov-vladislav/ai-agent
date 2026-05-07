@@ -1,28 +1,27 @@
 import { githubProvider, githubDiffProvider } from 'shared/infrastructure/clients/github-client';
-import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
+import {
+  ChangedFile,
+  FilteredFileDiff,
+  GithubFileResponse,
+  RepositoryMetadata,
+} from './github.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from 'shared/utils/axios-utils';
-import {
-  IGNORED_DIRECTORIES,
-  IGNORED_EXTENSIONS,
-  IGNORED_FILES,
-  MAX_FILE_SIZE,
-} from './github.constants';
+import { MAX_FILE_SIZE } from './github.constants';
 import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
+import { filterAndParseDiff, isIgnoredPath } from './github.utils';
 
-export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
+export const getPullRequestDiff = async (prUrl: string): Promise<FilteredFileDiff[]> => {
   const { data } = await githubDiffProvider.get(prUrl);
-  return data;
+  const diff = filterAndParseDiff(data);
+
+  return diff;
 };
 
 export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => {
   const { data: allFiles } = await githubProvider.get<GithubFileResponse[]>(`${prUrl}/files`);
 
-  const filteredFiles = allFiles.filter((file) => {
-    const isIgnoredExt = IGNORED_EXTENSIONS.some((ext) => file.filename.endsWith(ext));
-    const isIgnoredFile = IGNORED_FILES.includes(file.filename);
-    return !isIgnoredExt && !isIgnoredFile;
-  });
+  const filteredFiles = allFiles.filter((file) => !isIgnoredPath(file.filename));
 
   return Promise.all(
     filteredFiles.map(async (file): Promise<ChangedFile> => {
@@ -151,11 +150,7 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
 
       if (size > MAX_FILE_SIZE) return false;
 
-      const isInIgnoredDir = IGNORED_DIRECTORIES.some((dir) => path.includes(dir));
-      const hasIgnoredExt = IGNORED_EXTENSIONS.some((ext) => path.endsWith(ext));
-      const isIgnoredFile = IGNORED_FILES.some((file) => path === file.toLowerCase());
-
-      return !isInIgnoredDir && !hasIgnoredExt && !isIgnoredFile;
+      return !isIgnoredPath(path);
     })
     .map((item) => ({
       path: item.path,
