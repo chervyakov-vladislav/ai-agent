@@ -1,8 +1,14 @@
 import { githubProvider, githubDiffProvider } from 'shared/infrastructure/clients/github-client';
 import { ChangedFile, GithubFileResponse, RepositoryMetadata } from './github.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { getGitHubError } from 'shared/infrastructure/clients/axios-utils';
-import { IGNORED_EXTENSIONS, IGNORED_FILES } from './github.constants';
+import { getGitHubError } from 'shared/utils/axios-utils';
+import {
+  IGNORED_DIRECTORIES,
+  IGNORED_EXTENSIONS,
+  IGNORED_FILES,
+  MAX_FILE_SIZE,
+} from './github.constants';
+import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<string> => {
   const { data } = await githubDiffProvider.get(prUrl);
@@ -36,11 +42,20 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
 export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMetadata> => {
   const { data } = await githubProvider.get(repoUrl);
 
+  const MAX_SIZE_KB = 100 * 1024;
+
+  if (data.size > MAX_SIZE_KB) {
+    throw new PayloadTooLargeError(
+      `Repository is too large (${(data.size / 1024).toFixed(2)} MB). Max allowed is 100 MB.`,
+    );
+  }
+
   return {
     fullName: data.full_name,
     description: data.description,
     topics: data.topics,
     language: data.language,
+    defaultBranch: data.default_branch,
   };
 };
 
@@ -93,11 +108,22 @@ export const getRepositoryReadme = async (repoUrl: string): Promise<string | nul
   try {
     const { data } = await githubProvider.get<{ content: string }>(`${repoUrl}/readme`);
 
-    if (data.content) {
-      return Buffer.from(data.content, 'base64').toString('utf-8');
+    if (!data?.content) {
+      return null;
     }
 
-    return null;
+    const fullReadme = Buffer.from(data.content, 'base64').toString('utf-8');
+
+    const START_MARKER = '<!-- AI_CONTEXT_START -->';
+    const END_MARKER = '<!-- AI_CONTEXT_END -->';
+
+    if (fullReadme.includes(START_MARKER) && fullReadme.includes(END_MARKER)) {
+      const parts = fullReadme.split(START_MARKER);
+      const targetPart = parts[1].split(END_MARKER)[0];
+      return targetPart.trim();
+    }
+
+    return fullReadme.trim();
   } catch (error) {
     const ghError = getGitHubError(error);
 
@@ -109,4 +135,37 @@ export const getRepositoryReadme = async (repoUrl: string): Promise<string | nul
     logger.error(`Error fetching README from ${repoUrl}`, error);
     throw error;
   }
+};
+
+export const getRepositoryTree = async (repoId: string, branch: string) => {
+  const { data: treeData } = await githubProvider.get<{
+    tree: { path: string; type: string; sha: string; size?: number }[];
+  }>(`/repos/${repoId}/git/trees/${branch}?recursive=1`);
+
+  return treeData.tree
+    .filter((item) => {
+      if (item.type !== 'blob') return false;
+
+      const path = item.path.toLowerCase();
+      const size = item.size || 0;
+
+      if (size > MAX_FILE_SIZE) return false;
+
+      const isInIgnoredDir = IGNORED_DIRECTORIES.some((dir) => path.includes(dir));
+      const hasIgnoredExt = IGNORED_EXTENSIONS.some((ext) => path.endsWith(ext));
+      const isIgnoredFile = IGNORED_FILES.some((file) => path === file.toLowerCase());
+
+      return !isInIgnoredDir && !hasIgnoredExt && !isIgnoredFile;
+    })
+    .map((item) => ({
+      path: item.path,
+      sha: item.sha,
+    }));
+};
+
+export const getFileContent = async (repoUrl: string, path: string): Promise<string> => {
+  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${path}`, {
+    headers: { Accept: 'application/vnd.github.v3.raw' },
+  });
+  return String(data);
 };

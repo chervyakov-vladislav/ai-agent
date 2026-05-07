@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { envConfig } from '@config/env-config';
-import { logger } from '../logger/pino-logger';
+import { logger } from '../infrastructure/logger/pino-logger';
 
 interface GitHubErrorResponse {
   message: string;

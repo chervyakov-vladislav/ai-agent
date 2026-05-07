@@ -13,6 +13,9 @@ const envSchema = z.object({
   QDRANT_URL: z.url().min(1),
   OLLAMA_URL: z.url().min(1),
   EMBEDDING_MODEL: z.string().default('nomic-embed-text'),
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z.coerce.number().default(6379),
+  REDIS_PASSWORD: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

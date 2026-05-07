@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { AiServiceError } from '@shared/errors/AiServiceError';
+import { AiServiceError } from 'shared/errors/502.AiServiceError';
 
 const rawReviewCommentSchema = z.object({
   file: z.string(),

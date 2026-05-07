@@ -1,5 +1,4 @@
 import type { Request, Response, NextFunction } from 'express';
-import { GithubAction } from '@shared/types/action.enums';
 import { mapGithubToPR } from './github.mapper';
 import { GithubPullRequestEvent } from './github.types';
 import { analyzePullRequestUseCase } from './use-cases/analyze-pr.use-case';
@@ -15,7 +14,7 @@ export const githubController = async (
     const payload = req.body;
     const normalizedData = mapGithubToPR(event, payload);
 
-    if (normalizedData && normalizedData.action === GithubAction.Opened) {
+    if (normalizedData && normalizedData.action) {
       analyzePullRequestUseCase(normalizedData.url, normalizedData.repoUrl).catch((err) => {
         logger.error('Background error in AI Agent:', err);
       });

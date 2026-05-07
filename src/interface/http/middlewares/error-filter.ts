@@ -1,7 +1,7 @@
 import { AppError } from 'shared/errors/AppError';
 import { NextFunction, Request, Response } from 'express';
 import { logger } from '@/shared/infrastructure/logger/pino-logger';
-import { InternalServerError } from '@shared/errors/InternalServerError';
+import { InternalServerError } from 'shared/errors/500.InternalServerError';
 
 export const createErrorFilter = () => {
   return (err: unknown, req: Request, res: Response, _next: NextFunction) => {

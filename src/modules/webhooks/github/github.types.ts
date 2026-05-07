@@ -35,6 +35,7 @@ export interface RepositoryMetadata {
   description: string | null;
   topics: string[];
   language: string | null;
+  defaultBranch: string;
 }
 
 export interface GithubFileResponse {

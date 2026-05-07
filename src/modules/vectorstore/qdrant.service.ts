@@ -1,8 +1,7 @@
-import { qdrantClient, pingQdrantApi } from '@shared/infrastructure/clients/qdrant-client';
+import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 
 const COLLECTION_NAME = 'code_base';
-const HEALTH_CHECK_TIMEOUT_MS = 3000;
 
 export const initQdrant = async () => {
   try {
@@ -25,24 +24,6 @@ export const initQdrant = async () => {
     logger.error('Failed to initialize Qdrant collection', error);
     throw error;
   }
-};
 
-export const checkQdrantHealth = async () => {
-  try {
-    const response = await pingQdrantApi(HEALTH_CHECK_TIMEOUT_MS);
-
-    if (!response.ok) {
-      logger.error(`Qdrant health check failed with status: ${response.status}`);
-      return false;
-    }
-
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      logger.error(`Qdrant health check timed out after ${HEALTH_CHECK_TIMEOUT_MS}ms`);
-    } else {
-      logger.error('Qdrant health check failed', error);
-    }
-    return false;
-  }
+  logger.info('Vector Database initialized successfully');
 };
