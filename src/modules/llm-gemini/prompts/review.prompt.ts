@@ -45,10 +45,8 @@ export const getReviewPrompt = (context: ReviewContext) => `
   ### ИЗМЕНЕННЫЕ ФАЙЛЫ:
   ${JSON.stringify(context.files)}
 
-### 3. ИЗМЕНЕНИЯ ПУЛЛ РЕКВЕСТА (git diff):
-  \`\`\`diff
-  ${context.diff} 
-  \`\`\`
+  ### 3. ИЗМЕНЕНИЯ ПУЛЛ РЕКВЕСТА (git diff):
+    ${context.diff.map((f) => f.promptData).join('\n\n')}
 
   ### ИНСТРУКЦИЯ ПО КОММЕНТАРИЯМ:
   1. **Локализация**: Поле "line" — это номер строки ИЗ НОВОЙ ВЕРСИИ файла (правая колонка в диффе, строки с "+").

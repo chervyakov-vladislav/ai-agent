@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
+import { logger } from '@shared/infrastructure/logger/pino-logger';
+import { analyzePullRequestUseCase } from '@/container/dependency-injection/github.container';
 import { mapGithubToPR } from './github.mapper';
 import { GithubPullRequestEvent } from './github.types';
-import { analyzePullRequestUseCase } from './use-cases/analyze-pr.use-case';
-import { logger } from '@shared/infrastructure/logger/pino-logger';
 
 export const githubController = async (
   req: Request<object, object, GithubPullRequestEvent>,
