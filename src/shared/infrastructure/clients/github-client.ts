@@ -1,7 +1,13 @@
 import https from 'node:https';
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { envConfig } from '@config/env-config';
 import { logger } from '../logger';
+
+interface CustomAxiosConfig extends InternalAxiosRequestConfig {
+  metadata: {
+    startTime: number;
+  };
+}
 
 export const commonConfig = {
   baseURL: 'https://api.github.com',
@@ -37,19 +43,48 @@ export const githubDiffProvider = axios.create({
 });
 
 const setupLoggingInterceptors = (instance: AxiosInstance) => {
+  instance.interceptors.request.use((config) => {
+    (config as any).metadata = { startTime: Date.now() };
+
+    logger.debug(`[GitHub API] Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      params: config.params,
+    });
+
+    return config;
+  });
+
   instance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      const config = response.config as CustomAxiosConfig;
+      const startTime = config.metadata?.startTime;
+      const duration = startTime ? `${Date.now() - startTime}ms` : 'unknown';
+
+      logger.info(
+        `[GitHub API] Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
+        {
+          status: response.status,
+          duration,
+          requestId: response.headers['x-github-request-id'],
+        },
+      );
+
+      return response;
+    },
     (error) => {
+      const startTime = error.config?.metadata?.startTime;
+      const duration = startTime ? `${Date.now() - startTime}ms` : 'unknown';
+
       const sanitizedError = {
         message: error.message,
         code: error.code,
         status: error.response?.status,
-        statusText: error.response?.statusText,
         url: error.config?.url,
-        method: error.config?.method,
+        method: error.config?.method?.toUpperCase(),
+        duration,
+        apiResponse: error.response?.data,
       };
 
-      logger.error(`[GitHub API Error]:`, sanitizedError);
+      logger.error(`[GitHub API Error]`, sanitizedError);
 
       return Promise.reject(sanitizedError);
     },

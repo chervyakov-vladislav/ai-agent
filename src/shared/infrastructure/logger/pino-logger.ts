@@ -6,6 +6,7 @@ class PinoLogger {
 
   constructor() {
     const isDev = envConfig.NODE_ENV !== 'production';
+    const isDebug = envConfig.LOG_LEVEL === 'debug';
 
     const redactConfig = {
       paths: [
@@ -29,7 +30,7 @@ class PinoLogger {
             colorize: true,
             translateTime: 'HH:MM:ss Z',
             messageFormat: '{msg}',
-            singleLine: true,
+            singleLine: !isDebug,
           },
         });
       }

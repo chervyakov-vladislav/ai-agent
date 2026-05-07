@@ -31,10 +31,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc",
-    "localtunnel": "npx localtunnel --port 3000",
     "sshtunnel": "ssh -R 3005:localhost:3005 veesp",
     "docker:clean": "docker compose down -v",
-    "docker:up:local": "docker compose up -d qdrant ollama"
+    "docker:up:local": "docker compose up -d qdrant ollama redis"
   },
   "dependencies": {
     "@google/genai": "^1.52.0",

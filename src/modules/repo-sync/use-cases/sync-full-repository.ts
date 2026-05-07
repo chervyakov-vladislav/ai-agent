@@ -2,6 +2,7 @@
 // import { ProcessingService } from '../../processing/processing.service';
 
 import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
+import { logger } from '@shared/infrastructure/logger';
 
 interface SyncDependencies {
   github: {
@@ -26,7 +27,7 @@ export const createSyncFullRepositoryUseCase = ({
     const metadata = await github.getRepositoryInfo(`/repos/${repoId}`);
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
 
-    console.log(filePaths);
+    logger.debug(JSON.stringify(filePaths));
 
     // Нарезаем на чанки LangChain
     // const documents = await processing.splitFilesIntoDocuments(files);
