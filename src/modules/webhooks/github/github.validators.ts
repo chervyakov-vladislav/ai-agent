@@ -2,7 +2,7 @@ import { z } from 'zod';
 import parse from 'parse-diff';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { AiServiceError } from 'shared/errors/502.AiServiceError';
-import { FilteredFileDiff } from './github.types';
+import { FilteredFileDiff, ReviewComment } from './github.types';
 
 const rawReviewCommentSchema = z.object({
   file: z.string(),
@@ -22,7 +22,7 @@ const getValidLinesForFile = (rawDiff: string): Set<number> => {
   diff.forEach((file) => {
     file.chunks.forEach((chunk) => {
       chunk.changes.forEach((change) => {
-        if ('ln' in change) {
+        if ('ln' in change && change.ln) {
           validLines.add(change.ln);
         }
       });
@@ -41,28 +41,24 @@ export const validateAndFormatReview = (rawData: unknown, diffData: FilteredFile
 
   const { summary, reviews } = parseResult.data;
 
-  const validComments: { file: string; line: number; comment: string }[] = [];
+  const fileValidLinesMap = new Map<string, Set<number>>(
+    diffData.map((d) => [d.path, getValidLinesForFile(d.rawDiff)]),
+  );
+
+  const validComments: ReviewComment[] = [];
   const extraNotes: string[] = [];
-
   reviews.forEach((rev) => {
-    const fileDiff = diffData.find((d) => d.path === rev.file);
+    const validLines = fileValidLinesMap.get(rev.file);
 
-    if (!fileDiff) {
-      extraNotes.push(`**${rev.file}**: ${rev.comment}`);
-      return;
-    }
-
-    const validLines = getValidLinesForFile(fileDiff.rawDiff);
-
-    if (rev.line && validLines.has(rev.line)) {
+    if (!validLines || !rev.line || !validLines.has(rev.line)) {
+      const lineInfo = rev.line ? ` (строка ${rev.line})` : '';
+      extraNotes.push(`**${rev.file}${lineInfo}**: ${rev.comment}`);
+    } else {
       validComments.push({
         file: rev.file,
         line: rev.line,
         comment: rev.comment,
       });
-    } else {
-      const lineSuffix = rev.line ? ` (строка ${rev.line})` : '';
-      extraNotes.push(`**${rev.file}${lineSuffix}**: ${rev.comment}`);
     }
   });
 
