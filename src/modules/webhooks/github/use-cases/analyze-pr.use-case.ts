@@ -5,11 +5,10 @@ import { AnalyzePRDependencies } from '../github.types';
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {
   return async (prUrl: string, repoUrl: string): Promise<AIReviewResponse> => {
-    const [diff, files, repoInfo, readme] = await Promise.all([
+    const [diff, files, repoInfo] = await Promise.all([
       github.getPullRequestDiff(prUrl),
       github.getChangedFiles(prUrl),
       github.getRepositoryInfo(repoUrl),
-      github.getRepositoryReadme(repoUrl),
     ]);
 
     const context = {
@@ -18,7 +17,6 @@ export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDepend
         description: repoInfo.description,
         techStack: repoInfo.topics,
       },
-      readme,
       diff,
       files: files.map((f) => ({
         name: f.filename,

@@ -78,7 +78,6 @@ export interface AnalyzePRDependencies {
     getPullRequestDiff: (url: string) => Promise<FilteredFileDiff[]>;
     getChangedFiles: (url: string) => Promise<ChangedFile[]>;
     getRepositoryInfo: (url: string) => Promise<RepositoryMetadata>;
-    getRepositoryReadme: (url: string) => Promise<string | null>;
     createPullRequestReview: (url: string, review: CreateReviewInput) => Promise<void>;
   };
   llm: {
