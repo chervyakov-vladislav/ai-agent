@@ -1,7 +1,7 @@
 import https from 'node:https';
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { envConfig } from '@config/env-config';
-import { logger } from '../logger';
+import { logger } from '../../logger';
 
 interface CustomAxiosConfig extends InternalAxiosRequestConfig {
   metadata: {

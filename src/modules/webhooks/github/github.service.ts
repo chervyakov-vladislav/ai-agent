@@ -1,4 +1,7 @@
-import { githubProvider, githubDiffProvider } from 'shared/infrastructure/clients/github-client';
+import {
+  githubProvider,
+  githubDiffProvider,
+} from 'shared/infrastructure/clients/github/github-client';
 import {
   ChangedFile,
   FilteredFileDiff,
@@ -6,7 +9,7 @@ import {
   RepositoryMetadata,
 } from './github.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { getGitHubError } from 'shared/utils/axios-utils';
+import { getGitHubError } from 'shared/infrastructure/clients/github/github-errors';
 import { MAX_FILE_SIZE, MAX_REPO_SIZE } from './github.constants';
 import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 import { filterAndParseDiff, isIgnoredPath } from './github.utils';

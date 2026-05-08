@@ -3,7 +3,7 @@ import { envConfig } from '@config/env-config';
 import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 import { AiServiceError } from 'shared/errors/502.AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { withRetry, isNetworkError } from 'shared/utils/axios-utils';
+import { withRetry, isRetryable } from 'shared/infrastructure/clients/http-client.utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
 import { aiReviewResponseSchema } from './gemini.validator';
@@ -53,7 +53,7 @@ export const geminiService = {
 
         return validation.data;
       } catch (error: unknown) {
-        if (isNetworkError(error) && error.status === 429) {
+        if (isRetryable(error) && error.status === 429) {
           logger.warn(`Model ${modelName} rate limited. Trying next available model...`);
           continue;
         }

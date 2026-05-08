@@ -4,7 +4,7 @@
 import pLimit from 'p-limit';
 import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
-import { withRetry } from '@shared/utils/axios-utils';
+import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
 import { envConfig } from '@config/env-config';
 
 interface SyncDependencies {

@@ -1,31 +1,7 @@
-import axios from 'axios';
 import { envConfig } from '@config/env-config';
-import { logger } from '@/shared/infrastructure/logger';
+import { logger } from '../logger';
 
-interface GitHubErrorResponse {
-  message: string;
-  errors?: {
-    resource: string;
-    code: string;
-    field: string;
-    message?: string;
-  }[];
-  documentation_url?: string;
-}
-
-export const getGitHubError = (error: unknown) => {
-  if (axios.isAxiosError(error)) {
-    return {
-      status: error.response?.status,
-      message: (error.response?.data as GitHubErrorResponse)?.message,
-      errors: (error.response?.data as GitHubErrorResponse)?.errors,
-      isValidationError: error.response?.status === 422,
-    };
-  }
-  return null;
-};
-
-interface NetworkError {
+interface Retryable {
   status?: number;
   code?: string;
   response?: {
@@ -33,7 +9,7 @@ interface NetworkError {
   };
 }
 
-export const isNetworkError = (error: unknown): error is NetworkError => {
+export const isRetryable = (error: unknown): error is Retryable => {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -52,7 +28,7 @@ export const withRetry = async <T>(
     let status: number | undefined;
     let code: string | undefined;
 
-    if (isNetworkError(error)) {
+    if (isRetryable(error)) {
       status = error.status || error.response?.status;
       code = error.code;
     }

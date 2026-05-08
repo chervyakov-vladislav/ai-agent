@@ -1,5 +1,5 @@
 import { AIReviewResponse } from '@shared/types/review-context.types';
-import { withRetry } from 'shared/utils/axios-utils';
+import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
 import { validateAndFormatReview } from '../github.validators';
 import { AnalyzePRDependencies } from '../github.types';
 
