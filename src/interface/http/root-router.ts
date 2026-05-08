@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { healthRouter } from 'modules/health/health.controller';
-import { webhookRouter } from '@/modules/webhooks/webhook.router';
-import { repoSyncRouter } from '@/modules/repo-sync/repo-sync.router';
+import { healthRouter } from '@/interface/http/routers/health.router';
+import { webhookRouter } from '@/interface/http/routers/webhook.router';
+import { repoSyncRouter } from '@/interface/http/routers/repo-sync.router';
 
 export function createRootRouter(): Router {
   const router = Router();

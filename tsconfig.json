@@ -14,7 +14,8 @@
       "*": ["./src/*"],
       "@/*": ["./src/*"],
       "@config/*": ["./src/config/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@modules/*": ["./src/modules/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"],

@@ -1,14 +1,9 @@
-import { Queue, ConnectionOptions } from 'bullmq';
-import { envConfig } from '@/config/env-config';
+import { Queue } from 'bullmq';
 import { logger } from '../logger';
-
-export const redisConnection: ConnectionOptions = {
-  host: envConfig.REDIS_HOST,
-  port: envConfig.REDIS_PORT,
-};
+import { queueRedis } from './redis-client';
 
 export const repoSyncQueue = new Queue('repo-sync-queue', {
-  connection: redisConnection,
+  connection: queueRedis,
   defaultJobOptions: {
     attempts: 3,
     backoff: { type: 'exponential', delay: 30000 },
@@ -24,13 +19,3 @@ repoSyncQueue.on('error', (err) => {
 repoSyncQueue.on('waiting', (jobId) => {
   logger.debug(`[BullMQ] Job ${jobId} is now waiting`);
 });
-
-export const checkRedisHealth = async (): Promise<boolean> => {
-  try {
-    const client = await repoSyncQueue.client;
-    const result = await client.ping();
-    return result === 'PONG';
-  } catch {
-    return false;
-  }
-};

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { repoSyncController } from './repo-sync.controller';
+import { repoSyncController } from '@modules/repo-sync/repo-sync.controller';
 
 const repoSyncRouter = Router();
 

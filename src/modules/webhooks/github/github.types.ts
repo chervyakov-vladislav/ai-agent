@@ -1,5 +1,4 @@
 import { GithubFileStatus } from '@shared/types/action.enums';
-import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
 
 export interface GithubPullRequestEvent {
   action: string;
@@ -52,6 +51,12 @@ export interface GithubFileResponse {
   patch?: string;
 }
 
+export interface DiffChunk {
+  header: string;
+  content: string;
+  searchQuery: string;
+}
+
 export interface FilteredFileDiff {
   path: string;
   fileName: string;
@@ -59,6 +64,7 @@ export interface FilteredFileDiff {
   rawDiff: string;
   promptData: string;
   chunksCount: number;
+  chunks: DiffChunk[];
 }
 
 export interface ReviewComment {
@@ -73,14 +79,9 @@ export interface CreateReviewInput {
   comments: ReviewComment[];
 }
 
-export interface AnalyzePRDependencies {
-  github: {
-    getPullRequestDiff: (url: string) => Promise<FilteredFileDiff[]>;
-    getChangedFiles: (url: string) => Promise<ChangedFile[]>;
-    getRepositoryInfo: (url: string) => Promise<RepositoryMetadata>;
-    createPullRequestReview: (url: string, review: CreateReviewInput) => Promise<void>;
-  };
-  llm: {
-    review: (context: ReviewContext) => Promise<AIReviewResponse>;
-  };
+export interface IGitHubService {
+  getPullRequestDiff: (url: string) => Promise<FilteredFileDiff[]>;
+  getChangedFiles: (url: string) => Promise<ChangedFile[]>;
+  getRepositoryInfo: (url: string) => Promise<RepositoryMetadata>;
+  createPullRequestReview: (url: string, review: CreateReviewInput) => Promise<void>;
 }

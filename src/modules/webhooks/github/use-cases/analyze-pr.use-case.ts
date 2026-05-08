@@ -1,7 +1,13 @@
 import { AIReviewResponse } from '@shared/types/review-context.types';
-import { withRetry } from 'shared/utils/axios-utils';
+import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
+import { IGeminiService } from '@modules/llm-gemini/gemini.types';
 import { validateAndFormatReview } from '../github.validators';
-import { AnalyzePRDependencies } from '../github.types';
+import { IGitHubService } from '../github.types';
+
+export interface AnalyzePRDependencies {
+  github: IGitHubService;
+  llm: IGeminiService;
+}
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {
   return async (prUrl: string, repoUrl: string): Promise<AIReviewResponse> => {
@@ -25,7 +31,7 @@ export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDepend
       })),
     };
 
-    const result = await withRetry(() => llm.review(context));
+    const result = await withRetry(() => llm.reviewCode(context));
     const { summary, comments } = validateAndFormatReview(result, diff);
 
     await github.createPullRequestReview(prUrl, {

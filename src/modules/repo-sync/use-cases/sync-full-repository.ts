@@ -1,8 +1,12 @@
 // import { VectorStoreService } from '../../vectorstore/qdrant.service';
 // import { ProcessingService } from '../../processing/processing.service';
 
-import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
+import pLimit from 'p-limit';
+import { RepositoryMetadata } from '@modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
+import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
+import { InternalServerError } from '@/shared/errors/500.InternalServerError';
+import { AppError } from '@shared/errors/AppError';
 
 interface SyncDependencies {
   github: {
@@ -17,23 +21,62 @@ interface SyncDependencies {
   // vectorStore: {
   //   indexDocuments: (documents: any[], embedder: (text: string) => Promise<number[]>) => Promise<void>;
   // };
+  parallelLimit: number;
 }
+
+const logProgress = (current: number, total: number, file: string, error?: string) => {
+  const percentage = ((current / total) * 100).toFixed(2);
+  const status = error ? `Failed: ${error}` : `Indexed: ${file}`;
+  const prefix = `[${current}/${total}] (${percentage}%)`;
+
+  if (error) {
+    logger.error(`${prefix} ${status}`);
+  } else {
+    logger.info(`${prefix} ${status}`);
+  }
+};
+
 export const createSyncFullRepositoryUseCase = ({
   github,
   // processing,
   // vectorStore,
+  parallelLimit,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
-    const metadata = await github.getRepositoryInfo(`/repos/${repoId}`);
+    const repoUrl = `/repos/${repoId}`;
+    const metadata = await github.getRepositoryInfo(repoUrl);
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
+    const total = filePaths.length;
+    let processed = 0;
+    // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
+    const limit = pLimit(parallelLimit);
 
-    // нельзя логировать в use-case. убрать потом
-    logger.debug(JSON.stringify(filePaths));
+    const tasks = filePaths.map((file) =>
+      limit(async () => {
+        try {
+          const content = await withRetry(() => github.getFileContent(repoUrl, file.path), 3, 2000);
+          // const chunks = await processing.processFile(file, content);
+          // await vectorStore.indexChunks(chunks);
 
-    // Нарезаем на чанки LangChain
-    // const documents = await processing.splitFilesIntoDocuments(files);
+          console.log(content);
 
-    // Эмбеддинги и сохранение
-    // await vectorStore.indexDocuments(documents, (text) => processing.generateEmbedding(text));
+          processed++;
+
+          logProgress(processed, total, file.path);
+        } catch (error) {
+          processed++;
+
+          const syncError =
+            error instanceof AppError
+              ? error
+              : new InternalServerError(`Failed to process ${file.path}`, 'REPO_SYNC_ERROR');
+
+          logProgress(processed, total, file.path, syncError.message);
+        }
+      }),
+    );
+
+    await Promise.all(tasks);
+    logger.info(`Sync completed. ${processed} files handled.`);
   };
 };
