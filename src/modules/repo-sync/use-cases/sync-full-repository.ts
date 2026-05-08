@@ -2,9 +2,11 @@
 // import { ProcessingService } from '../../processing/processing.service';
 
 import pLimit from 'p-limit';
-import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
+import { RepositoryMetadata } from '@modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
-import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
+import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
+import { InternalServerError } from '@/shared/errors/500.InternalServerError';
+import { AppError } from '@shared/errors/AppError';
 
 interface SyncDependencies {
   github: {
@@ -64,8 +66,12 @@ export const createSyncFullRepositoryUseCase = ({
         } catch (error) {
           processed++;
 
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          logProgress(processed, total, file.path, errorMessage);
+          const syncError =
+            error instanceof AppError
+              ? error
+              : new InternalServerError(`Failed to process ${file.path}`, 'REPO_SYNC_ERROR');
+
+          logProgress(processed, total, file.path, syncError.message);
         }
       }),
     );

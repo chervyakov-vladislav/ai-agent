@@ -1,4 +1,4 @@
-import { FilteredFileDiff } from '@/modules/webhooks/github/github.types';
+import { FilteredFileDiff } from '@modules/webhooks/github/github.types';
 import { GithubFileStatus } from './action.enums';
 
 export interface ReviewFile {

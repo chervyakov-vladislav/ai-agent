@@ -1,8 +1,8 @@
 import { AIReviewResponse } from '@shared/types/review-context.types';
-import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
+import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
+import { IGeminiService } from '@modules/llm-gemini/gemini.types';
 import { validateAndFormatReview } from '../github.validators';
 import { IGitHubService } from '../github.types';
-import { IGeminiService } from '../../../llm-gemini/gemini.types';
 
 export interface AnalyzePRDependencies {
   github: IGitHubService;
