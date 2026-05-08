@@ -1,11 +1,7 @@
 import { cacheRedis } from '../clients/redis-client';
 import { logger } from '../logger';
 
-export const saveToRedis = async <T = any>(
-  key: string,
-  data: T,
-  ttlSeconds = 3600,
-): Promise<void> => {
+export const saveToRedis = async <T>(key: string, data: T, ttlSeconds = 3600): Promise<void> => {
   try {
     const serializedData = JSON.stringify(data);
     await cacheRedis.set(key, serializedData, 'EX', ttlSeconds);
@@ -14,7 +10,7 @@ export const saveToRedis = async <T = any>(
   }
 };
 
-export const getFromRedis = async <T = any>(key: string): Promise<T | null> => {
+export const getFromRedis = async <T>(key: string): Promise<T | null> => {
   try {
     const data = await cacheRedis.get(key);
     if (!data) return null;
