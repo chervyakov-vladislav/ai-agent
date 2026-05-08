@@ -1,7 +1,13 @@
 import { AIReviewResponse } from '@shared/types/review-context.types';
 import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
 import { validateAndFormatReview } from '../github.validators';
-import { AnalyzePRDependencies } from '../github.types';
+import { IGitHubService } from '../github.types';
+import { IGeminiService } from '../../../llm-gemini/gemini.types';
+
+export interface AnalyzePRDependencies {
+  github: IGitHubService;
+  llm: IGeminiService;
+}
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {
   return async (prUrl: string, repoUrl: string): Promise<AIReviewResponse> => {

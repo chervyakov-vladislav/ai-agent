@@ -5,7 +5,6 @@ import pLimit from 'p-limit';
 import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from 'shared/infrastructure/clients/http-client.utils';
-import { envConfig } from '@config/env-config';
 
 interface SyncDependencies {
   github: {
@@ -20,6 +19,7 @@ interface SyncDependencies {
   // vectorStore: {
   //   indexDocuments: (documents: any[], embedder: (text: string) => Promise<number[]>) => Promise<void>;
   // };
+  parallelLimit: number;
 }
 
 const logProgress = (current: number, total: number, file: string, error?: string) => {
@@ -38,6 +38,7 @@ export const createSyncFullRepositoryUseCase = ({
   github,
   // processing,
   // vectorStore,
+  parallelLimit,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
     const repoUrl = `/repos/${repoId}`;
@@ -46,7 +47,7 @@ export const createSyncFullRepositoryUseCase = ({
     const total = filePaths.length;
     let processed = 0;
     // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
-    const limit = pLimit(envConfig.OLLAMA_NUM_PARALLEL);
+    const limit = pLimit(parallelLimit);
 
     const tasks = filePaths.map((file) =>
       limit(async () => {

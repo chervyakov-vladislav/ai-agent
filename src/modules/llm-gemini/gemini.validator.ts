@@ -7,7 +7,7 @@ export const aiReviewSchema = z.object({
   reviews: z.array(
     z.object({
       file: z.string(),
-      line: z.number().int().positive(),
+      line: z.number().int().positive().optional(),
       comment: z.string(),
     }),
   ),

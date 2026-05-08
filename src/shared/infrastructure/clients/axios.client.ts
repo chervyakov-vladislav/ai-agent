@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, CreateAxiosDefaults } from 'axios';
 import { logger } from '../logger';
+import { HttpClientError } from '../../errors/http-client.error';
 
 interface CustomMetadata {
   startTime: number;
@@ -41,17 +42,18 @@ export const createHttpClient = (
       const config = error.config as InternalConfigWithMetadata;
       const duration = config?.metadata ? `${Date.now() - config.metadata.startTime}ms` : 'unknown';
 
-      const errorPayload = {
-        message: error.message,
-        status: error.response?.status,
+      const httpError = new HttpClientError({
+        message: error.message || `Request failed with status ${error.response?.status}`,
+        status: error.response?.status ?? 500,
+        code: `HTTP_${error.code ?? 'FETCH_ERROR'}`,
         url: error.config?.url,
         method: error.config?.method?.toUpperCase(),
         duration,
         data: error.response?.data,
-      };
+      });
 
-      logger.error(`[${serviceName} Error]`, errorPayload);
-      return Promise.reject(errorPayload);
+      logger.error(`[${serviceName} Error]`, httpError.toJSON());
+      return Promise.reject(httpError);
     },
   );
 

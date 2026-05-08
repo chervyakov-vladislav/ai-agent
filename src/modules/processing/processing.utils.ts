@@ -1,13 +1,5 @@
 import { Project, SyntaxKind, Node } from 'ts-morph';
-
-export type CodeSymbolKind = 'class' | 'function' | 'interface' | 'type' | 'method' | 'const-func';
-
-interface CodeSymbol {
-  name: string;
-  kind: CodeSymbolKind;
-  startLine: number;
-  endLine: number;
-}
+import { CodeSymbol, CodeSymbolKind } from './processing.types';
 
 const sharedProject = new Project({
   useInMemoryFileSystem: true,
