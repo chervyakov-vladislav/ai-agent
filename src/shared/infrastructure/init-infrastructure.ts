@@ -1,5 +1,5 @@
 import { InternalServerError } from '../errors/500.InternalServerError';
-import { checkRedisHealth } from './clients/bullmq-client';
+import { checkRedisHealth } from './clients/redis-client';
 import { checkQdrantHealth } from './clients/qdrant-client';
 import { logger } from './logger';
 

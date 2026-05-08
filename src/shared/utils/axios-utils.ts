@@ -33,13 +33,13 @@ interface NetworkError {
   };
 }
 
-function isNetworkError(error: unknown): error is NetworkError {
+export const isNetworkError = (error: unknown): error is NetworkError => {
   return (
     typeof error === 'object' &&
     error !== null &&
     ('status' in error || 'code' in error || 'response' in error)
   );
-}
+};
 
 export const withRetry = async <T>(
   fn: () => Promise<T>,

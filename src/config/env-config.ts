@@ -12,10 +12,15 @@ const envSchema = z.object({
   RETRY_DELAY: z.coerce.number().default(2000),
   QDRANT_URL: z.url().min(1),
   OLLAMA_URL: z.url().min(1),
+  OLLAMA_KEEP_ALIVE: z.string().default('24h'),
+  OLLAMA_NUM_PARALLEL: z.coerce.number().int().positive().default(1),
   EMBEDDING_MODEL: z.string().default('nomic-embed-text'),
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().default(6379),
-  REDIS_PASSWORD: z.string().optional(),
+  REDIS_PASSWORD: z
+    .string()
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
 });
 
 const _env = envSchema.safeParse(process.env);

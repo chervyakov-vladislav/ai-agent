@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { envConfig } from '@/config/env-config';
 import { HealthResponseDTO, QdrantStatusDTO, AppStatusDTO, RedisStatusDTO } from './health.types';
-import { checkRedisHealth } from '@/shared/infrastructure/clients/bullmq-client';
+import { checkRedisHealth } from '@/shared/infrastructure/clients/redis-client';
 import { checkQdrantHealth } from '@shared/infrastructure/clients/qdrant-client';
 
 export const healthController = async (_req: Request, res: Response) => {

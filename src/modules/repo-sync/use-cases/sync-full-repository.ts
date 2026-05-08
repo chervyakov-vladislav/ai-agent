@@ -5,6 +5,7 @@ import pLimit from 'p-limit';
 import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from '@shared/utils/axios-utils';
+import { envConfig } from '@config/env-config';
 
 interface SyncDependencies {
   github: {
@@ -44,7 +45,8 @@ export const createSyncFullRepositoryUseCase = ({
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
     const total = filePaths.length;
     let processed = 0;
-    const limit = pLimit(5);
+    // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
+    const limit = pLimit(envConfig.OLLAMA_NUM_PARALLEL);
 
     const tasks = filePaths.map((file) =>
       limit(async () => {

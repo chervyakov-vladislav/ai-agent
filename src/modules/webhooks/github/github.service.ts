@@ -7,7 +7,7 @@ import {
 } from './github.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from 'shared/utils/axios-utils';
-import { MAX_FILE_SIZE } from './github.constants';
+import { MAX_FILE_SIZE, MAX_REPO_SIZE } from './github.constants';
 import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 import { filterAndParseDiff, isIgnoredPath } from './github.utils';
 
@@ -41,9 +41,7 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
 export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMetadata> => {
   const { data } = await githubProvider.get(repoUrl);
 
-  const MAX_SIZE_KB = 100 * 1024;
-
-  if (data.size > MAX_SIZE_KB) {
+  if (data.size > MAX_REPO_SIZE) {
     throw new PayloadTooLargeError(
       `Repository is too large (${(data.size / 1024).toFixed(2)} MB). Max allowed is 100 MB.`,
     );
@@ -148,7 +146,12 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
       const path = item.path.toLowerCase();
       const size = item.size || 0;
 
-      if (size > MAX_FILE_SIZE) return false;
+      if (size > MAX_FILE_SIZE) {
+        logger.warn(
+          `Rejected. File is too large: ${path} (${(size / (1024 * 1024)).toFixed(2)} MB). Max allowed is 1 MB.`,
+        );
+        return false;
+      }
 
       return !isIgnoredPath(path);
     })

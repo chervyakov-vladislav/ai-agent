@@ -52,3 +52,4 @@ export const IGNORED_DIRECTORIES = [
 ];
 
 export const MAX_FILE_SIZE = 1024 * 1024;
+export const MAX_REPO_SIZE = 100 * 1024;
