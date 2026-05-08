@@ -1,18 +1,24 @@
 import { Project, SyntaxKind, Node } from 'ts-morph';
 
+export type CodeSymbolKind = 'class' | 'function' | 'interface' | 'type' | 'method' | 'const-func';
+
 interface CodeSymbol {
   name: string;
-  kind: string;
+  kind: CodeSymbolKind;
   startLine: number;
   endLine: number;
 }
 
+const sharedProject = new Project({
+  useInMemoryFileSystem: true,
+  compilerOptions: { allowJs: true },
+});
+
 export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[] => {
-  const project = new Project();
-  const sourceFile = project.createSourceFile(filename, code);
+  const sourceFile = sharedProject.createSourceFile(filename, code, { overwrite: true });
   const symbols: CodeSymbol[] = [];
 
-  const addSymbol = (node: Node, kind: string, customName?: string) => {
+  const addSymbol = (node: Node, kind: CodeSymbolKind, customName?: string) => {
     let name: string | undefined;
 
     if (customName) {
@@ -45,6 +51,8 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
       addSymbol(v, 'const-func');
     }
   });
+
+  sharedProject.removeSourceFile(sourceFile);
 
   return symbols;
 };
