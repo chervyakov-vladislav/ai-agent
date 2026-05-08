@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { envConfig } from '@config/env-config';
-import { logger } from '../infrastructure/logger/pino-logger';
+import { logger } from '@/shared/infrastructure/logger';
 
 interface GitHubErrorResponse {
   message: string;
@@ -25,33 +25,53 @@ export const getGitHubError = (error: unknown) => {
   return null;
 };
 
-interface ErrorWithStatus {
-  status: number;
+interface NetworkError {
+  status?: number;
+  code?: string;
+  response?: {
+    status: number;
+  };
 }
 
-export const hasStatus = (error: unknown): error is ErrorWithStatus =>
-  typeof error === 'object' &&
-  error !== null &&
-  'status' in error &&
-  typeof (error as Record<string, unknown>).status === 'number';
+function isNetworkError(error: unknown): error is NetworkError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    ('status' in error || 'code' in error || 'response' in error)
+  );
+}
 
 export const withRetry = async <T>(
   fn: () => Promise<T>,
   retries = 3,
-  baseDelay = Number(envConfig.RETRY_DELAY) || 2000,
+  delay = Number(envConfig.RETRY_DELAY) || 2000,
 ): Promise<T> => {
   try {
     return await fn();
   } catch (error: unknown) {
-    if (retries > 0 && hasStatus(error) && error.status === 429) {
-      const currentDelay = baseDelay * (4 - retries);
+    let status: number | undefined;
+    let code: string | undefined;
+
+    if (isNetworkError(error)) {
+      status = error.status || error.response?.status;
+      code = error.code;
+    }
+
+    const shouldRetry =
+      status === 429 ||
+      (status !== undefined && status >= 500 && status <= 504) ||
+      code === 'ECONNABORTED';
+
+    if (retries > 0 && shouldRetry) {
+      const currentDelay = delay * (4 - retries);
 
       logger.warn(
-        `Rate limit exceeded. Retrying in ${currentDelay}ms... (Attempts left: ${retries})`,
+        `Retry triggered (Status: ${status ?? 'Network Error'}). ` +
+          `Retrying in ${currentDelay}ms... (Attempts left: ${retries})`,
       );
 
       await new Promise((resolve) => setTimeout(resolve, currentDelay));
-      return withRetry(fn, retries - 1, baseDelay);
+      return withRetry(fn, retries - 1, delay);
     }
 
     throw error;

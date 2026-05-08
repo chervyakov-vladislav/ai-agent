@@ -299,3 +299,71 @@ wsl --shutdown
 # Скачивание модели nomic-embed-text (размерность 768)
 docker exec -it ollama ollama pull nomic-embed-text
 ```
+
+---
+
+## 📂 Масштабирование application layer
+
+При увеличении количества бизнес-логики убрать её application. перейти от модульной архитекруты к гексагональной архитектуре
+Запретить модулям общаться друг с другом и делать это на уровне application
+
+## 📂 Пример структуры
+
+```text
+src/
+├── interface/                          # HTTP / transport layer
+│   └── http/
+│       ├── middlewares/
+│       ├── routers/                    # вынести роутеры суда, что бы явно видеть все внешние эндпоинты в одном месте
+│       └── express.ts
+│
+├── application/                        # Чистая бизнес-логика
+│   ├── use-cases/                      # Добавить, когда будет 3+ use-cases
+│   │   └── analyze-pr/
+│   │       ├── analyze-pr.use-case.ts
+│   │       ├── analyze-pr.module.ts    # подлючаем port(adapter)
+│   │       ├── analyze-pr.ports.ts     # из сервиса забираем только нужные методы и создаем порт к адаптеру
+│   │       ├── analyze-pr.types.ts
+│   │       └── analyze-pr.constants.ts
+│   │
+│   ├── workflows/                      # Оркестрация нескольких use-cases
+│   ├── pipelines/                      # AI/RAG pipelines(когда логика обработки в модуле pipeline вырастет до 5-6 шагов)
+│   └── contracts/                      # Общие application interfaces
+│
+├── modules/                            # Infrastructure adapters
+│   ├── github/
+│   │   ├── github.service.ts
+│   │   ├── github.adapter.ts           # собираем методы, которые нужны в портах от application
+│   │   ├── github.mapper.ts
+│   │   ├── github.types.ts
+│   │   └── github.constants.ts
+│   │
+│   ├── llm/
+│   │   └── gemini/
+│   │       ├── prompts/
+│   │       ├── gemini.service.ts
+│   │       ├── gemini.adapter.ts
+│   │       └── gemini.types.ts
+│   │
+│   ├── vectorstore/
+│   ├── embeddings/
+│   └── repo-query/
+│
+├── shared/
+│   ├── errors/
+│   ├── infrastructure/
+│   │   ├── axios/
+│   │   ├── logger/
+│   │   └── database/
+│   │
+│   ├── lib/
+│   ├── utils/
+│   └── types/
+│
+├── config/
+│   └── env-config.ts
+│
+└── main.ts
+```
+
+---

@@ -7,9 +7,9 @@ interface CodeSymbol {
   endLine: number;
 }
 
-export const getDetailedSymbols = (code: string): CodeSymbol[] => {
+export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[] => {
   const project = new Project();
-  const sourceFile = project.createSourceFile('temp.ts', code);
+  const sourceFile = project.createSourceFile(filename, code);
   const symbols: CodeSymbol[] = [];
 
   const addSymbol = (node: Node, kind: string, customName?: string) => {

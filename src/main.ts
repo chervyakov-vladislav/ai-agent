@@ -1,4 +1,4 @@
-import { App } from './interface/http/app';
+import { App } from './interface/http/express';
 import { logger } from './shared/infrastructure/logger/pino-logger';
 import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';

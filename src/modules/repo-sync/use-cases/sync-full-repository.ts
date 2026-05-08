@@ -4,6 +4,7 @@
 import pLimit from 'p-limit';
 import { RepositoryMetadata } from '@/modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
+import { withRetry } from '@shared/utils/axios-utils';
 
 interface SyncDependencies {
   github: {
@@ -48,7 +49,7 @@ export const createSyncFullRepositoryUseCase = ({
     const tasks = filePaths.map((file) =>
       limit(async () => {
         try {
-          const content = await github.getFileContent(repoUrl, file.path);
+          const content = await withRetry(() => github.getFileContent(repoUrl, file.path), 3, 2000);
           // const chunks = await processing.processFile(file, content);
           // await vectorStore.indexChunks(chunks);
 
@@ -60,14 +61,13 @@ export const createSyncFullRepositoryUseCase = ({
         } catch (error) {
           processed++;
 
-          if (error instanceof Error) {
-            logProgress(processed, total, file.path, error.message);
-          }
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          logProgress(processed, total, file.path, errorMessage);
         }
       }),
     );
 
     await Promise.all(tasks);
-    logger.info(`✅ Sync completed. ${processed} files handled.`);
+    logger.info(`Sync completed. ${processed} files handled.`);
   };
 };
