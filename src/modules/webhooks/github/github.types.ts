@@ -86,6 +86,6 @@ export interface AnalyzePRDependencies {
     createPullRequestReview: (url: string, review: CreateReviewInput) => Promise<void>;
   };
   llm: {
-    review: (context: ReviewContext) => Promise<AIReviewResponse>;
+    reviewCode: (context: ReviewContext) => Promise<AIReviewResponse>;
   };
 }

@@ -25,7 +25,7 @@ export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDepend
       })),
     };
 
-    const result = await withRetry(() => llm.review(context));
+    const result = await withRetry(() => llm.reviewCode(context));
     const { summary, comments } = validateAndFormatReview(result, diff);
 
     await github.createPullRequestReview(prUrl, {

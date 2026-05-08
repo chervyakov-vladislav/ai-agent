@@ -1,15 +1,8 @@
 import https from 'node:https';
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { envConfig } from '@config/env-config';
-import { logger } from '../../logger';
+import { createHttpClient } from '../axios.client';
 
-interface CustomAxiosConfig extends InternalAxiosRequestConfig {
-  metadata: {
-    startTime: number;
-  };
-}
-
-export const commonConfig = {
+const githubBaseConfig = {
   baseURL: 'https://api.github.com',
   timeout: 60000,
   httpsAgent: new https.Agent({
@@ -26,70 +19,18 @@ export const commonConfig = {
   },
 };
 
-export const githubProvider = axios.create({
-  ...commonConfig,
+export const githubProvider = createHttpClient('GitHub API', {
+  ...githubBaseConfig,
   headers: {
-    ...commonConfig.headers,
+    ...githubBaseConfig.headers,
     Accept: 'application/vnd.github.v3+json',
   },
 });
 
-export const githubDiffProvider = axios.create({
-  ...commonConfig,
+export const githubDiffProvider = createHttpClient('GitHub API', {
+  ...githubBaseConfig,
   headers: {
-    ...commonConfig.headers,
+    ...githubBaseConfig.headers,
     Accept: 'application/vnd.github.v3.diff',
   },
 });
-
-const setupLoggingInterceptors = (instance: AxiosInstance) => {
-  instance.interceptors.request.use((config) => {
-    (config as CustomAxiosConfig).metadata = { startTime: Date.now() };
-
-    logger.debug(`[GitHub API] Request: ${config.method?.toUpperCase()} ${config.url}`, {
-      params: config.params,
-    });
-
-    return config;
-  });
-
-  instance.interceptors.response.use(
-    (response) => {
-      const config = response.config as CustomAxiosConfig;
-      const startTime = config.metadata?.startTime;
-      const duration = startTime ? `${Date.now() - startTime}ms` : 'unknown';
-
-      logger.info(
-        `[GitHub API] Response: ${response.config.method?.toUpperCase()} ${response.config.url}`,
-        {
-          status: response.status,
-          duration,
-          requestId: response.headers['x-github-request-id'],
-        },
-      );
-
-      return response;
-    },
-    (error) => {
-      const startTime = error.config?.metadata?.startTime;
-      const duration = startTime ? `${Date.now() - startTime}ms` : 'unknown';
-
-      const sanitizedError = {
-        message: error.message,
-        code: error.code,
-        status: error.response?.status,
-        url: error.config?.url,
-        method: error.config?.method?.toUpperCase(),
-        duration,
-        apiResponse: error.response?.data,
-      };
-
-      logger.error(`[GitHub API Error]`, sanitizedError);
-
-      return Promise.reject(sanitizedError);
-    },
-  );
-};
-
-setupLoggingInterceptors(githubProvider);
-setupLoggingInterceptors(githubDiffProvider);
