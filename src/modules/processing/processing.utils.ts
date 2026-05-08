@@ -1,13 +1,13 @@
 import { Project, SyntaxKind, Node } from 'ts-morph';
 import { CodeSymbol, CodeSymbolKind } from './processing.types';
 
-const sharedProject = new Project({
-  useInMemoryFileSystem: true,
-  compilerOptions: { allowJs: true },
-});
-
 export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[] => {
-  const sourceFile = sharedProject.createSourceFile(filename, code, { overwrite: true });
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    skipLoadingLibFiles: true,
+    compilerOptions: { allowJs: true },
+  });
+  const sourceFile = project.createSourceFile(filename, code, { overwrite: true });
   const symbols: CodeSymbol[] = [];
 
   const addSymbol = (node: Node, kind: CodeSymbolKind, customName?: string) => {
@@ -43,8 +43,6 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
       addSymbol(v, 'const-func');
     }
   });
-
-  sharedProject.removeSourceFile(sourceFile);
 
   return symbols;
 };
