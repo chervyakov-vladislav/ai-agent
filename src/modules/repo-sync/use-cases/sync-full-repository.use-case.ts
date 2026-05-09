@@ -35,13 +35,7 @@ const logProgress = (
 };
 
 const logMemory = (stage: string) => {
-  const used = process.memoryUsage();
-  logger.debug(`Memory Usage (${stage}):`, {
-    rss: `${(used.rss / 1024 / 1024).toFixed(2)} MB`, // Общая память, выделенная процессу
-    heapUsed: `${(used.heapUsed / 1024 / 1024).toFixed(2)} MB`, // Используемая память в куче
-    heapTotal: `${(used.heapTotal / 1024 / 1024).toFixed(2)} MB`, // Общий размер кучи
-    external: `${(used.external / 1024 / 1024).toFixed(2)} MB`, // C++ объекты (например, от ts-morph)
-  });
+  logger.debug('Memory Usage', { stage, ...process.memoryUsage() });
 };
 
 export const createSyncFullRepositoryUseCase = ({

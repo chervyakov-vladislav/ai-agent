@@ -11,11 +11,16 @@ export interface AnalyzePRDependencies {
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {
   return async (prUrl: string, repoUrl: string): Promise<AIReviewResponse> => {
-    const [diff, files, repoInfo] = await Promise.all([
-      github.getPullRequestDiff(prUrl),
-      github.getChangedFiles(prUrl),
-      github.getRepositoryInfo(repoUrl),
-    ]);
+    const [diff, files, repoInfo] = await withRetry(
+      () =>
+        Promise.all([
+          github.getPullRequestDiff(prUrl),
+          github.getChangedFiles(prUrl),
+          github.getRepositoryInfo(repoUrl),
+        ]),
+      3,
+      2000,
+    );
 
     const context = {
       project: {

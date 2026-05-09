@@ -1,4 +1,4 @@
-import { createSyncFullRepositoryUseCase } from '@modules/repo-sync/use-cases/sync-full-repository';
+import { createSyncFullRepositoryUseCase } from 'modules/repo-sync/use-cases/sync-full-repository.use-case';
 import { processingModule } from '@modules/processing/processing.module';
 import { envConfig } from '@/config/env-config';
 import { embeddingsModule } from '@modules/embeddings/embeddings.module';

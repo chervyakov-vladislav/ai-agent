@@ -3,6 +3,7 @@ import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { Embedding } from '@modules/embeddings/embeddings.types';
 import { envConfig } from '@config/env-config';
+import { AiServiceError } from '@shared/errors/502.AiServiceError';
 import { ScrollOffset } from './qdrant.types';
 import { isFilesMapPayload } from './qdrant.utils';
 
@@ -153,8 +154,12 @@ export const indexChunks = async (
     });
 
     logger.info(`Indexed ${chunks.length} chunks for ${chunks[0]?.metadata.filename}`);
-  } catch (error) {
-    logger.error('Failed to index chunks in Qdrant', error);
-    throw error;
+  } catch {
+    logger.error(`Failed to index chunks for ${chunks[0]?.metadata.filename}`);
+
+    throw new AiServiceError(
+      'Vector indexing failed. Sync aborted to prevent data loss.',
+      'QDRANT_UPSERT_ERROR',
+    );
   }
 };
