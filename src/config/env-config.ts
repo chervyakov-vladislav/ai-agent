@@ -12,6 +12,7 @@ const envSchema = z.object({
   RETRY_DELAY: z.coerce.number().default(2000),
   QDRANT_URL: z.url().min(1),
   QDRANT_API_KEY: z.string().min(1, 'QDRANT_API_KEY is required'),
+  QDRANT_SEED_ID: z.string().uuid().default('1b671a64-40d5-491e-99b0-da01ff1f3341'),
   OLLAMA_URL: z.url().min(1),
   OLLAMA_KEEP_ALIVE: z.string().default('24h'),
   OLLAMA_NUM_PARALLEL: z.coerce.number().int().positive().default(1),

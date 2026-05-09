@@ -32,5 +32,6 @@ export const githubDiffProvider = createHttpClient('GitHub API', {
   headers: {
     ...githubBaseConfig.headers,
     Accept: 'application/vnd.github.v3.diff',
+    responseType: 'text',
   },
 });

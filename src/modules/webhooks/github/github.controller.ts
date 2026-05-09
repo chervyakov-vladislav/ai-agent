@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { analyzePullRequestUseCase } from './github.module';
+import { analyzePullRequestUseCase } from './use-cases/analyze-pr.module';
 import { mapGithubToPR } from './github.utils';
 import { GithubPullRequestEvent } from './github.types';
 

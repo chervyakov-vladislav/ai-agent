@@ -1,4 +1,4 @@
-import { Project, SyntaxKind, Node } from 'ts-morph';
+import { Project, Node } from 'ts-morph';
 import { CodeSymbol, CodeSymbolKind } from './processing.types';
 
 export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[] => {
@@ -16,7 +16,8 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
     if (customName) {
       name = customName;
     } else {
-      if (Node.isNameable(node)) {
+      // Node.isNameable(node) - слишком строгий для этой задачи и отбрасывает названия функций, интерфейсов, типов и.т.д.
+      if ('getName' in node && typeof node.getName === 'function') {
         name = node.getName();
       }
 
@@ -26,12 +27,18 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
     }
 
     if (name) {
-      symbols.push({
-        name,
-        kind,
-        startLine: node.getStartLineNumber(),
-        endLine: node.getEndLineNumber(),
-      });
+      const isDuplicate = symbols.some(
+        (s) => s.name === name && s.startLine === node.getStartLineNumber(),
+      );
+
+      if (!isDuplicate) {
+        symbols.push({
+          name,
+          kind,
+          startLine: node.getStartLineNumber(),
+          endLine: node.getEndLineNumber(),
+        });
+      }
     }
   };
 
@@ -39,12 +46,32 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
   sourceFile.getFunctions().forEach((f) => addSymbol(f, CodeSymbolKind.Function));
   sourceFile.getInterfaces().forEach((i) => addSymbol(i, CodeSymbolKind.Interface));
   sourceFile.getTypeAliases().forEach((t) => addSymbol(t, CodeSymbolKind.Type));
+  sourceFile.getEnums().forEach((e) => addSymbol(e, CodeSymbolKind.Enum));
   sourceFile.getClasses().forEach((cls) => {
     cls.getMethods().forEach((m) => addSymbol(m, CodeSymbolKind.Method));
   });
+
+  const defaultExportSymbol = sourceFile.getDefaultExportSymbol();
+  if (defaultExportSymbol) {
+    const declaration = defaultExportSymbol.getDeclarations()[0];
+    if (declaration) {
+      addSymbol(declaration, CodeSymbolKind.Type, 'default');
+    }
+  }
+
   sourceFile.getVariableDeclarations().forEach((v) => {
-    if (v.getInitializerIfKind(SyntaxKind.ArrowFunction)) {
+    const initializer = v.getInitializer();
+    if (!initializer) return;
+
+    const isFunction = Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer);
+
+    if (isFunction) {
       addSymbol(v, CodeSymbolKind.ConstFunc);
+    } else {
+      const parentStatement = v.getVariableStatement();
+      if (parentStatement?.isExported()) {
+        addSymbol(v, CodeSymbolKind.Type);
+      }
     }
   });
 

@@ -40,12 +40,16 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
     filteredFiles.map(async (file): Promise<ChangedFile> => {
       const { data: content } = await githubProvider.get<string>(file.contents_url, {
         headers: { Accept: 'application/vnd.github.v3.raw' },
+        responseType: 'text',
       });
 
       const result = githubContentSchema.safeParse(content);
 
       if (!result.success) {
-        logger.error(`[GitHub] Failed to get valid content for ${file}`, result.error.issues);
+        logger.error(
+          `[GitHub] Failed to get valid content for ${file.filename}`,
+          result.error.issues,
+        );
         throw new GitHubError(`Invalid file content received from GitHub for ${file}`);
       }
 
@@ -53,6 +57,7 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
         filename: file.filename,
         status: file.status,
         content: result.data,
+        fileHash: file.sha,
       };
     }),
   );

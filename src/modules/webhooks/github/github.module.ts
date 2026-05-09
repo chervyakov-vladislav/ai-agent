@@ -1,8 +1,12 @@
 import * as githubService from '@modules/webhooks/github/github.service';
-import { reviewCode } from '@modules/llm-gemini/gemini.service';
-import { createAnalyzePullRequestUseCase } from '@modules/webhooks/github/use-cases/analyze-pr.use-case';
 
-export const analyzePullRequestUseCase = createAnalyzePullRequestUseCase({
-  github: githubService,
-  llm: { reviewCode },
-});
+export const githubModule = {
+  getRepositoryInfo: githubService.getRepositoryInfo,
+  getRepositoryTree: githubService.getRepositoryTree,
+  getFileContent: githubService.getFileContent,
+  getChangedFiles: githubService.getChangedFiles,
+  getPullRequestDiff: githubService.getPullRequestDiff,
+  createPullRequestReview: githubService.createPullRequestReview,
+};
+
+export type GithubModule = typeof githubModule;
