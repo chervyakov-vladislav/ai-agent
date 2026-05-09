@@ -1,4 +1,7 @@
-import { findSymbolsInLines, getDetailedSymbols } from './processing.utils';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { getJsSymbols } from './extractors/typescript.extractor';
+import { getJavaSymbols } from './extractors/java.extractor';
+import { getSqlSymbols } from './extractors/sql.extractor';
 import { CodeSymbol, CodeSymbolKind, ProcessedChunk } from './processing.types';
 import {
   CHUNK_OVERLAP,
@@ -6,7 +9,7 @@ import {
   LANGCHAIN_LANGUAGE_MAP,
   SUPPORTED_JS_EXTENSIONS,
 } from './processing.constants';
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { findSymbolsInLines } from './processing.utils';
 
 export const processFile = async (
   filename: string,
@@ -18,7 +21,15 @@ export const processFile = async (
   let foundSymbols: CodeSymbol[] = [];
 
   if (SUPPORTED_JS_EXTENSIONS.has(extension)) {
-    foundSymbols = getDetailedSymbols(filename, content);
+    foundSymbols = getJsSymbols(filename, content);
+  }
+
+  if (extension === '.java') {
+    foundSymbols = getJavaSymbols(content);
+  }
+
+  if (extension === '.sql') {
+    foundSymbols = getSqlSymbols(content);
   }
 
   const lcLang = LANGCHAIN_LANGUAGE_MAP[extension];

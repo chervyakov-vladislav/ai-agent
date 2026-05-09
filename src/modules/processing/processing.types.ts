@@ -7,6 +7,11 @@ export enum CodeSymbolKind {
   Method = 'method',
   ConstFunc = 'const-func',
   FileContent = 'file-content',
+  Table = 'table',
+  Index = 'index',
+  View = 'view',
+  Modification = 'modification',
+  Transaction = 'Transaction',
 }
 
 export interface CodeSymbol {

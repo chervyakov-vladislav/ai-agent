@@ -34,10 +34,6 @@ const logProgress = (
   }
 };
 
-const logMemory = (stage: string) => {
-  logger.debug('Memory Usage', { stage, ...process.memoryUsage() });
-};
-
 export const createSyncFullRepositoryUseCase = ({
   github,
   processing,
@@ -74,10 +70,7 @@ export const createSyncFullRepositoryUseCase = ({
             2000,
           );
 
-          logMemory('Before processing');
           const chunks = await processing.processFile(file.path, content, file.sha, extension);
-          logMemory('After processing');
-
           const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
 
           await vectorStore.deleteFileChunks(collectionName, file.path);
