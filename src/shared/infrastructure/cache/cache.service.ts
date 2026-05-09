@@ -10,7 +10,7 @@ export const saveToRedis = async <T>(key: string, data: T, ttlSeconds = 3600): P
   }
 };
 
-export const getFromRedis = async <T>(key: string): Promise<T | null> => {
+export const getFromRedis = async <T = unknown>(key: string): Promise<T | null> => {
   try {
     const data = await cacheRedis.get(key);
     if (!data) return null;

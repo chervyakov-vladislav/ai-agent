@@ -11,6 +11,7 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().min(1, 'GEMINI_API_KEY is required'),
   RETRY_DELAY: z.coerce.number().default(2000),
   QDRANT_URL: z.url().min(1),
+  QDRANT_API_KEY: z.string().min(1, 'QDRANT_API_KEY is required'),
   OLLAMA_URL: z.url().min(1),
   OLLAMA_KEEP_ALIVE: z.string().default('24h'),
   OLLAMA_NUM_PARALLEL: z.coerce.number().int().positive().default(1),

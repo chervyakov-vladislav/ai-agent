@@ -1,6 +1,6 @@
 import https from 'node:https';
 import { envConfig } from '@config/env-config';
-import { createHttpClient } from '../axios.client';
+import { createHttpClient } from '../axios-client';
 
 const githubBaseConfig = {
   baseURL: 'https://api.github.com',

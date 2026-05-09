@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   githubProvider,
   githubDiffProvider,
@@ -13,10 +14,19 @@ import { getGitHubError } from 'shared/infrastructure/clients/github/github-erro
 import { MAX_FILE_SIZE, MAX_REPO_SIZE } from './github.constants';
 import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 import { filterAndParseDiff, isIgnoredPath } from './github.utils';
+import { githubContentSchema } from './github.validators';
+import { GitHubError } from '@shared/errors/502.GithubError';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<FilteredFileDiff[]> => {
   const { data } = await githubDiffProvider.get(prUrl);
-  const diff = filterAndParseDiff(data);
+  const result = githubContentSchema.safeParse(data);
+
+  if (!result.success) {
+    logger.error(`[GitHub] Failed to get valid content for ${prUrl}`, result.error.issues);
+    throw new GitHubError(`Invalid file content received from GitHub for ${prUrl}`);
+  }
+
+  const diff = filterAndParseDiff(result.data);
 
   return diff;
 };
@@ -32,10 +42,17 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
         headers: { Accept: 'application/vnd.github.v3.raw' },
       });
 
+      const result = githubContentSchema.safeParse(content);
+
+      if (!result.success) {
+        logger.error(`[GitHub] Failed to get valid content for ${file}`, result.error.issues);
+        throw new GitHubError(`Invalid file content received from GitHub for ${file}`);
+      }
+
       return {
         filename: file.filename,
         status: file.status,
-        content: String(content),
+        content: result.data,
       };
     }),
   );
@@ -150,23 +167,40 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
       const size = item.size || 0;
 
       if (size > MAX_FILE_SIZE) {
-        logger.warn(
-          `Rejected. File is too large: ${path} (${(size / (1024 * 1024)).toFixed(2)} MB). Max allowed is 1 MB.`,
-        );
+        logger.warn('File size limit exceeded', { path, size: size / (1024 * 1024) });
         return false;
       }
 
       return !isIgnoredPath(path);
     })
-    .map((item) => ({
-      path: item.path,
-      sha: item.sha,
-    }));
+    .map((item) => {
+      const extension = path.extname(item.path).toLowerCase();
+      return {
+        path: item.path,
+        sha: item.sha,
+        extension,
+      };
+    });
 };
 
-export const getFileContent = async (repoUrl: string, path: string): Promise<string> => {
-  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${path}`, {
+export const getFileContent = async (
+  repoUrl: string,
+  filePath: string,
+): Promise<{ content: string; extension: string }> => {
+  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${filePath}`, {
     headers: { Accept: 'application/vnd.github.v3.raw' },
+    responseType: 'text',
   });
-  return String(data);
+  const extension = path.extname(filePath).toLowerCase();
+  const result = githubContentSchema.safeParse(data);
+
+  if (!result.success) {
+    logger.error(`[GitHub] Failed to get valid content for ${filePath}`, result.error.issues);
+    throw new GitHubError(`Invalid file content received from GitHub for ${filePath}`);
+  }
+
+  return {
+    content: result.data,
+    extension,
+  };
 };
