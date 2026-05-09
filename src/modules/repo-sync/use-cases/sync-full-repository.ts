@@ -32,13 +32,19 @@ interface SyncDependencies {
   parallelLimit: number;
 }
 
-const logProgress = (current: number, total: number, file: string, error?: string) => {
+const logProgress = (
+  current: number,
+  total: number,
+  file: string,
+  error?: string,
+  stack?: string,
+) => {
   const percentage = ((current / total) * 100).toFixed(2);
   const status = error ? `Failed: ${error}` : `Indexed: ${file}`;
   const prefix = `[${current}/${total}] (${percentage}%)`;
 
   if (error) {
-    logger.error(`${prefix} ${status}`);
+    logger.error('Failed to process file', { path: file, error, stack });
   } else {
     logger.info(`${prefix} ${status}`);
   }
@@ -85,7 +91,7 @@ export const createSyncFullRepositoryUseCase = ({
               ? error
               : new InternalServerError(`Failed to process ${file.path}`, 'REPO_SYNC_ERROR');
 
-          logProgress(processed, total, file.path, syncError.message);
+          logProgress(processed, total, file.path, syncError.message, syncError.stack);
         }
       }),
     );

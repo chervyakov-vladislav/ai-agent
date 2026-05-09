@@ -16,7 +16,7 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
     if (customName) {
       name = customName;
     } else {
-      if ('getName' in node && typeof node.getName === 'function') {
+      if (Node.isNameable(node)) {
         name = node.getName();
       }
 

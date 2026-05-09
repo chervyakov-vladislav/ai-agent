@@ -14,10 +14,19 @@ import { getGitHubError } from 'shared/infrastructure/clients/github/github-erro
 import { MAX_FILE_SIZE, MAX_REPO_SIZE } from './github.constants';
 import { PayloadTooLargeError } from 'shared/errors/413.PayloadTooLargeError';
 import { filterAndParseDiff, isIgnoredPath } from './github.utils';
+import { githubContentSchema } from './github.validators';
+import { GitHubError } from '@shared/errors/502.GithubError';
 
 export const getPullRequestDiff = async (prUrl: string): Promise<FilteredFileDiff[]> => {
   const { data } = await githubDiffProvider.get(prUrl);
-  const diff = filterAndParseDiff(data);
+  const result = githubContentSchema.safeParse(data);
+
+  if (!result.success) {
+    logger.error(`[GitHub] Failed to get valid content for ${prUrl}`, result.error.issues);
+    throw new GitHubError(`Invalid file content received from GitHub for ${prUrl}`);
+  }
+
+  const diff = filterAndParseDiff(result.data);
 
   return diff;
 };
@@ -33,10 +42,17 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
         headers: { Accept: 'application/vnd.github.v3.raw' },
       });
 
+      const result = githubContentSchema.safeParse(content);
+
+      if (!result.success) {
+        logger.error(`[GitHub] Failed to get valid content for ${file}`, result.error.issues);
+        throw new GitHubError(`Invalid file content received from GitHub for ${file}`);
+      }
+
       return {
         filename: file.filename,
         status: file.status,
-        content: String(content),
+        content: result.data,
       };
     }),
   );
@@ -176,9 +192,15 @@ export const getFileContent = async (
     responseType: 'text',
   });
   const extension = path.extname(filePath).toLowerCase();
+  const result = githubContentSchema.safeParse(data);
+
+  if (!result.success) {
+    logger.error(`[GitHub] Failed to get valid content for ${filePath}`, result.error.issues);
+    throw new GitHubError(`Invalid file content received from GitHub for ${filePath}`);
+  }
 
   return {
-    content: String(data),
+    content: result.data,
     extension,
   };
 };

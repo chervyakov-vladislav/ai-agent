@@ -72,3 +72,5 @@ export const validateAndFormatReview = (rawData: unknown, diffData: FilteredFile
     comments: validComments,
   };
 };
+
+export const githubContentSchema = z.string().min(1, 'Content is empty');
