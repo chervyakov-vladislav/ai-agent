@@ -29,6 +29,7 @@ export interface ChangedFile {
   filename: string;
   status: GithubFileResponse['status'];
   content: string;
+  fileHash: string;
 }
 export interface RepositoryMetadata {
   fullName: string;

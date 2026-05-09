@@ -57,6 +57,7 @@ export const getChangedFiles = async (prUrl: string): Promise<ChangedFile[]> => 
         filename: file.filename,
         status: file.status,
         content: result.data,
+        fileHash: file.sha,
       };
     }),
   );

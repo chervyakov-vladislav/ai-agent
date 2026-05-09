@@ -5,6 +5,7 @@ import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import { ProcessedChunk } from '@modules/processing/processing.types';
+import { Embedding } from '@modules/embeddings/embeddings.types';
 
 interface SyncDependencies {
   github: {
@@ -25,6 +26,9 @@ interface SyncDependencies {
       fileHash: string,
       extension: string,
     ) => Promise<ProcessedChunk[]>;
+  };
+  embeddings: {
+    generateEmbeddings: (chunks: ProcessedChunk[]) => Promise<Embedding[]>;
   };
   // vectorStore: {
   //   indexDocuments: (documents: any[], embedder: (text: string) => Promise<number[]>) => Promise<void>;
@@ -63,6 +67,7 @@ const logMemory = (stage: string) => {
 export const createSyncFullRepositoryUseCase = ({
   github,
   processing,
+  embeddings,
   // vectorStore,
   parallelLimit,
 }: SyncDependencies) => {
@@ -70,6 +75,8 @@ export const createSyncFullRepositoryUseCase = ({
     const repoUrl = `/repos/${repoId}`;
     const metadata = await github.getRepositoryInfo(repoUrl);
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
+    // тут идем в qdrant за хешами существующих файлов.и обновляем и добавляем потом только те, что обновились
+    // еще нужно запилить проверку на удаление файла, если файл перенесен, что бы не засорять базу дублями
     const total = filePaths.length;
     let processed = 0;
     // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
@@ -89,12 +96,9 @@ export const createSyncFullRepositoryUseCase = ({
           logMemory('After processing');
 
           // await vectorStore.indexChunks(chunks);
+          const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
 
-          console.log(chunks);
-          // chunks.forEach((chunk) => {
-          //   console.log(chunk.metadata.symbolKind);
-          //   console.log(chunk.metadata.symbolName);
-          // });
+          console.log(chunksWithEmbeddings);
 
           processed++;
 

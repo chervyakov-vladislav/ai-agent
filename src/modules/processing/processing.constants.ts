@@ -27,5 +27,5 @@ export const LANGCHAIN_LANGUAGE_MAP: Record<string, SupportedTextSplitterLanguag
   '.tex': 'latex',
 };
 
-export const CHUNK_SIZE = 1200;
-export const CHUNK_OVERLAP = 150;
+export const CHUNK_SIZE = 2500;
+export const CHUNK_OVERLAP = 250;
