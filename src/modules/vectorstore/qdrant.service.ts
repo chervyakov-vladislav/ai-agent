@@ -6,36 +6,46 @@ import { envConfig } from '@config/env-config';
 import { ScrollOffset } from './qdrant.types';
 import { isFilesMapPayload } from './qdrant.utils';
 
+const initializedCollections = new Map<string, Promise<void>>();
+
 const ensureCollection = async (collectionName: string) => {
-  try {
-    const { collections } = await qdrantClient.getCollections();
-    const exists = collections.some((c) => c.name === collectionName);
-
-    if (!exists) {
-      logger.info(`Creating collection: ${collectionName}`);
-      await qdrantClient.createCollection(collectionName, {
-        vectors: {
-          size: 768,
-          distance: 'Cosine',
-        },
-      });
-
-      await qdrantClient.createPayloadIndex(collectionName, {
-        field_name: 'filename',
-        field_schema: 'keyword',
-        wait: true,
-      });
-
-      logger.info(`Collection ${collectionName} created successfully.`);
-    } else {
-      logger.info(`Collection ${collectionName} already exists.`);
-    }
-  } catch (error) {
-    logger.error('Failed to initialize Qdrant collection', error);
-    throw error;
+  if (initializedCollections.has(collectionName)) {
+    return initializedCollections.get(collectionName);
   }
 
-  logger.info('Vector Database initialized successfully');
+  const initVectorBase = async () => {
+    try {
+      const { collections } = await qdrantClient.getCollections();
+      const exists = collections.some((c) => c.name === collectionName);
+
+      if (!exists) {
+        logger.info(`Creating collection: ${collectionName}`);
+        await qdrantClient.createCollection(collectionName, {
+          vectors: {
+            size: 768,
+            distance: 'Cosine',
+          },
+        });
+
+        await qdrantClient.createPayloadIndex(collectionName, {
+          field_name: 'filename',
+          field_schema: 'keyword',
+          wait: true,
+        });
+
+        logger.info(`Collection ${collectionName} created successfully.`);
+      }
+    } catch (error) {
+      initializedCollections.delete(collectionName);
+      logger.error(`Failed to ensure collection ${collectionName}`, error);
+      throw error;
+    }
+  };
+
+  const vectorbase = initVectorBase();
+
+  initializedCollections.set(collectionName, vectorbase);
+  return vectorbase;
 };
 
 export const getStoredFilesMap = async (collectionName: string): Promise<Map<string, string>> => {
