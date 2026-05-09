@@ -60,9 +60,7 @@ export const processFile = async (
         endLine,
         symbolName: symbolsInChunk.map((s) => s.name).join(', ') || undefined,
         symbolKind:
-          symbolsInChunk.length === 1
-            ? (symbolsInChunk[0].kind as CodeSymbolKind)
-            : CodeSymbolKind.FileContent,
+          symbolsInChunk.length === 1 ? symbolsInChunk[0].kind : CodeSymbolKind.FileContent,
       },
     };
   });
