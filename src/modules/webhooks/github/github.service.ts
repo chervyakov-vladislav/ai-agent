@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   githubProvider,
   githubDiffProvider,
@@ -156,15 +157,28 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
 
       return !isIgnoredPath(path);
     })
-    .map((item) => ({
-      path: item.path,
-      sha: item.sha,
-    }));
+    .map((item) => {
+      const extension = path.extname(item.path).toLowerCase();
+      return {
+        path: item.path,
+        sha: item.sha,
+        extension,
+      };
+    });
 };
 
-export const getFileContent = async (repoUrl: string, path: string): Promise<string> => {
-  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${path}`, {
+export const getFileContent = async (
+  repoUrl: string,
+  filePath: string,
+): Promise<{ content: string; extension: string }> => {
+  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${filePath}`, {
     headers: { Accept: 'application/vnd.github.v3.raw' },
+    responseType: 'text',
   });
-  return String(data);
+  const extension = path.extname(filePath).toLowerCase();
+
+  return {
+    content: String(data),
+    extension,
+  };
 };

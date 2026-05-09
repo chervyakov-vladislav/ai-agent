@@ -1,23 +1,31 @@
-// import { VectorStoreService } from '../../vectorstore/qdrant.service';
-// import { ProcessingService } from '../../processing/processing.service';
-
 import pLimit from 'p-limit';
 import { RepositoryMetadata } from '@modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
+import { ProcessedChunk } from '@modules/processing/processing.types';
 
 interface SyncDependencies {
   github: {
     getRepositoryInfo: (repoId: string) => Promise<RepositoryMetadata>;
-    getRepositoryTree: (repoId: string, branch: string) => Promise<{ path: string; sha: string }[]>;
-    getFileContent: (repoUrl: string, path: string) => Promise<string>;
+    getRepositoryTree: (
+      repoId: string,
+      branch: string,
+    ) => Promise<{ path: string; sha: string; extension: string }[]>;
+    getFileContent: (
+      repoUrl: string,
+      path: string,
+    ) => Promise<{ content: string; extension: string }>;
   };
-  // processing: {
-  //   splitTextIntoDocuments: (content: string, metadata: Record<string, any>) => Promise<any[]>;
-  //   generateEmbedding: (text: string) => Promise<number[]>;
-  // };
+  processing: {
+    processFile: (
+      filename: string,
+      content: string,
+      fileHash: string,
+      extension: string,
+    ) => Promise<ProcessedChunk[]>;
+  };
   // vectorStore: {
   //   indexDocuments: (documents: any[], embedder: (text: string) => Promise<number[]>) => Promise<void>;
   // };
@@ -38,7 +46,7 @@ const logProgress = (current: number, total: number, file: string, error?: strin
 
 export const createSyncFullRepositoryUseCase = ({
   github,
-  // processing,
+  processing,
   // vectorStore,
   parallelLimit,
 }: SyncDependencies) => {
@@ -54,11 +62,17 @@ export const createSyncFullRepositoryUseCase = ({
     const tasks = filePaths.map((file) =>
       limit(async () => {
         try {
-          const content = await withRetry(() => github.getFileContent(repoUrl, file.path), 3, 2000);
-          // const chunks = await processing.processFile(file, content);
+          const { content, extension } = await withRetry(
+            () => github.getFileContent(repoUrl, file.path),
+            3,
+            2000,
+          );
+
+          const chunks = await processing.processFile(file.path, content, file.sha, extension);
+
           // await vectorStore.indexChunks(chunks);
 
-          console.log(content);
+          console.log(chunks);
 
           processed++;
 

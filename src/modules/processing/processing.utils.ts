@@ -15,10 +15,14 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
 
     if (customName) {
       name = customName;
-    } else if (Node.isNameable(node)) {
-      name =
-        node.getName() ||
-        (Node.isExportGetable(node) && node.isDefaultExport() ? 'default' : undefined);
+    } else {
+      if ('getName' in node && typeof node.getName === 'function') {
+        name = node.getName();
+      }
+
+      if (!name && Node.isExportGetable(node) && node.isDefaultExport()) {
+        name = 'default';
+      }
     }
 
     if (name) {
@@ -31,18 +35,28 @@ export const getDetailedSymbols = (filename: string, code: string): CodeSymbol[]
     }
   };
 
-  sourceFile.getClasses().forEach((c) => addSymbol(c, 'class'));
-  sourceFile.getFunctions().forEach((f) => addSymbol(f, 'function'));
-  sourceFile.getInterfaces().forEach((i) => addSymbol(i, 'interface'));
-  sourceFile.getTypeAliases().forEach((t) => addSymbol(t, 'type'));
+  sourceFile.getClasses().forEach((c) => addSymbol(c, CodeSymbolKind.Class));
+  sourceFile.getFunctions().forEach((f) => addSymbol(f, CodeSymbolKind.Function));
+  sourceFile.getInterfaces().forEach((i) => addSymbol(i, CodeSymbolKind.Interface));
+  sourceFile.getTypeAliases().forEach((t) => addSymbol(t, CodeSymbolKind.Type));
   sourceFile.getClasses().forEach((cls) => {
-    cls.getMethods().forEach((m) => addSymbol(m, 'method'));
+    cls.getMethods().forEach((m) => addSymbol(m, CodeSymbolKind.Method));
   });
   sourceFile.getVariableDeclarations().forEach((v) => {
     if (v.getInitializerIfKind(SyntaxKind.ArrowFunction)) {
-      addSymbol(v, 'const-func');
+      addSymbol(v, CodeSymbolKind.ConstFunc);
     }
   });
 
   return symbols;
+};
+
+export const findSymbolsInLines = (
+  startLine: number,
+  endLine: number,
+  symbols: CodeSymbol[],
+): { name: string; kind: string }[] => {
+  return symbols
+    .filter((s) => startLine <= s.endLine && endLine >= s.startLine)
+    .map((s) => ({ name: s.name, kind: s.kind }));
 };

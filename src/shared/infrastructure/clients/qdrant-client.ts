@@ -4,22 +4,26 @@ import { logger } from '../logger';
 
 export const qdrantClient = new QdrantClient({
   url: envConfig.QDRANT_URL,
+  apiKey: envConfig.QDRANT_API_KEY,
+  checkCompatibility: true,
 });
 
 export const checkQdrantHealth = async (timeoutMs = 3000): Promise<boolean> => {
   try {
-    const result = await Promise.race([
-      qdrantClient.getCollections(),
+    const healthPromise = qdrantClient.api().readyz({});
+
+    await Promise.race([
+      healthPromise,
       new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs)),
     ]);
 
-    return !!result;
+    return true;
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.message === 'Timeout') {
         logger.error(`[Qdrant] Health check failed: Timeout after ${timeoutMs}ms`);
       } else {
-        logger.error(`[Qdrant] Connection error: ${error.message}`, { error });
+        logger.error(`[Qdrant] Health check error: ${error.message}`);
       }
     } else {
       logger.error('[Qdrant] Unknown connection error');
