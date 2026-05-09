@@ -49,6 +49,7 @@ export const processFile = async (
         : 'Generic Code';
 
     const partSuffix = docs.length > 1 ? ` (part ${index + 1}/${docs.length})` : '';
+    const allKinds = [...new Set(symbolsInChunk.map((s) => s.kind))];
 
     return {
       content: `File: ${filename}${partSuffix}\n${symbolsHeader}\n---\n${doc.pageContent}`,
@@ -58,9 +59,8 @@ export const processFile = async (
         language,
         startLine,
         endLine,
-        symbolName: symbolsInChunk.map((s) => s.name).join(', ') || undefined,
-        symbolKind:
-          symbolsInChunk.length === 1 ? symbolsInChunk[0].kind : CodeSymbolKind.FileContent,
+        symbolName: symbolsInChunk.map((s) => s.name),
+        symbolKind: allKinds.length > 0 ? allKinds : [CodeSymbolKind.FileContent],
       },
     };
   });
