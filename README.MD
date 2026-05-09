@@ -72,6 +72,51 @@
 4. **Типизация**: Запрещено использование `any`. Все интерфейсы должны быть в соответствующих файлах `.types.ts`.
 5. **Логирование**: Критические операции и ошибки должны логироваться через `pino`.
 
+## 📂 Схема директорий
+
+```text
+src/
+├── interface/
+│   └── http/
+│       ├── middlewares/            # Прослойки (логирование, ошибки, auth)
+│       │   └── error-filter.ts     # Глобальный обработчик ошибок
+│       ├── express.ts                  # Конфигурация Express
+│       └── root-router.ts          # Главный роутер, объединяющий роутеры модулей
+│
+├── modules/                        # Бизнес-логика приложения
+│   ├── llm-gemini/                 # Модуль взаимодействия с Google Gemini
+│   │   ├── prompts/
+│   │   ├── ai-review-output.schema.ts
+│   │   └── gemini.service.ts
+│   │
+│   ├── webhooks/                   # Прием внешних событий
+│   │   └── github/
+│   │       ├── use-cases/          # Сценарии обработки конкретных событий
+│   │       ├── github.controller.ts
+│   │       ├── github.service.ts
+│   │       ├── github.mapper.ts
+│   │       ├── github.types.ts
+│   │       ├── github.constants.ts
+│   │       └── webhook.router.ts
+│   │
+│   ├── processing/                 # Оркестрация процесса анализа
+│   ├── repo-query/                 # Работа с кодовой базой
+│   ├── vectorstore/                # Индексация для RAG
+│   └── health/                     # Проверка состояния сервиса
+│
+├── shared/                         # Общий код
+│   ├── errors/                     # Централизованные классы ошибок
+│   ├── infrastructure/             # Техническая реализация (Axios, DB Clients)
+│   │   ├── axios/
+│   │   └── logger/                 # Логирование (Pino)
+│   └── types/                      # Общие TS интерфейсы
+│
+├── config/                         # Конфигурация окружения
+│   └── env-config.ts               # Валидация .env
+│
+└── main.ts                         # Точка входа
+```
+
 <!-- AI_CONTEXT_END -->
 
 ## 🏗 Архитектура сборки (Docker Pipeline)
@@ -114,11 +159,10 @@
 
 ### Б. Аналитический движок (RAG & Hybrid LLM)
 
-- [ ] **Local Embeddings (Ollama)**: Генерация векторов внутри контура (модель `nomic-embed-text`).
+- [ ] **Local Embeddings (Ollama)**: Генерация векторов внутри контура (`ts-morph` + модель `nomic-embed-text`).
 - [ ] **Vector DB (Qdrant)**: Хранилище индексов всей кодовой базы с поддержкой коллекций.
 - [ ] **Корпоративный Qwen**: Использование внутреннего инстанса Qwen для финального анализа и генерации текста.
 - [ ] **RAG Logic (LangChain)**: Поиск релевантного контекста в Qdrant и сборка промпта.
-- [ ] **Управление правилами (.agents)**: Автоматическая индексация файлов конфигурации агентов и их приоритетная перезапись при изменениях.
 
 ### В. Интеграция с Jira
 
@@ -190,63 +234,19 @@
 ### Этап 2: "Память и Правила" (Local RAG) 🧠
 
 - [ ] Настройка **LangChain + Ollama + Qdrant**
-- [ ] Механизм отслеживания и перезаписи правил из файлов `.agents`.
+- [ ] Кеширование полученных векторов в redis
+- [ ] Настройка очередей через BullMQ + redis
 
 ### Этап 3: "Анализ" (VCS + Qwen) 🚀
 
 - [ ] Интеграция с Bitbucket API для получения Diff.
-- [ ] Формирование промпта: `[Правила .agents]` + `[Контекст из Qdrant]` + `[Diff]`.
+- [ ] Формирование промпта:`[Контекст из Qdrant]` + `[Diff]`.
 - [ ] Запрос к корпоративному Qwen.
 
 ### Этап 4: "Финализация" (Jira Loop) 📝
 
 - [ ] Генерация Summary через Qwen после события `merged`.
 - [ ] Интеграция с Jira REST API для публикации отчетов.
-
-## 📂 Схема директорий
-
-```text
-src/
-├── interface/
-│   └── http/
-│       ├── middlewares/            # Прослойки (логирование, ошибки, auth)
-│       │   └── error-filter.ts     # Глобальный обработчик ошибок
-│       ├── express.ts                  # Конфигурация Express
-│       └── root-router.ts          # Главный роутер, объединяющий роутеры модулей
-│
-├── modules/                        # Бизнес-логика приложения
-│   ├── llm-gemini/                 # Модуль взаимодействия с Google Gemini
-│   │   ├── prompts/
-│   │   ├── ai-review-output.schema.ts
-│   │   └── gemini.service.ts
-│   │
-│   ├── webhooks/                   # Прием внешних событий
-│   │   └── github/
-│   │       ├── use-cases/          # Сценарии обработки конкретных событий
-│   │       ├── github.controller.ts
-│   │       ├── github.service.ts
-│   │       ├── github.mapper.ts
-│   │       ├── github.types.ts
-│   │       ├── github.constants.ts
-│   │       └── webhook.router.ts
-│   │
-│   ├── processing/                 # Оркестрация процесса анализа
-│   ├── repo-query/                 # Работа с кодовой базой
-│   ├── vectorstore/                # Индексация для RAG
-│   └── health/                     # Проверка состояния сервиса
-│
-├── shared/                         # Общий код
-│   ├── errors/                     # Централизованные классы ошибок
-│   ├── infrastructure/             # Техническая реализация (Axios, DB Clients)
-│   │   ├── axios/
-│   │   └── logger/                 # Логирование (Pino)
-│   └── types/                      # Общие TS интерфейсы
-│
-├── config/                         # Конфигурация окружения
-│   └── env-config.ts               # Валидация .env
-│
-└── main.ts                         # Точка входа
-```
 
 ---
 
@@ -290,17 +290,6 @@ processors=2
 ```bash
 wsl --shutdown
 ```
-
-## Инициализация Ollama (Важно!)
-
-После первого запуска контейнера необходимо вручную загрузить модель для генерации векторов. Без этой модели сервис эмбеддингов работать не будет
-
-```bash
-# Скачивание модели nomic-embed-text (размерность 768)
-docker exec -it ollama ollama pull nomic-embed-text
-```
-
----
 
 ## 📂 Масштабирование application layer
 

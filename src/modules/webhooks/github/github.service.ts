@@ -150,9 +150,7 @@ export const getRepositoryTree = async (repoId: string, branch: string) => {
       const size = item.size || 0;
 
       if (size > MAX_FILE_SIZE) {
-        logger.warn(
-          `Rejected. File is too large: ${path} (${(size / (1024 * 1024)).toFixed(2)} MB). Max allowed is 1 MB.`,
-        );
+        logger.warn('File size limit exceeded', { path, size: size / (1024 * 1024) });
         return false;
       }
 
