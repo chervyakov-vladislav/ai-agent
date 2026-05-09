@@ -1,38 +1,18 @@
 import pLimit from 'p-limit';
-import { RepositoryMetadata } from '@modules/webhooks/github/github.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
-import { ProcessedChunk } from '@modules/processing/processing.types';
-import { Embedding } from '@modules/embeddings/embeddings.types';
+import { QdrantModule } from '@modules/vectorstore/qdrant.module';
+import { ProcessingModule } from '@modules/processing/processing.module';
+import { EmbeddingModule } from '@modules/embeddings/embeddings.module';
+import { GithubModule } from '@modules/webhooks/github/github.module';
 
 interface SyncDependencies {
-  github: {
-    getRepositoryInfo: (repoId: string) => Promise<RepositoryMetadata>;
-    getRepositoryTree: (
-      repoId: string,
-      branch: string,
-    ) => Promise<{ path: string; sha: string; extension: string }[]>;
-    getFileContent: (
-      repoUrl: string,
-      path: string,
-    ) => Promise<{ content: string; extension: string }>;
-  };
-  processing: {
-    processFile: (
-      filename: string,
-      content: string,
-      fileHash: string,
-      extension: string,
-    ) => Promise<ProcessedChunk[]>;
-  };
-  embeddings: {
-    generateEmbeddings: (chunks: ProcessedChunk[]) => Promise<Embedding[]>;
-  };
-  // vectorStore: {
-  //   indexDocuments: (documents: any[], embedder: (text: string) => Promise<number[]>) => Promise<void>;
-  // };
+  github: GithubModule;
+  processing: ProcessingModule;
+  embeddings: EmbeddingModule;
+  vectorStore: QdrantModule;
   parallelLimit: number;
 }
 
@@ -68,15 +48,16 @@ export const createSyncFullRepositoryUseCase = ({
   github,
   processing,
   embeddings,
-  // vectorStore,
+  vectorStore,
   parallelLimit,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
+    const collectionName = repoId.replace(/\//g, '_');
+    const currentSyncId = Date.now().toString();
     const repoUrl = `/repos/${repoId}`;
     const metadata = await github.getRepositoryInfo(repoUrl);
     const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
-    // тут идем в qdrant за хешами существующих файлов.и обновляем и добавляем потом только те, что обновились
-    // еще нужно запилить проверку на удаление файла, если файл перенесен, что бы не засорять базу дублями
+    const storedFiles = await vectorStore.getStoredFilesMap(collectionName);
     const total = filePaths.length;
     let processed = 0;
     // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
@@ -85,6 +66,14 @@ export const createSyncFullRepositoryUseCase = ({
     const tasks = filePaths.map((file) =>
       limit(async () => {
         try {
+          const existingHash = storedFiles.get(file.path);
+
+          if (existingHash === file.sha) {
+            await vectorStore.updateSyncIdForFile(collectionName, file.path, currentSyncId);
+            processed++;
+            return;
+          }
+
           const { content, extension } = await withRetry(
             () => github.getFileContent(repoUrl, file.path),
             3,
@@ -95,10 +84,10 @@ export const createSyncFullRepositoryUseCase = ({
           const chunks = await processing.processFile(file.path, content, file.sha, extension);
           logMemory('After processing');
 
-          // await vectorStore.indexChunks(chunks);
           const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
 
-          console.log(chunksWithEmbeddings);
+          await vectorStore.deleteFileChunks(collectionName, file.path);
+          await vectorStore.indexChunks(collectionName, chunksWithEmbeddings, currentSyncId);
 
           processed++;
 
@@ -117,6 +106,7 @@ export const createSyncFullRepositoryUseCase = ({
     );
 
     await Promise.all(tasks);
+    await vectorStore.cleanupOldSyncData(collectionName, currentSyncId);
     logger.info(`Sync completed. ${processed} files handled.`);
   };
 };

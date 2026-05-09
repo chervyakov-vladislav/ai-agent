@@ -1,12 +1,12 @@
 import { AIReviewResponse } from '@shared/types/review-context.types';
 import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
-import { IGeminiService } from '@modules/llm-gemini/gemini.types';
+import { GeminiModule } from '@modules/llm-gemini/gemini.module';
 import { validateAndFormatReview } from '../github.validators';
-import { IGitHubService } from '../github.types';
+import { GithubModule } from '../github.module';
 
 export interface AnalyzePRDependencies {
-  github: IGitHubService;
-  llm: IGeminiService;
+  github: GithubModule;
+  llm: GeminiModule;
 }
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {

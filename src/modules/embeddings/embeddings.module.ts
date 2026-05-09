@@ -4,4 +4,4 @@ export const embeddingsModule = {
   generateEmbeddings: embeddingsService.generateChunksEmbeddings,
 };
 
-export type ProcessingModule = typeof embeddingsModule;
+export type EmbeddingModule = typeof embeddingsModule;

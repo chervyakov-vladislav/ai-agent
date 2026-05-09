@@ -1,4 +1,4 @@
-import { syncFullRepositoryUseCase } from '@modules/repo-sync/repo-sync.module';
+import { syncFullRepositoryUseCase } from 'modules/repo-sync/use-cases/sync-full-repository.module';
 import { logger } from '@/shared/infrastructure/logger/pino-logger';
 import { parseRepoFullName } from '../webhooks/github/github.utils';
 
