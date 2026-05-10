@@ -11,7 +11,7 @@ export enum CodeSymbolKind {
   Index = 'index',
   View = 'view',
   Modification = 'modification',
-  Transaction = 'Transaction',
+  Transaction = 'transaction',
 }
 
 export interface CodeSymbol {
@@ -29,6 +29,7 @@ export interface ChunkMetadata {
   startLine?: number;
   endLine?: number;
   language?: string;
+  imports: string;
 }
 
 export interface ProcessedChunk {
