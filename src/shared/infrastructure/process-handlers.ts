@@ -2,9 +2,8 @@ import { logger } from './logger/pino-logger';
 
 export const setupProcessHandlers = () => {
   process.on('uncaughtException', (err) => {
-    logger.error('Uncaught Exception', {
+    logger.error('Uncaught Exception', err, {
       message: err.message,
-      stack: err.stack,
     });
 
     setTimeout(() => {
@@ -13,9 +12,8 @@ export const setupProcessHandlers = () => {
   });
 
   process.on('unhandledRejection', (reason: unknown) => {
-    const stack = reason instanceof Error ? reason.stack : undefined;
     const message = reason instanceof Error ? reason.message : String(reason);
 
-    logger.error(`Unhandled Rejection: ${message}`, { stack });
+    logger.error(`Unhandled Rejection: ${message}`, reason);
   });
 };

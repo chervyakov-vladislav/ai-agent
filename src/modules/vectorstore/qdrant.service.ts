@@ -1,9 +1,9 @@
+import { createHash } from 'node:crypto';
 import { v5 as uuidv5 } from 'uuid';
 import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { Embedding } from '@modules/embeddings/embeddings.types';
 import { envConfig } from '@config/env-config';
-import { AiServiceError } from '@shared/errors/502.AiServiceError';
 import { ScrollOffset } from './qdrant.types';
 import { isFilesMapPayload } from './qdrant.utils';
 
@@ -137,16 +137,19 @@ export const indexChunks = async (
   syncId: string,
 ): Promise<void> => {
   try {
-    const points = chunks.map((chunk, index) => ({
-      id: uuidv5(`${chunk.metadata.filename}_${index}`, envConfig.QDRANT_SEED_ID),
-      vector: chunk.embedding,
-      payload: {
-        ...chunk.metadata,
-        content: chunk.content,
-        sync_id: syncId,
-        chunk_index: index,
-      },
-    }));
+    const points = chunks.map((chunk) => {
+      const contentHash = createHash('sha256').update(chunk.content).digest('hex');
+
+      return {
+        id: uuidv5(`${chunk.metadata.filename}_${contentHash}`, envConfig.QDRANT_SEED_ID),
+        vector: chunk.embedding,
+        payload: {
+          ...chunk.metadata,
+          content: chunk.content,
+          sync_id: syncId,
+        },
+      };
+    });
 
     await qdrantClient.upsert(collectionName, {
       wait: true,
@@ -154,12 +157,10 @@ export const indexChunks = async (
     });
 
     logger.info(`Indexed ${chunks.length} chunks for ${chunks[0]?.metadata.filename}`);
-  } catch {
-    logger.error(`Failed to index chunks for ${chunks[0]?.metadata.filename}`);
-
-    throw new AiServiceError(
-      'Vector indexing failed. Sync aborted to prevent data loss.',
-      'QDRANT_UPSERT_ERROR',
-    );
+  } catch (error: unknown) {
+    logger.error('Failed to index chunks in Qdrant', error, {
+      collectionName,
+      filename: chunks[0]?.metadata.filename,
+    });
   }
 };

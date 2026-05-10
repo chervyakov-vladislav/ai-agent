@@ -28,14 +28,10 @@ const logProgress = (
   const prefix = `[${current}/${total}] (${percentage}%)`;
 
   if (error) {
-    logger.error('Failed to process file', { path: file, error, stack });
+    logger.error('Failed to process file', error, { path: file, error, stack });
   } else {
     logger.info(`${prefix} ${status}`);
   }
-};
-
-const logMemory = (stage: string) => {
-  logger.debug('Memory Usage', { stage, ...process.memoryUsage() });
 };
 
 export const createSyncFullRepositoryUseCase = ({
@@ -74,13 +70,9 @@ export const createSyncFullRepositoryUseCase = ({
             2000,
           );
 
-          logMemory('Before processing');
           const chunks = await processing.processFile(file.path, content, file.sha, extension);
-          logMemory('After processing');
-
           const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
 
-          await vectorStore.deleteFileChunks(collectionName, file.path);
           await vectorStore.indexChunks(collectionName, chunksWithEmbeddings, currentSyncId);
 
           processed++;

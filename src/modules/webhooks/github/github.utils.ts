@@ -1,6 +1,6 @@
 import parse from 'parse-diff';
 import { IGNORED_EXTENSIONS, IGNORED_FILES, IGNORED_DIRECTORIES } from './github.constants';
-import { FilteredFileDiff } from './github.types';
+import { DiffChunk, FilteredFileDiff } from './github.types';
 import { GithubAction } from '@shared/types/action.enums';
 import { GithubPullRequestEvent } from './github.types';
 
@@ -9,11 +9,13 @@ export interface NormalizedPR {
   number: number;
   title: string;
   author: string;
-  action: GithubAction;
   url: string;
   repoUrl: string;
   diffUrl: string;
   branch: string;
+  repoId: string;
+  shouldAnalyze: boolean;
+  shouldSync: boolean;
 }
 
 export const mapGithubToPR = (
@@ -24,24 +26,28 @@ export const mapGithubToPR = (
 
   const pr = payload.pull_request;
   const repo = payload.repository;
+  const action = payload.action;
 
-  const action =
-    payload.action === GithubAction.Opened || payload.action === GithubAction.Synchronize
-      ? payload.action
-      : false;
+  const shouldAnalyze = action === GithubAction.Opened || action === GithubAction.Synchronize;
 
-  if (!action) return null;
+  const isMerged = action === 'closed' && pr.merged === true;
+  const isDefaultBranch = pr.base.ref === repo.default_branch;
+  const shouldSync = isMerged && isDefaultBranch;
+
+  if (!shouldAnalyze && !shouldSync) return null;
 
   return {
     id: pr.id,
     number: pr.number,
     title: pr.title,
     author: pr.user.login,
-    action,
     url: pr.url,
     repoUrl: repo.url || `https://api.github.com/repos/${repo.full_name}`,
+    repoId: repo.full_name,
     diffUrl: pr.diff_url,
     branch: pr.head.ref,
+    shouldAnalyze,
+    shouldSync,
   };
 };
 
@@ -87,6 +93,7 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
       const extension = fileName.includes('.') ? fileName.split('.').pop() || '' : '';
       const fromPath = f.from === '/dev/null' ? '/dev/null' : `a/${f.from}`;
       const toPath = f.to === '/dev/null' ? '/dev/null' : `b/${f.to}`;
+
       const fileDiffString = [
         `diff --git ${fromPath} ${toPath}`,
         `--- ${f.from === '/dev/null' ? '/dev/null' : 'a/' + f.from}`,
@@ -94,14 +101,37 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         ...f.chunks.map((c) => [c.content, ...c.changes.map((ch) => ch.content)].join('\n')),
       ].join('\n');
       const promptData = `FILE: ${path}\n\`\`\`diff\n${fileDiffString}\n\`\`\``;
-      const chunks = f.chunks.map((c) => {
+
+      const chunks: DiffChunk[] = f.chunks.map((c): DiffChunk => {
         const chunkChanges = c.changes.map((ch) => ch.content).join('\n');
+
+        const cleanCodeForSearch = c.changes
+          .filter((ch) => ch.type !== 'del')
+          .map((ch) => ch.content.replace(/^[+-]/, ''))
+          .join('\n');
+
         return {
           header: c.content,
-          content: chunkChanges,
-          searchQuery: `Context for change in ${f.to || f.from} at ${c.content}:\n${chunkChanges}`,
+          promptContext: `Context for change in ${f.to || f.from} at ${c.content}:\n${chunkChanges}`,
+          vectorQuery: cleanCodeForSearch || chunkChanges.replace(/^[+-]/gm, ''),
         };
       });
+
+      const isNew = f.new || f.from === '/dev/null';
+      const isDeleted = f.deleted || f.to === '/dev/null';
+      const isRenamed = f.from !== f.to && f.from !== '/dev/null' && f.to !== '/dev/null';
+      const additions = f.chunks.reduce(
+        (acc, c) => acc + c.changes.filter((ch) => ch.type === 'add').length,
+        0,
+      );
+      const deletions = f.chunks.reduce(
+        (acc, c) => acc + c.changes.filter((ch) => ch.type === 'del').length,
+        0,
+      );
+      // перенести определение стратегии в qdrant service при поиске
+      let strategy = { threshold: 0.7, limit: 4 };
+      if (isNew) strategy = { threshold: 0.6, limit: 5 };
+      if (isRenamed) strategy = { threshold: 0.8, limit: 2 };
 
       return {
         path,
@@ -111,6 +141,12 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         chunks,
         rawDiff: fileDiffString,
         chunksCount: f.chunks.length,
+        oldPath: isRenamed ? f.from : undefined,
+        isNew,
+        isDeleted,
+        isRenamed,
+        stats: { additions, deletions },
+        strategy,
       };
     });
 };

@@ -17,9 +17,8 @@ export const startRepoSync = (repoUrl: string): void => {
       logger.info('Repository sync completed successfully', { repoId });
     })
     .catch((error) => {
-      logger.error('Repository sync failed', {
+      logger.error('Repository sync failed', error, {
         repoId,
-        err: error instanceof Error ? error.message : error,
       });
     })
     .finally(() => {

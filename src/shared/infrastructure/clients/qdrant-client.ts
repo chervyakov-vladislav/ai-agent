@@ -21,12 +21,12 @@ export const checkQdrantHealth = async (timeoutMs = 3000): Promise<boolean> => {
   } catch (error: unknown) {
     if (error instanceof Error) {
       if (error.message === 'Timeout') {
-        logger.error(`[Qdrant] Health check failed: Timeout after ${timeoutMs}ms`);
+        logger.error(`[Qdrant] Health check failed: Timeout after ${timeoutMs}ms`, error);
       } else {
-        logger.error(`[Qdrant] Health check error: ${error.message}`);
+        logger.error(`[Qdrant] Health check error: ${error.message}`, error);
       }
     } else {
-      logger.error('[Qdrant] Unknown connection error');
+      logger.error('[Qdrant] Unknown connection error', error);
     }
 
     return false;

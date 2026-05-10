@@ -22,6 +22,7 @@ export interface GithubPullRequestEvent {
     description: string | null;
     topics?: string[];
     language?: string | null;
+    default_branch: string;
   };
 }
 
@@ -52,10 +53,20 @@ export interface GithubFileResponse {
   patch?: string;
 }
 
+export interface SearchStrategy {
+  threshold: number;
+  limit: number;
+}
+
 export interface DiffChunk {
   header: string;
-  content: string;
-  searchQuery: string;
+  promptContext: string;
+  vectorQuery: string;
+}
+
+export interface FileDiffStats {
+  additions: number;
+  deletions: number;
 }
 
 export interface FilteredFileDiff {
@@ -66,6 +77,12 @@ export interface FilteredFileDiff {
   promptData: string;
   chunksCount: number;
   chunks: DiffChunk[];
+  oldPath?: string;
+  isNew: boolean;
+  isDeleted: boolean;
+  isRenamed: boolean;
+  stats: FileDiffStats;
+  strategy: SearchStrategy;
 }
 
 export interface ReviewComment {

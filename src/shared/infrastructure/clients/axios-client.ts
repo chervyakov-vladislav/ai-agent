@@ -52,7 +52,7 @@ export const createHttpClient = (
         data: error.response?.data,
       });
 
-      logger.error(`[${serviceName} Error]`, httpError.toJSON());
+      logger.error(`[${serviceName} Error]`, error, httpError.toJSON());
       return Promise.reject(httpError);
     },
   );

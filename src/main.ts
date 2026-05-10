@@ -34,10 +34,7 @@ async function bootstrap() {
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
   } catch (error) {
-    logger.error(
-      'Failed to start application',
-      error instanceof Error ? error.stack : String(error),
-    );
+    logger.error('Failed to start application', error);
     process.exit(1);
   }
 }
