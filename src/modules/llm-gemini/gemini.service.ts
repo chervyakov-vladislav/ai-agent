@@ -1,12 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 import { envConfig } from '@config/env-config';
-import { AIReviewResponse, ReviewContext } from '@shared/types/review-context.types';
-import { AiServiceError } from 'shared/errors/502.AiServiceError';
+import { AIReviewResponse } from '@application/contracts/code-analysis.types';
+import { AiServiceError } from '@shared/errors/502.AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { withRetry, isRetryable } from 'shared/infrastructure/clients/http-client.utils';
+import { withRetry, isRetryable } from '@shared/infrastructure/clients/http-client.utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
 import { aiReviewResponseSchema } from './gemini.validator';
+import { ReviewContext } from './gemini.types';
 
 const ai = new GoogleGenAI({
   apiKey: envConfig.GEMINI_API_KEY,
@@ -42,7 +43,7 @@ const callModel = async (modelName: string, prompt: string): Promise<string> => 
     logger.info(`[LLM Response] Model: ${modelName} Success`, {
       duration: `${duration}ms`,
       responseLength: response.text.length,
-      usage: response.usageMetadata, // Полезно для мониторинга токенов
+      usage: response.usageMetadata,
     });
 
     return response.text;

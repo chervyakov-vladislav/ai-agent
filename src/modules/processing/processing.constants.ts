@@ -35,7 +35,7 @@ export const SPLITTER_CONFIGS: Record<
 > = {
   nomic: { chunkSize: 2500, chunkOverlap: 250 },
   fullDocument: { chunkSize: 2500, chunkOverlap: 250 },
-  config: { chunkSize: 2500, chunkOverlap: 2500 },
+  config: { chunkSize: 2500, chunkOverlap: 250 },
 };
 
 // export const SPLITTER_CONFIGS = {

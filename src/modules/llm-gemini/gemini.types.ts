@@ -1,6 +1,20 @@
-import { ReviewContext } from '@shared/types/review-context.types';
-import { AIReviewResponse } from './gemini.validator';
+import { FilteredFileDiff, GithubFileStatus } from '@application/contracts/github.types';
 
-export interface IGeminiService {
-  reviewCode: (context: ReviewContext) => Promise<AIReviewResponse>;
+interface ReviewFile {
+  name: string;
+  action: GithubFileStatus;
+  body: string;
+}
+
+interface ProjectInfo {
+  name: string;
+  description: string | null;
+  techStack: string[];
+}
+
+export interface ReviewContext {
+  project: ProjectInfo;
+  diff: FilteredFileDiff[];
+  readme?: string | null;
+  files: ReviewFile[];
 }
