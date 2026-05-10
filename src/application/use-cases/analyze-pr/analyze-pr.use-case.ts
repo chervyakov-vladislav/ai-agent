@@ -1,12 +1,11 @@
-import { AIReviewResponse } from '@application/contracts/code-analysis.types';
+import { AIReviewResponse } from '@application/contracts/llm.types';
 import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
-import { GeminiModule } from '@modules/llm-gemini/gemini.module';
 import { validateAndFormatReview } from 'modules/github/github.validators';
-import { PullRequestSourcePort } from './analyze-pr.ports';
+import { LlmPort, PullRequestSourcePort } from './analyze-pr.ports';
 
 export interface AnalyzePRDependencies {
   github: PullRequestSourcePort;
-  llm: GeminiModule;
+  llm: LlmPort;
 }
 
 export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDependencies) => {
@@ -37,12 +36,12 @@ export const createAnalyzePullRequestUseCase = ({ github, llm }: AnalyzePRDepend
     };
 
     const result = await withRetry(() => llm.reviewCode(context));
-    const { summary, comments } = validateAndFormatReview(result, diff);
+    const { summary, reviews } = validateAndFormatReview(result, diff);
 
     await github.createPullRequestReview(prUrl, {
       verdict: 'COMMENT',
       summary,
-      comments,
+      reviews,
     });
 
     return result;

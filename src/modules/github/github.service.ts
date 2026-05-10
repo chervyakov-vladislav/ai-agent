@@ -3,6 +3,7 @@ import {
   githubProvider,
   githubDiffProvider,
 } from '@shared/infrastructure/clients/github/github-client';
+import { AIReviewResponse } from '@application/contracts/llm.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from '@shared/infrastructure/clients/github/github-errors';
 import { PayloadTooLargeError } from '@shared/errors/413.PayloadTooLargeError';
@@ -83,13 +84,9 @@ export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMeta
 
 export const createPullRequestReview = async (
   prUrl: string,
-  review: {
-    verdict: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
-    summary: string;
-    comments: { file: string; line: number; comment: string }[];
-  },
+  review: AIReviewResponse,
 ): Promise<void> => {
-  const comments = review.comments.map((c) => ({
+  const comments = review.reviews.map((c) => ({
     path: c.file,
     line: c.line,
     body: c.comment,
@@ -113,7 +110,7 @@ export const createPullRequestReview = async (
       const summaryWithComments = [
         review.summary,
         '\n\n### 💡 Детальные замечания:',
-        ...review.comments.map((c) => `* **${c.file}:${c.line}**: ${c.comment}`),
+        ...review.reviews.map((c) => `* **${c.file}:${c.line}**: ${c.comment}`),
       ].join('\n');
 
       return await githubProvider.post(`${prUrl}/reviews`, {

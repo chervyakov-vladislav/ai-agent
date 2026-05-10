@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SyncRepoCommand } from '@application/use-cases/repo-sync/repo-sync.types';
+import { SyncRepoCommand } from 'application/contracts/repo-sync.types';
 
 const parseRepoFullName = (url: string): string => {
   return url
