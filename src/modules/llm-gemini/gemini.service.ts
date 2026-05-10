@@ -49,7 +49,7 @@ const callModel = async (modelName: string, prompt: string): Promise<string> => 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const duration = Date.now() - startTime;
-    logger.error(`[LLM Error] Model: ${modelName}`, {
+    logger.error(`[LLM Error] Model: ${modelName}`, error, {
       duration: `${duration}ms`,
       message: errorMessage,
     });

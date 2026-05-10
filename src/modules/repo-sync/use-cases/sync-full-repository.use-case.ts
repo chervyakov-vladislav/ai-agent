@@ -28,7 +28,7 @@ const logProgress = (
   const prefix = `[${current}/${total}] (${percentage}%)`;
 
   if (error) {
-    logger.error('Failed to process file', { path: file, error, stack });
+    logger.error('Failed to process file', error, { path: file, error, stack });
   } else {
     logger.info(`${prefix} ${status}`);
   }

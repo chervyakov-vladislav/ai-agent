@@ -31,6 +31,8 @@ class PinoLogger {
             translateTime: 'HH:MM:ss Z',
             messageFormat: '{msg}',
             singleLine: !isDebug,
+            ignore: 'pid,hostname',
+            errorLikeObjectKeys: ['err', 'error'],
           },
         });
       }
