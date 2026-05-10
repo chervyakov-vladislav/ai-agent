@@ -6,6 +6,7 @@ export enum CodeSymbolKind {
   Enum = 'enum',
   Method = 'method',
   ConstFunc = 'const-func',
+  Variable = 'variable',
   FileContent = 'file-content',
   Table = 'table',
   Index = 'index',
@@ -26,6 +27,7 @@ export interface ChunkMetadata {
   fileHash: string;
   symbolKind: CodeSymbolKind[];
   symbolName?: string[];
+  symbols?: string[];
   startLine?: number;
   endLine?: number;
   language?: string;

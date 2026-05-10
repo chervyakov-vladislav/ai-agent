@@ -2,23 +2,25 @@ import { parse } from 'sql-parser-cst';
 import { logger } from '@shared/infrastructure/logger';
 import { CodeSymbol, CodeSymbolKind } from '../processing.types';
 
-function isNode(node: unknown): node is { type: string } {
+const isNode = (node: unknown): node is { type: string } => {
   return (
     typeof node === 'object' && node !== null && 'type' in node && typeof node.type === 'string'
   );
-}
+};
 
-function isIdentifier(node: unknown): node is { type: 'identifier'; name?: string; text?: string } {
-  return isNode(node) && node.type === 'identifier';
-}
-
-function isMemberExpr(
+const isIdentifier = (
   node: unknown,
-): node is { type: 'member_expr'; object: unknown; property: unknown } {
-  return isNode(node) && node.type === 'member_expr';
-}
+): node is { type: 'identifier'; name?: string; text?: string } => {
+  return isNode(node) && node.type === 'identifier';
+};
 
-function hasRange(node: unknown): node is { range: [number, number] } {
+const isMemberExpr = (
+  node: unknown,
+): node is { type: 'member_expr'; object: unknown; property: unknown } => {
+  return isNode(node) && node.type === 'member_expr';
+};
+
+const hasRange = (node: unknown): node is { range: [number, number] } => {
   return (
     typeof node === 'object' &&
     node !== null &&
@@ -28,15 +30,15 @@ function hasRange(node: unknown): node is { range: [number, number] } {
     typeof node.range[0] === 'number' &&
     typeof node.range[1] === 'number'
   );
-}
+};
 
-function hasExpr(node: unknown): node is { expr: unknown } {
+const hasExpr = (node: unknown): node is { expr: unknown } => {
   return typeof node === 'object' && node !== null && 'expr' in node;
-}
+};
 
-function hasName(node: unknown): node is { name: unknown } {
+const hasName = (node: unknown): node is { name: unknown } => {
   return typeof node === 'object' && node !== null && 'name' in node;
-}
+};
 
 export const getSqlSymbols = (
   code: string,

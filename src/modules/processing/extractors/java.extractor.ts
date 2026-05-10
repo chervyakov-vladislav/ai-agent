@@ -2,23 +2,23 @@ import { parse, CstNode, IToken } from 'java-parser';
 import { logger } from '@shared/infrastructure/logger';
 import { CodeSymbol, CodeSymbolKind } from '../processing.types';
 
-function isCstNode(value: unknown): value is CstNode {
+const isCstNode = (value: unknown): value is CstNode => {
   return !!value && typeof value === 'object' && 'children' in value;
-}
+};
 
-function isToken(value: unknown): value is IToken {
+const isToken = (value: unknown): value is IToken => {
   return !!value && typeof value === 'object' && 'image' in value;
-}
+};
 
-function getFirstChild<T extends CstNode | IToken>(
+const getFirstChild = <T extends CstNode | IToken>(
   node: CstNode,
   key: string,
   guard: (value: unknown) => value is T,
-): T | undefined {
+): T | undefined => {
   const child = node.children[key]?.[0];
 
   return guard(child) ? child : undefined;
-}
+};
 
 export const getJavaSymbols = (code: string): CodeSymbol[] => {
   let cst: CstNode;

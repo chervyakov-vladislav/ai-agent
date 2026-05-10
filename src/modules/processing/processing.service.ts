@@ -80,6 +80,7 @@ export const processFile = async (
         language,
         startLine,
         endLine,
+        symbols: symbolsInChunk.map((s) => `${s.kind}:${s.name}`),
         symbolName: symbolsInChunk.map((s) => s.name),
         symbolKind: allKinds.length > 0 ? allKinds : [CodeSymbolKind.FileContent],
         imports: imports.join(','),
