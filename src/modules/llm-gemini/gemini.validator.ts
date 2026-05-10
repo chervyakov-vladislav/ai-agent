@@ -3,11 +3,11 @@ import { z } from 'zod';
 export const aiReviewSchema = z.object({
   isSafe: z.boolean(),
   verdict: z.enum(['APPROVE', 'REQUEST_CHANGES', 'COMMENT']),
-  summary: z.string().min(1, 'Summary cannot be empty'),
+  summary: z.string(),
   reviews: z.array(
     z.object({
       file: z.string(),
-      line: z.number().int().positive().optional(),
+      line: z.number().int(),
       comment: z.string(),
     }),
   ),
@@ -23,5 +23,3 @@ export const safeJsonParse = (val: unknown) => {
 };
 
 export const aiReviewResponseSchema = z.preprocess(safeJsonParse, aiReviewSchema);
-
-export type AIReviewResponse = z.infer<typeof aiReviewResponseSchema>;

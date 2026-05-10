@@ -34,18 +34,6 @@ export interface RepositoryMetadata {
   defaultBranch: string;
 }
 
-export interface ReviewComment {
-  file: string;
-  line: number;
-  comment: string;
-}
-
-export interface CreateReviewInput {
-  verdict: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
-  summary: string;
-  comments: ReviewComment[];
-}
-
 export interface FilteredFileDiff {
   path: string;
   fileName: string;

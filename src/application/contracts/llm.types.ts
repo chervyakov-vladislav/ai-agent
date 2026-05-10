@@ -18,3 +18,16 @@ export interface ReviewContext {
   readme?: string | null;
   files: ReviewFile[];
 }
+
+export interface AIReviewResponse {
+  isSafe?: boolean;
+  verdict: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
+  summary: string;
+  reviews: ReviewComment[];
+}
+
+export interface ReviewComment {
+  file: string;
+  line?: number;
+  comment: string;
+}

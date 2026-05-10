@@ -33,34 +33,40 @@
 - **Type Checking:** TSC
 - **Tunneling:** `localtunnel` / SSH-tunnel — проброс портов для тестирования GitHub Webhooks в локальном окружении.
 
-### 🧱 Архитектура (Modular Architecture)
-
-Проект организован по **модульному принципу**, что обеспечивает изоляцию функциональных блоков и упрощает поддержку системы. Каждый модуль инкапсулирует свою логику и предоставляет четкие интерфейсы для взаимодействия.
+### 🧱 Архитектура
 
 #### 📂 Основные слои и модули
 
-1.  **`modules/webhooks/github` (Бизнес-логика)**
-    - **UseCases**: Сценарии использования (например, анализ PR).
-    - **Validators**: Zod-схемы для парсинга ответов AI и фильтрации данных.
-    - Клиент для взаимодействия с GitHub REST API. Получение диффов и публикация результатов ревью.
-2.  **`modules/llm-gemini` (AI-сервис)**
-    - Интеграция с SDK `@google/genai`.
-    - Управление промптами и контекстом модели Gemini 3 Flash.
-3.  **`shared/` (Общий слой)**
-    - **Infrastructure**: Конфигурация логгера (Pino), HTTP-клиента (Axios) и логика повторных запросов (`retry`).
-    - **Errors**: Глобальные классы ошибок (например, `AiServiceError`).
-    - **Types**: Общие интерфейсы и типы данных.
+1.  **`application/` (Ядро системы)**
+    - **UseCases**: Чистая логика сценариев (например, синхронизация репозитория или анализ PR). Не зависит от фреймворков.
+    - **Ports**: Интерфейсы (`*.ports.ts`), определяющие контракты для внешних сервисов.
+    - **Contracts**: Общие типы и интерфейсы приложения.
+
+2.  **`interface/` (Входящие адаптеры / Primary Adapters)**
+    - **HTTP/Express**: Транспортный слой приложения.
+    - **Controllers**: Прием запросов, делегирование работы UseCase и возврат ответов.
+    - **DTO-Validators**: Строгая валидация входящих данных через Zod-схемы.
+
+3.  **`modules/` (Исходящие адаптеры / Secondary Adapters)**
+    - **GitHub**: Реализация работы с API (получение диффов, публикация ревью).
+    - **LLM-Gemini**: Интеграция с ИИ, управление промптами и валидация ответов модели.
+    - **Infrastructure Adapters**: Работа с векторными хранилищами (Qdrant), эмбеддингами и парсингом кода.
+
+4.  **`shared/` (Общий слой)**
+    - **Infrastructure**: Низкоуровневые клиенты (Axios, Redis, BullMQ) и конфигурация логгера (Pino).
+    - **Errors**: Глобальная иерархия кастомных ошибок (наследуются от `AppError`).
 
 #### 🔄 Поток обработки данных
 
-Система следует строгому пайплайну обработки данных:
+Система следует строгому пайплайну, где зависимости направлены только внутрь:
 
-1.  **Webhook Interface**: Прием события от GitHub.
-2.  **UseCase**: Координация процесса (сбор данных PR, вызов AI).
-3.  **Zod Validation (Input)**: Проверка структуры входящих данных.
-4.  **AI Service**: Генерация обзора кода.
-5.  **Zod Validation (Output)**: Валидация ответа AI и очистка от галлюцинаций.
-6.  **GitHub Publish**: Публикация финального ревью в репозиторий.
+1.  **Entry Point**: Вебхук или запрос попадает в `interface/http`.
+2.  **Validation**: Проверка входящего DTO на уровне контроллера.
+3.  **Execution**: Вызов соответствующего `UseCase` из слоя приложения.
+4.  **Infrastructure Call**: UseCase обращается к `Modules` через `Ports`.
+5.  **Data Mapping**: Адаптеры преобразуют внешние данные в типы приложения (через `Mappers`).
+6.  **AI Validation**: Ответы от LLM проходят обязательную проверку Zod-валидатором на выходе.
+7.  **Response**: Возврат обработанного результата клиенту.
 
 ## ⚖️ Правила проведения Review для агента
 
@@ -74,47 +80,54 @@
 
 ## 📂 Схема директорий
 
-```text
+```
 src/
-├── interface/
-│   └── http/
-│       ├── middlewares/            # Прослойки (логирование, ошибки, auth)
-│       │   └── error-filter.ts     # Глобальный обработчик ошибок
-│       ├── express.ts                  # Конфигурация Express
-│       └── root-router.ts          # Главный роутер, объединяющий роутеры модулей
+├── interface/ # Входящие адаптеры (Primary Adapters)
+│ └── http/ # Транспортный слой (Express)
+│ ├── controllers/ # Валидация DTO и вызов Use Case
+│ ├── dto-validators/ # Схемы Zod (например, repo-sync.schema.ts)
+│ ├── middlewares/ # Обработка ошибок, логгеры запросов
+│ ├── express.ts # Инициализация приложения
+│ └── root-router.ts # Главный роутер системы
 │
-├── modules/                        # Бизнес-логика приложения
-│   ├── llm-gemini/                 # Модуль взаимодействия с Google Gemini
-│   │   ├── prompts/
-│   │   ├── ai-review-output.schema.ts
-│   │   └── gemini.service.ts
-│   │
-│   ├── webhooks/                   # Прием внешних событий
-│   │   └── github/
-│   │       ├── use-cases/          # Сценарии обработки конкретных событий
-│   │       ├── github.controller.ts
-│   │       ├── github.service.ts
-│   │       ├── github.mapper.ts
-│   │       ├── github.types.ts
-│   │       ├── github.constants.ts
-│   │       └── webhook.router.ts
-│   │
-│   ├── processing/                 # Оркестрация процесса анализа
-│   ├── repo-query/                 # Работа с кодовой базой
-│   ├── vectorstore/                # Индексация для RAG
-│   └── health/                     # Проверка состояния сервиса
+├── application/ # Ядро системы (Чистая логика и Порты)
+│ ├── use-cases/ # Сценарии использования
+│ │ ├── analyze-pr/ # Кейс анализа PR
+│ │ │ ├── analyze-pr.use-case.ts
+│ │ │ ├── analyze-pr.module.ts # DI: связывание портов с адаптерами
+│ │ │ ├── analyze-pr.ports.ts # Интерфейсы, необходимые этому кейсу
+│ │ │ └── analyze-pr.types.ts
+│ │ └── repo-sync/ # Кейс синхронизации
+│ │ ├── repo-sync.use-case.ts
+│ │ ├── repo-sync.module.ts
+│ │ └── repo-sync.ports.ts # Интерфейсы RepoSourcePort, VectorStorePort и т.д.
+│ │
+│ ├── contracts/ # Общие интерфейсы приложения и типы
+│ ├── workflows/ # Оркестрация нескольких use-cases
+│ └── pipelines/ # Сложная AI/RAG логика обработки
 │
-├── shared/                         # Общий код
-│   ├── errors/                     # Централизованные классы ошибок
-│   ├── infrastructure/             # Техническая реализация (Axios, DB Clients)
-│   │   ├── axios/
-│   │   └── logger/                 # Логирование (Pino)
-│   └── types/                      # Общие TS интерфейсы
+├── modules/ # Исходящие адаптеры (Infrastructure Adapters)
+│ ├── github/ # Модуль работы с GitHub API
+│ │ ├── github.adapter.ts # Реализация RepoSourcePort
+│ │ ├── github.service.ts # Низкоуровневая работа с API
+│ │ ├── github.mapper.ts # Преобразование API ответов в доменные типы
+│ │ └── github.types.ts
+│ ├── llm-gemini/ # Интеграция с Google Gemini
+│ ├── vectorstore/ # Реализация Qdrant
+│ ├── embeddings/ # Генерация эмбеддингов
+│ └── processing/ # Парсинг и разбиение файлов
 │
-├── config/                         # Конфигурация окружения
-│   └── env-config.ts               # Валидация .env
+├── shared/ # Общий код для всех уровней
+│ ├── errors/ # Кастомные ошибки (AppError, GithubError)
+│ ├── infrastructure/ # Низкоуровневые клиенты и утилиты
+│ │ ├── clients/ # Axios, Redis, Qdrant, BullMQ клиенты
+│ │ └── logger/ # Настройка Pino
+│ ├── lib/
+│ └── utils/ # Чистые утилиты (http-client.utils.ts)
 │
-└── main.ts                         # Точка входа
+├── config/ # Конфигурация окружения
+│ └── env-config.ts
+└── main.ts # Точка входа в приложение
 ```
 
 <!-- AI_CONTEXT_END -->
@@ -183,41 +196,6 @@ src/
 - **Vector DB**: **Qdrant** (Self-hosted образ).
 - **Orchestration**: **LangChain** для цепочек RAG.
 - **Container Registry**: Использование корпоративного GitLab Registry для всех образов (Ollama, Qdrant, App).
-
-### 🧱 Архитектура (Modular Architecture)
-
-Проект организован по **модульному принципу**, что обеспечивает изоляцию функциональных блоков и упрощает поддержку системы. Каждый модуль инкапсулирует свою логику и предоставляет четкие интерфейсы для взаимодействия.
-
-#### 📂 Основные слои и модули
-
-1.  **`modules/webhooks/github` (Бизнес-логика)**
-    - **UseCases**: Сценарии использования (например, анализ PR).
-    - **Validators**: Zod-схемы для парсинга ответов AI и фильтрации данных.
-    - Клиент для взаимодействия с GitHub REST API. Получение диффов и публикация результатов ревью.
-2.  **`modules/llm-gemini` (AI-сервис)**
-    - Интеграция с SDK `@google/genai`.
-    - Управление промптами и контекстом модели Gemini 3 Flash.
-3.  **`shared/` (Общий слой)**
-    - **Infrastructure**: Конфигурация логгера (Pino), HTTP-клиента (Axios) и логика повторных запросов (`retry`).
-    - **Errors**: Глобальные классы ошибок (например, `AiServiceError`).
-    - **Types**: Общие интерфейсы и типы данных.
-
-#### 🔄 Поток обработки данных
-
-Система следует строгому пайплайну обработки данных:
-
-1.  **Webhook Interface**: Прием события от GitHub.
-2.  **UseCase**: Координация процесса (сбор данных PR, вызов AI).
-3.  **Zod Validation (Input)**: Проверка структуры входящих данных.
-4.  **AI Service**: Генерация обзора кода.
-5.  **Zod Validation (Output)**: Валидация ответа AI и очистка от галлюцинаций.
-6.  **GitHub Publish**: Публикация финального ревью в репозиторий.
-
-### В. Качество и CI/CD
-
-- **Quality Gates**: Strict TS 6.x, ESLint 10, Prettier.
-- **Docker Pipeline**: base -> checker -> builder -> runner.
-- **Secrets**: Переменные для Bitbucket, Jira, Qwen API через `.env` (локально) и ENV (в проде).
 
 ---
 
@@ -293,66 +271,72 @@ wsl --shutdown
 
 ## 📂 Масштабирование application layer
 
-При увеличении количества бизнес-логики убрать её application. перейти от модульной архитекруты к гексагональной архитектуре
-Запретить модулям общаться друг с другом и делать это на уровне application
+При увеличении количества бизнес-логики убрать её application + domain. перейти от модульной архитекруты к гексагональной архитектуре
+Запретить модулям общаться друг с другом и делать это на уровне application + domain
 
 ## 📂 Пример структуры
 
 ```text
 src/
-├── interface/                          # HTTP / transport layer
-│   └── http/
-│       ├── middlewares/
-│       ├── routers/                    # вынести роутеры суда, что бы явно видеть все внешние эндпоинты в одном месте
-│       └── express.ts
+├── domain/                          # ❤️ СЕРДЦЕ СИСТЕМЫ (Pure Logic / Entities)
+│   ├── repository/                  # Доменная область репозитория
+│   │   ├── repository.entity.ts     # Логика сущности: расчет прогресса, правила синхронизации
+│   │   ├── repository.errors.ts     # Бизнес-ошибки (Domain Errors)
+│   │   └── repository.types.ts      # Типы сущности (FileMetadata, SyncStats)
+│   └── code-analysis/               # Доменная область анализа кода
+│       ├── analysis-result.vo.ts    # Value Objects (неизменяемые результаты анализа)
+│       └── scoring-rules.ts         # Правила и алгоритмы оценки кода
 │
-├── application/                        # Чистая бизнес-логика
-│   ├── use-cases/                      # Добавить, когда будет 3+ use-cases
-│   │   └── analyze-pr/
-│   │       ├── analyze-pr.use-case.ts
-│   │       ├── analyze-pr.module.ts    # подлючаем port(adapter)
-│   │       ├── analyze-pr.ports.ts     # из сервиса забираем только нужные методы и создаем порт к адаптеру
-│   │       ├── analyze-pr.types.ts
-│   │       └── analyze-pr.constants.ts
+├── application/                      # 🏗️ ЯДРО ПРИЛОЖЕНИЯ (Orchestration & Ports)
+│   ├── use-cases/                    # Сценарии использования (Use Cases)
+│   │   ├── analyze-pr/               # Кейс анализа Pull Request
+│   │   │   ├── analyze-pr.use-case.ts# Дирижер: вызывает домен и порты
+│   │   │   ├── analyze-pr.module.ts  # Внедрение зависимостей (Dependency Injection)
+│   │   │   ├── analyze-pr.ports.ts   # Интерфейсы (Inbound/Outbound) для этого кейса
+│   │   │   └── analyze-pr.types.ts   # DTO и типы данных уровня приложения
+│   │   └── repo-sync/                # Кейс синхронизации репозитория
+│   │       ├── repo-sync.use-case.ts # Логика процесса: получение данных -> вызов домена
+│   │       ├── repo-sync.module.ts   # Сборка зависимостей для синхронизации
+│   │       └── repo-sync.ports.ts    # Контракты (RepoSourcePort, VectorStorePort)
 │   │
-│   ├── workflows/                      # Оркестрация нескольких use-cases
-│   ├── pipelines/                      # AI/RAG pipelines(когда логика обработки в модуле pipeline вырастет до 5-6 шагов)
-│   └── contracts/                      # Общие application interfaces
+│   ├── contracts/                    # Общие интерфейсы и абстракции приложения
+│   ├── workflows/                    # Оркестрация нескольких сложных Use Cases
+│   └── pipelines/                    # AI/RAG конвейеры обработки данных
 │
-├── modules/                            # Infrastructure adapters
-│   ├── github/
-│   │   ├── github.service.ts
-│   │   ├── github.adapter.ts           # собираем методы, которые нужны в портах от application
-│   │   ├── github.mapper.ts
-│   │   ├── github.types.ts
-│   │   └── github.constants.ts
-│   │
-│   ├── llm/
-│   │   └── gemini/
-│   │       ├── prompts/
-│   │       ├── gemini.service.ts
-│   │       ├── gemini.adapter.ts
-│   │       └── gemini.types.ts
-│   │
-│   ├── vectorstore/
-│   ├── embeddings/
-│   └── repo-query/
+├── modules/                          # 🔌 ИСХОДЯЩИЕ АДАПТЕРЫ (Secondary Adapters)
+│   ├── github/                       # Инфраструктура GitHub API
+│   │   ├── github.adapter.ts         # Реализация RepoSourcePort (маппинг в домен)
+│   │   ├── github.service.ts         # Низкоуровневая работа с внешним API
+│   │   ├── github.mapper.ts          # Преобразование данных API -> Domain Entity
+│   │   └── github.types.ts           # Внутренние типы ответов API
+│   ├── llm-gemini/                   # Адаптер для Google Gemini (генерация ответов)
+│   │   ├── prompts/                  # Шаблоны промптов для AI
+│   │   └── gemini.adapter.ts         # Реализация порта для LLM
+│   ├── vectorstore/                  # Адаптер векторной БД (например, Qdrant)
+│   ├── embeddings/                   # Адаптер сервиса генерации эмбеддингов
+│   └── processing/                   # Адаптер для парсинга и разбиения кода (Chunking)
 │
-├── shared/
-│   ├── errors/
-│   ├── infrastructure/
-│   │   ├── axios/
-│   │   ├── logger/
-│   │   └── database/
-│   │
-│   ├── lib/
-│   ├── utils/
-│   └── types/
+├── interface/                        # 🌐 ВХОДЯЩИЕ АДАПТЕРЫ (Primary Adapters)
+│   └── http/                         # Транспортный слой (Express.js)
+│       ├── controllers/              # Прием запросов и вызов Use Cases
+│       ├── dto-validators/           # Схемы валидации (Zod)
+│       ├── middlewares/              # Обработка ошибок, CORS, логирование запросов
+│       ├── routers/                  # Определение маршрутов (Routes)
+│       ├── express.ts                # Конфигурация Express сервера
+│       └── root-router.ts            # Точка сборки всех роутов
 │
-├── config/
-│   └── env-config.ts
+├── shared/                           # 🛠️ ОБЩИЙ СЛОЙ (Shared Kernel)
+│   ├── errors/                       # Базовые классы ошибок (AppError)
+│   ├── infrastructure/               # Низкоуровневые технические клиенты
+│   │   ├── clients/                  # Инициализация Axios, Redis, BullMQ
+│   │   └── logger/                   # Настройка системы логирования (Pino)
+│   ├── lib/                          # Сторонние библиотеки/обертки
+│   └── utils/                        # Чистые утилитарные функции
 │
-└── main.ts
+├── config/                           # ⚙️ КОНФИГУРАЦИЯ
+│   └── env-config.ts                 # Валидация и доступ к переменным окружения
+│
+└── main.ts                           # 🚀 ТОЧКА ВХОДА (App Bootstrap)
 ```
 
 ---

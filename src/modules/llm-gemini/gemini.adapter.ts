@@ -1,7 +1,5 @@
 import * as geminiService from './gemini.service';
 
-export const geminiModule = {
+export const geminiAdapter = {
   reviewCode: geminiService.reviewCode,
 };
-
-export type GeminiModule = typeof geminiModule;

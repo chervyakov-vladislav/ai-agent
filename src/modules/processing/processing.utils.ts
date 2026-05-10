@@ -1,5 +1,5 @@
+import { CodeSymbol, CodeSymbolKind } from '@application/contracts/code-analysis.types';
 import { SUPPORTED_JS_EXTENSIONS } from './processing.constants';
-import { CodeSymbol, CodeSymbolKind } from './processing.types';
 
 export const findSymbolsInLines = (
   startLine: number,

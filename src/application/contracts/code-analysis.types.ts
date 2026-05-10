@@ -43,14 +43,3 @@ export interface ProcessedChunk {
 export interface Embedding extends ProcessedChunk {
   embedding: number[];
 }
-
-export interface AIReviewResponse {
-  isSafe: boolean;
-  verdict: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT';
-  summary: string;
-  reviews: {
-    file: string;
-    line?: number;
-    comment: string;
-  }[];
-}

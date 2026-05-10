@@ -1,6 +1,6 @@
 import pLimit from 'p-limit';
+import { ProcessedChunk } from '@application/contracts/code-analysis.types';
 import { getEmbedding } from '@shared/infrastructure/clients/ollama-client';
-import { ProcessedChunk } from '@modules/processing/processing.types';
 import { envConfig } from '@config/env-config';
 
 const limit = pLimit(envConfig.OLLAMA_NUM_PARALLEL);

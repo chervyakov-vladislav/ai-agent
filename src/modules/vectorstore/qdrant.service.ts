@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { v5 as uuidv5 } from 'uuid';
+import { Embedding } from '@application/contracts/code-analysis.types';
 import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { Embedding } from '@modules/embeddings/embeddings.types';
 import { envConfig } from '@config/env-config';
 import { ScrollOffset } from './qdrant.types';
 import { isFilesMapPayload } from './qdrant.utils';
