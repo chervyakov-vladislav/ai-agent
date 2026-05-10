@@ -138,6 +138,6 @@ function getKind(type: string): CodeSymbolKind {
     case 'create_function_stmt':
       return CodeSymbolKind.Function;
     default:
-      return CodeSymbolKind.Method;
+      return CodeSymbolKind.Modification;
   }
 }
