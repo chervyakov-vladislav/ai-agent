@@ -160,14 +160,11 @@ export const indexChunks = async (
     logger.info(`Indexed ${chunks.length} chunks for ${chunks[0]?.metadata.filename}`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : 'Unknown error';
     logger.error(errorMessage, 'Failed to index chunks in Qdrant', {
       collectionName,
       filename: chunks[0]?.metadata.filename,
+      errorStack,
     });
-
-    throw new AiServiceError(
-      'Vector indexing failed. Sync aborted to prevent data loss.',
-      'QDRANT_UPSERT_ERROR',
-    );
   }
 };
