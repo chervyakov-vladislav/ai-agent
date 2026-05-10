@@ -73,7 +73,6 @@ export const createSyncFullRepositoryUseCase = ({
           const chunks = await processing.processFile(file.path, content, file.sha, extension);
           const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
 
-          await vectorStore.deleteFileChunks(collectionName, file.path);
           await vectorStore.indexChunks(collectionName, chunksWithEmbeddings, currentSyncId);
 
           processed++;

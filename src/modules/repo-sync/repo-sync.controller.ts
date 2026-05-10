@@ -13,6 +13,7 @@ export const repoSyncController = (req: Request, res: Response) => {
 
   if (repoSyncService.isBusy()) {
     // отправить коммент в пул реквест, что сервис не смог обновиться по причине того что занят
+    // если добавяться очереди, то отправлять что индексация в очереди
 
     throw new ServiceUnavailableError(
       'Another repository is being indexed. Please wait a few minutes.',
