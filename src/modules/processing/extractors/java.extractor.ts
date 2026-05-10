@@ -1,6 +1,6 @@
 import { parse, CstNode, IToken } from 'java-parser';
 import { logger } from '@shared/infrastructure/logger';
-import { CodeSymbol, CodeSymbolKind } from '../processing.types';
+import { CodeSymbol, CodeSymbolKind } from '@application/contracts/code-analysis.types';
 
 const isCstNode = (value: unknown): value is CstNode => {
   return !!value && typeof value === 'object' && 'children' in value;

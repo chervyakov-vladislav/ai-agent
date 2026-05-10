@@ -2,7 +2,11 @@ import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { getJsSymbols } from './extractors/typescript.extractor';
 import { getJavaSymbols } from './extractors/java.extractor';
 import { getSqlSymbols } from './extractors/sql.extractor';
-import { CodeSymbol, CodeSymbolKind, ProcessedChunk } from './processing.types';
+import {
+  CodeSymbol,
+  CodeSymbolKind,
+  ProcessedChunk,
+} from '@application/contracts/code-analysis.types';
 import {
   LANGCHAIN_LANGUAGE_MAP,
   SPLITTER_CONFIGS,

@@ -1,5 +1,5 @@
 import { Project, Node } from 'ts-morph';
-import { CodeSymbol, CodeSymbolKind } from '../processing.types';
+import { CodeSymbol, CodeSymbolKind } from '@application/contracts/code-analysis.types';
 
 export const getJsSymbols = (filename: string, code: string): CodeSymbol[] => {
   const project = new Project({

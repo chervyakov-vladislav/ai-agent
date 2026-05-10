@@ -1,6 +1,6 @@
 import { parse } from 'sql-parser-cst';
 import { logger } from '@shared/infrastructure/logger';
-import { CodeSymbol, CodeSymbolKind } from '../processing.types';
+import { CodeSymbol, CodeSymbolKind } from '@/application/contracts/code-analysis.types';
 
 const isNode = (node: unknown): node is { type: string } => {
   return (
@@ -140,6 +140,6 @@ function getKind(type: string): CodeSymbolKind {
     case 'create_function_stmt':
       return CodeSymbolKind.Function;
     default:
-      return CodeSymbolKind.Modification;
+      return CodeSymbolKind.Unknown;
   }
 }
