@@ -1,4 +1,4 @@
-import { parse, CstElement, CstNode } from 'java-parser';
+import { parse, CstElement, CstNode, IToken } from 'java-parser';
 import { logger } from '@shared/infrastructure/logger';
 
 interface JavaParserLocation {
@@ -28,10 +28,26 @@ function isJavaNodeWithLocation(el: CstElement): el is JavaNodeWithLocation {
 }
 
 const JAVA_IMPORT_REGEX = /^import\s+(?:static\s+)?[a-zA-Z0-9_.]+(?:\.\*)?;\s*/gm;
+let javaCstCache:
+  | (CstNode & {
+      comments?: IToken[];
+    })
+  | null = null;
+let lastContent = '';
 
 export const removeJavaImports = (content: string): string => {
   try {
-    const cst = parse(content);
+    if (content !== lastContent) {
+      javaCstCache = parse(content);
+      lastContent = content;
+    }
+
+    const cst = javaCstCache;
+
+    if (cst === null) {
+      return content.trim();
+    }
+
     const importDeclarations = cst.children.importDeclaration;
 
     if (!importDeclarations || !Array.isArray(importDeclarations)) {
