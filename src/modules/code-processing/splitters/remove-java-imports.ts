@@ -63,12 +63,17 @@ export const removeJavaImports = (content: string): string => {
       return content.trim();
     }
 
-    rangesToExclude.sort((a, b) => b.start - a.start);
+    const sortedRanges = rangesToExclude.sort((a, b) => a.start - b.start);
 
-    let result = content;
-    for (const range of rangesToExclude) {
-      result = result.slice(0, range.start) + result.slice(range.end + 1);
+    let result = '';
+    let lastIndex = 0;
+
+    for (const range of sortedRanges) {
+      result += content.slice(lastIndex, range.start);
+      lastIndex = range.end + 1;
     }
+
+    result += content.slice(lastIndex);
 
     return result.trim();
   } catch (error) {

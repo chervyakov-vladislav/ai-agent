@@ -17,7 +17,7 @@ interface SyncDependencies {
   github: RepoSourcePort;
   embeddings: EmbeddingPort;
   vectorStore: VectorStorePort;
-  codeProcessingPipeline: (
+  processFilePipeline: (
     path: string,
     content: string,
     sha: string,
@@ -44,13 +44,14 @@ const logProgress = (
   }
 };
 
+// вынести в пайаплайны и сделать embeddingsPipeline и indexingPipeline
 export const createSyncFullRepositoryUseCase = ({
   statusPort,
   github,
   embeddings,
   vectorStore,
   parallelLimit,
-  codeProcessingPipeline,
+  processFilePipeline,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
     // управлять этим через очередина BullMQ
@@ -92,7 +93,7 @@ export const createSyncFullRepositoryUseCase = ({
             );
 
             // добавить очередь через bullMQ
-            const chunks = await codeProcessingPipeline(file.path, content, file.sha, extension);
+            const chunks = await processFilePipeline(file.path, content, file.sha, extension);
 
             const smallChunksWithEmbeddings = await embeddings.generateEmbeddings(
               chunks.smallChunks,

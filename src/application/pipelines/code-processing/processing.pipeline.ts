@@ -1,7 +1,7 @@
 import { SplitResult } from '@contracts/code-analysis.types';
 import { CodeAnalyzerFn, CodeSplitterFn } from './processing.contracts';
 
-export const createProcessFile = (analyze: CodeAnalyzerFn, split: CodeSplitterFn) => {
+export const createProcessFilePipeline = (analyze: CodeAnalyzerFn, split: CodeSplitterFn) => {
   return async (
     filename: string,
     rawContent: string,
