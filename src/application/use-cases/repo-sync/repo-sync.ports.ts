@@ -1,4 +1,4 @@
-import { ProcessedChunk, Embedding } from '@application/contracts/code-analysis.types';
+import { ProcessedChunk, Embedding } from '@contracts/code-analysis.types';
 
 export interface RepoSourcePort {
   getRepositoryInfo(repoUrl: string): Promise<{ defaultBranch: string }>;
@@ -11,15 +11,6 @@ export interface VectorStorePort {
   updateSyncIdForFile(collection: string, path: string, syncId: string): Promise<void>;
   indexChunks(collection: string, chunks: Embedding[], syncId: string): Promise<void>;
   cleanupOldSyncData(collection: string, syncId: string): Promise<void>;
-}
-
-export interface ProcessingPort {
-  processFile(
-    path: string,
-    content: string,
-    sha: string,
-    extension: string,
-  ): Promise<ProcessedChunk[]>;
 }
 
 export interface EmbeddingPort {

@@ -1,10 +1,6 @@
-import { AIReviewResponse } from '@application/contracts/llm.types';
-import {
-  ChangedFile,
-  FilteredFileDiff,
-  RepositoryMetadata,
-} from '@application/contracts/github.types';
-import { ReviewContext } from '@application/contracts/llm.types';
+import { AIReviewResponse } from '@contracts/llm.types';
+import { ChangedFile, FilteredFileDiff, RepositoryMetadata } from '@contracts/github.types';
+import { ReviewContext } from '@contracts/llm.types';
 
 export interface PullRequestSourcePort {
   getPullRequestDiff(prUrl: string): Promise<FilteredFileDiff[]>;

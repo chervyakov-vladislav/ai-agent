@@ -71,7 +71,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2048M
+          memory: 4096M
         # Раскомментируйте, если есть доступный GPU nvidia
         reservations:
           devices:

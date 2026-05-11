@@ -1,6 +1,6 @@
 import { parse } from 'sql-parser-cst';
 import { logger } from '@shared/infrastructure/logger';
-import { CodeSymbol, CodeSymbolKind } from '@/application/contracts/code-analysis.types';
+import { BaseSymbol, CodeSymbolKind } from '@/application/contracts/code-analysis.types';
 
 const isNode = (node: unknown): node is { type: string } => {
   return (
@@ -43,7 +43,7 @@ const hasName = (node: unknown): node is { name: unknown } => {
 export const getSqlSymbols = (
   code: string,
   dialect: 'postgresql' | 'mysql' | 'sqlite' = 'postgresql',
-): CodeSymbol[] => {
+): BaseSymbol[] => {
   let cst;
   try {
     cst = parse(code, { dialect });
@@ -72,7 +72,7 @@ export const getSqlSymbols = (
     return '';
   };
 
-  const symbols: CodeSymbol[] = [];
+  const symbols: BaseSymbol[] = [];
 
   for (const stmt of cst.statements) {
     if (!hasRange(stmt)) continue;

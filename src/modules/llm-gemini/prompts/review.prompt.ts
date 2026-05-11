@@ -1,4 +1,4 @@
-import { ReviewContext } from '@application/contracts/llm.types';
+import { ReviewContext } from '@contracts/llm.types';
 
 export const GEMINI_SYSTEM_INSTRUCTION = `
   Ты — экспертный Senior Fullstack Developer. Твоя задача — проводить глубокий аудит TypeScript кода.

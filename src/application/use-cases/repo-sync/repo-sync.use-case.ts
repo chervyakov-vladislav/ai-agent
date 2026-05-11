@@ -1,11 +1,11 @@
 import pLimit from 'p-limit';
+import type { SplitResult } from '@/application/contracts/code-analysis.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import {
   EmbeddingPort,
-  ProcessingPort,
   RepoSourcePort,
   SyncStatusPort,
   VectorStorePort,
@@ -15,9 +15,14 @@ import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableEr
 interface SyncDependencies {
   statusPort: SyncStatusPort;
   github: RepoSourcePort;
-  processing: ProcessingPort;
   embeddings: EmbeddingPort;
   vectorStore: VectorStorePort;
+  processFilePipeline: (
+    path: string,
+    content: string,
+    sha: string,
+    extension: string,
+  ) => Promise<SplitResult>;
   parallelLimit: number;
 }
 
@@ -39,13 +44,14 @@ const logProgress = (
   }
 };
 
+// вынести в пайаплайны и сделать embeddingsPipeline и indexingPipeline
 export const createSyncFullRepositoryUseCase = ({
   statusPort,
   github,
-  processing,
   embeddings,
   vectorStore,
   parallelLimit,
+  processFilePipeline,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
     // управлять этим через очередина BullMQ
@@ -86,10 +92,21 @@ export const createSyncFullRepositoryUseCase = ({
               2000,
             );
 
-            const chunks = await processing.processFile(file.path, content, file.sha, extension);
-            const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
+            // добавить очередь через bullMQ
+            const chunks = await processFilePipeline(file.path, content, file.sha, extension);
 
-            await vectorStore.indexChunks(collectionName, chunksWithEmbeddings, currentSyncId);
+            const smallChunksWithEmbeddings = await embeddings.generateEmbeddings(
+              chunks.smallChunks,
+            );
+            const largeChunksWithEmbeddings = await embeddings.generateEmbeddings(
+              chunks.largeChunks,
+            );
+
+            await vectorStore.indexChunks(
+              collectionName,
+              [...smallChunksWithEmbeddings, ...largeChunksWithEmbeddings],
+              currentSyncId,
+            );
 
             processed++;
 

@@ -1,13 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 import { envConfig } from '@config/env-config';
-import { AIReviewResponse } from '@application/contracts/llm.types';
+import { AIReviewResponse } from '@contracts/llm.types';
 import { AiServiceError } from '@shared/errors/502.AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { withRetry, isRetryable } from '@shared/infrastructure/clients/http-client.utils';
 import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
 import { MODEL_FALLBACKS } from './gemini.constants';
 import { aiReviewResponseSchema } from './gemini.validator';
-import { ReviewContext } from '@application/contracts/llm.types';
+import { ReviewContext } from '@contracts/llm.types';
 
 const ai = new GoogleGenAI({
   apiKey: envConfig.GEMINI_API_KEY,

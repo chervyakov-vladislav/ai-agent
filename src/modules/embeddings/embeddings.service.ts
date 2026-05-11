@@ -1,5 +1,5 @@
 import pLimit from 'p-limit';
-import { ProcessedChunk } from '@application/contracts/code-analysis.types';
+import { ProcessedChunk } from '@contracts/code-analysis.types';
 import { getEmbedding } from '@shared/infrastructure/clients/ollama-client';
 import { envConfig } from '@config/env-config';
 

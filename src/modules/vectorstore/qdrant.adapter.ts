@@ -1,5 +1,5 @@
 import { VectorStorePort } from '@application/use-cases/repo-sync/repo-sync.ports';
-import { Embedding } from '@application/contracts/code-analysis.types';
+import { Embedding } from '@contracts/code-analysis.types';
 import * as qdrantService from './qdrant.service';
 
 export const qdrantAdapter: VectorStorePort = {

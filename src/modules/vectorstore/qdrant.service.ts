@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { v5 as uuidv5 } from 'uuid';
-import { Embedding } from '@application/contracts/code-analysis.types';
+import { Embedding } from '@contracts/code-analysis.types';
 import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { envConfig } from '@config/env-config';

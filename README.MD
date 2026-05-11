@@ -6,33 +6,6 @@
 
 <!-- AI_CONTEXT_START -->
 
-### 🛠 Технологический стек
-
-### 🚀 Core Runtime
-
-- **Runtime:** [Node.js 24](https://nodejs.org/)
-- **Language:** [TypeScript 6](https://www.typescriptlang.org/)
-- **Bundler:** [Vite 8](https://vitejs.dev/)
-- **Dev Tooling:** `tsx`
-
-### 🧠 AI & Data Integrity
-
-- **AI Engine:** [@google/genai](https://www.npmjs.com/package/@google/genai)
-- **Validation:** [Zod](https://zod.dev/)
-
-### 🌐 Infrastructure & Networking
-
-- **Server:** [Express 5](https://expressjs.com/)
-- **HTTP Client:** [Axios](https://axios-http.com/) + кастомная логика ретраев (`withRetry`) для стабильного взаимодействия с GitHub API.
-- **CI/CD:** Jenkins + Docker
-- **Logging:** [Pino](https://getpino.io/) + `pino-pretty`
-
-### 💎 Development & Quality
-
-- **Linting:** ESLint 10 + Prettier
-- **Type Checking:** TSC
-- **Tunneling:** `localtunnel` / SSH-tunnel — проброс портов для тестирования GitHub Webhooks в локальном окружении.
-
 ### 🧱 Архитектура
 
 #### 📂 Основные слои и модули
@@ -82,52 +55,52 @@
 
 ```
 src/
-├── interface/ # Входящие адаптеры (Primary Adapters)
-│ └── http/ # Транспортный слой (Express)
-│ ├── controllers/ # Валидация DTO и вызов Use Case
-│ ├── dto-validators/ # Схемы Zod (например, repo-sync.schema.ts)
-│ ├── middlewares/ # Обработка ошибок, логгеры запросов
-│ ├── express.ts # Инициализация приложения
-│ └── root-router.ts # Главный роутер системы
+├── interface/                          # Входящие адаптеры (Primary Adapters)
+│   └── http/                           # Транспортный слой (Express)
+│       ├── controllers/                # Валидация DTO и вызов Use Case
+│       ├── dto-validators/             # Схемы Zod (например, repo-sync.schema.ts)
+│       ├── middlewares/                # Обработка ошибок, логгеры запросов
+│       ├── express.ts                  # Инициализация приложения
+│       └── root-router.ts              # Главный роутер системы
 │
-├── application/ # Ядро системы (Чистая логика и Порты)
-│ ├── use-cases/ # Сценарии использования
-│ │ ├── analyze-pr/ # Кейс анализа PR
-│ │ │ ├── analyze-pr.use-case.ts
-│ │ │ ├── analyze-pr.module.ts # DI: связывание портов с адаптерами
-│ │ │ ├── analyze-pr.ports.ts # Интерфейсы, необходимые этому кейсу
-│ │ │ └── analyze-pr.types.ts
-│ │ └── repo-sync/ # Кейс синхронизации
-│ │ ├── repo-sync.use-case.ts
-│ │ ├── repo-sync.module.ts
-│ │ └── repo-sync.ports.ts # Интерфейсы RepoSourcePort, VectorStorePort и т.д.
-│ │
-│ ├── contracts/ # Общие интерфейсы приложения и типы
-│ ├── workflows/ # Оркестрация нескольких use-cases
-│ └── pipelines/ # Сложная AI/RAG логика обработки
+├── application/                        # Ядро системы (Чистая логика и Порты)
+│   ├── use-cases/                      # Сценарии использования
+│   │   ├── analyze-pr/                 # Кейс анализа PR
+│   │   │   ├── analyze-pr.use-case.ts
+│   │   │   ├── analyze-pr.module.ts    # DI: связывание портов с адаптерами
+│   │   │   ├── analyze-pr.ports.ts     # Интерфейсы, необходимые этому кейсу
+│   │   │   └── analyze-pr.types.ts
+│   │   └── repo-sync/                  # Кейс синхронизации
+│   │       ├── repo-sync.use-case.ts
+│   │       ├── repo-sync.module.ts
+│   │       └── repo-sync.ports.ts      # Интерфейсы RepoSourcePort, VectorStorePort и т.д.
+│   │
+│   ├── contracts/                      # Общие интерфейсы приложения и типы
+│   ├── workflows/                      # Оркестрация нескольких use-cases
+│   └── pipelines/                      # Сложная AI/RAG логика обработки
 │
-├── modules/ # Исходящие адаптеры (Infrastructure Adapters)
-│ ├── github/ # Модуль работы с GitHub API
-│ │ ├── github.adapter.ts # Реализация RepoSourcePort
-│ │ ├── github.service.ts # Низкоуровневая работа с API
-│ │ ├── github.mapper.ts # Преобразование API ответов в доменные типы
-│ │ └── github.types.ts
-│ ├── llm-gemini/ # Интеграция с Google Gemini
-│ ├── vectorstore/ # Реализация Qdrant
-│ ├── embeddings/ # Генерация эмбеддингов
-│ └── processing/ # Парсинг и разбиение файлов
+├── modules/                            # Исходящие адаптеры (Infrastructure Adapters)
+│   ├── github/                         # Модуль работы с GitHub API
+│   │   ├── github.adapter.ts           # Реализация RepoSourcePort
+│   │   ├── github.service.ts           # Низкоуровневая работа с API
+│   │   ├── github.mapper.ts            # Преобразование API ответов в доменные типы
+│   │   └── github.types.ts
+│   ├── llm-gemini/                     # Интеграция с Google Gemini
+│   ├── vectorstore/                    # Реализация Qdrant
+│   ├── embeddings/                     # Генерация эмбеддингов
+│   └── processing/                     # Парсинг и разбиение файлов
 │
-├── shared/ # Общий код для всех уровней
-│ ├── errors/ # Кастомные ошибки (AppError, GithubError)
-│ ├── infrastructure/ # Низкоуровневые клиенты и утилиты
-│ │ ├── clients/ # Axios, Redis, Qdrant, BullMQ клиенты
-│ │ └── logger/ # Настройка Pino
-│ ├── lib/
-│ └── utils/ # Чистые утилиты (http-client.utils.ts)
+├── shared/                             # Общий код для всех уровней
+│   ├── errors/                         # Кастомные ошибки (AppError, GithubError)
+│   ├── infrastructure/                 # Низкоуровневые клиенты и утилиты
+│   │   ├── clients/                    # Axios, Redis, Qdrant, BullMQ клиенты
+│   │   └── logger/                     # Настройка Pino
+│   ├── lib/
+│   └── utils/                          # Чистые утилиты (http-client.utils.ts)
 │
-├── config/ # Конфигурация окружения
-│ └── env-config.ts
-└── main.ts # Точка входа в приложение
+├── config/                             # Конфигурация окружения
+│   └── env-config.ts
+└── main.ts                             # Точка входа в приложение
 ```
 
 <!-- AI_CONTEXT_END -->
@@ -219,12 +192,7 @@ src/
 
 - [ ] Интеграция с Bitbucket API для получения Diff.
 - [ ] Формирование промпта:`[Контекст из Qdrant]` + `[Diff]`.
-- [ ] Запрос к корпоративному Qwen.
-
-### Этап 4: "Финализация" (Jira Loop) 📝
-
-- [ ] Генерация Summary через Qwen после события `merged`.
-- [ ] Интеграция с Jira REST API для публикации отчетов.
+- [ ] Запрос через pipeline к корпоративному Qwen. Запрашиваем ревью на каждый дифф, потом отправляем финальный запрос за summary + группировкой итогов предыдущих запросов
 
 ---
 
@@ -321,7 +289,6 @@ src/
 │       ├── controllers/              # Прием запросов и вызов Use Cases
 │       ├── dto-validators/           # Схемы валидации (Zod)
 │       ├── middlewares/              # Обработка ошибок, CORS, логирование запросов
-│       ├── routers/                  # Определение маршрутов (Routes)
 │       ├── express.ts                # Конфигурация Express сервера
 │       └── root-router.ts            # Точка сборки всех роутов
 │
@@ -340,3 +307,30 @@ src/
 ```
 
 ---
+
+### 🛠 Технологический стек
+
+### 🚀 Core Runtime
+
+- **Runtime:** [Node.js 24](https://nodejs.org/)
+- **Language:** [TypeScript 6](https://www.typescriptlang.org/)
+- **Bundler:** [Vite 8](https://vitejs.dev/)
+- **Dev Tooling:** `tsx`
+
+### 🧠 AI & Data Integrity
+
+- **AI Engine:** [@google/genai](https://www.npmjs.com/package/@google/genai)
+- **Validation:** [Zod](https://zod.dev/)
+
+### 🌐 Infrastructure & Networking
+
+- **Server:** [Express 5](https://expressjs.com/)
+- **HTTP Client:** [Axios](https://axios-http.com/) + кастомная логика ретраев (`withRetry`) для стабильного взаимодействия с GitHub API.
+- **CI/CD:** Jenkins + Docker
+- **Logging:** [Pino](https://getpino.io/) + `pino-pretty`
+
+### 💎 Development & Quality
+
+- **Linting:** ESLint 10 + Prettier
+- **Type Checking:** TSC
+- **Tunneling:** `localtunnel` / SSH-tunnel — проброс портов для тестирования GitHub Webhooks в локальном окружении.

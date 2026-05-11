@@ -1,5 +1,5 @@
 import parse from 'parse-diff';
-import { DiffChunk, FilteredFileDiff } from '@application/contracts/github.types';
+import { DiffChunk, FilteredFileDiff } from '@contracts/github.types';
 import { IGNORED_EXTENSIONS, IGNORED_FILES, IGNORED_DIRECTORIES } from './github.constants';
 
 export interface NormalizedPR {
