@@ -8,6 +8,7 @@ import {
 import { SPLITTER_CONFIGS, SUPPORTED_JS_EXTENSIONS } from '../processing.constants';
 import { Document } from '@langchain/core/documents';
 import { removeJsImports } from './remove-js-imports';
+import { removeJavaImports } from './remove-java-imports';
 
 interface SplitParams {
   filename: string;
@@ -42,6 +43,10 @@ export const splitCodeIntoChunks = async ({
 
           if (SUPPORTED_JS_EXTENSIONS.has(extension)) {
             codeBlock = removeJsImports(codeBlock, extension);
+          }
+
+          if (extension === '.java') {
+            codeBlock = removeJavaImports(codeBlock);
           }
 
           const header = `${symbol.kind}: ${symbol.name}`;
@@ -107,7 +112,7 @@ export const splitCodeIntoChunks = async ({
 
     for (const [idx, parentDoc] of largeDocs.entries()) {
       const hasParts = largeDocs.length > 1;
-      const partText = `:(part ${idx}/${largeDocs.length}`;
+      const partText = `:(part ${idx}/${largeDocs.length})`;
 
       largeChunks.push({
         content: `File: ${filename}${hasParts ? partText : ''}\n${hasSymbols ? `Symbols: ${symbolKind} ${symbolName}\n` : ''}---\n${parentDoc.pageContent}`,
