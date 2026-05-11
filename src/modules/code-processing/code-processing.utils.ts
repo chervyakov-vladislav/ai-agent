@@ -6,3 +6,7 @@ export const makeSymbolId = (filePath: string, symbol: BaseSymbol) => {
     .update(`${filePath}:${symbol.kind}:${symbol.name}:${symbol.startLine}`)
     .digest('hex');
 };
+
+export const removeComments = (rawContent: string) => {
+  return rawContent.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
+};

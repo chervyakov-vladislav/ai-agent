@@ -1,4 +1,5 @@
 import pLimit from 'p-limit';
+import type { SplitResult } from '@/application/contracts/code-analysis.types';
 import { logger } from '@shared/infrastructure/logger';
 import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
@@ -10,14 +11,18 @@ import {
   VectorStorePort,
 } from '@/application/use-cases/repo-sync/repo-sync.ports';
 import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableError';
-import { CodeProcessingPipeline } from '@/application/contracts/code-analysis.types';
 
 interface SyncDependencies {
   statusPort: SyncStatusPort;
   github: RepoSourcePort;
   embeddings: EmbeddingPort;
   vectorStore: VectorStorePort;
-  codeProcessingPipeline: CodeProcessingPipeline;
+  codeProcessingPipeline: (
+    path: string,
+    content: string,
+    sha: string,
+    extension: string,
+  ) => Promise<SplitResult>;
   parallelLimit: number;
 }
 
@@ -42,10 +47,10 @@ const logProgress = (
 export const createSyncFullRepositoryUseCase = ({
   statusPort,
   github,
-  codeProcessingPipeline,
   embeddings,
   vectorStore,
   parallelLimit,
+  codeProcessingPipeline,
 }: SyncDependencies) => {
   return async (repoId: string): Promise<void> => {
     // управлять этим через очередина BullMQ
@@ -87,12 +92,7 @@ export const createSyncFullRepositoryUseCase = ({
             );
 
             // добавить очередь через bullMQ
-            const chunks = await codeProcessingPipeline.processFile(
-              file.path,
-              content,
-              file.sha,
-              extension,
-            );
+            const chunks = await codeProcessingPipeline(file.path, content, file.sha, extension);
 
             const smallChunksWithEmbeddings = await embeddings.generateEmbeddings(
               chunks.smallChunks,

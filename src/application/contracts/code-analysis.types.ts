@@ -53,10 +53,6 @@ export interface Embedding extends ProcessedChunk {
   embedding: number[];
 }
 
-export interface CodeProcessingPipeline {
-  processFile(path: string, content: string, sha: string, extension: string): Promise<SplitResult>;
-}
-
 export interface ImportDetails {
   source: string;
   defaultImport?: string;

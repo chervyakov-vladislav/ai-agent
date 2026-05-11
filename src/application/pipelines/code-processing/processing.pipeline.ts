@@ -1,27 +1,24 @@
 import { SplitResult } from '@contracts/code-analysis.types';
-import { analyzeRawContent } from './analyzers';
-import { splitCodeIntoChunks } from './chunking/code-splitter';
+import { CodeAnalyzerFn, CodeSplitterFn } from './processing.contracts';
 
-export const processFile = async (
-  filename: string,
-  rawContent: string,
-  fileHash: string,
-  extension: string,
-): Promise<SplitResult> => {
-  const {
-    cleanedContent: content,
-    imports,
-    symbols,
-  } = analyzeRawContent(rawContent, filename, extension);
+export const createProcessFile = (analyze: CodeAnalyzerFn, split: CodeSplitterFn) => {
+  return async (
+    filename: string,
+    rawContent: string,
+    fileHash: string,
+    extension: string,
+  ): Promise<SplitResult> => {
+    const { cleanedContent: content, imports, symbols } = analyze(rawContent, filename, extension);
 
-  const splitCode = await splitCodeIntoChunks({
-    filename,
-    content,
-    fileHash,
-    extension,
-    symbols,
-    imports,
-  });
+    const splitCode = await split({
+      filename,
+      content,
+      fileHash,
+      extension,
+      symbols,
+      imports,
+    });
 
-  return splitCode;
+    return splitCode;
+  };
 };

@@ -1,5 +1,6 @@
 import { parse } from 'java-parser';
 import { ImportDetails } from '@contracts/code-analysis.types';
+import { logger } from '@/shared/infrastructure/logger';
 
 interface Token {
   image: string;
@@ -100,7 +101,7 @@ export const extractJavaImports = (content: string): ImportDetails[] => {
 
     return result.length ? result : fallbackExtractImports(content);
   } catch (error) {
-    console.error('Ошибка парсинга Java imports:', error);
+    logger.error('Ошибка парсинга Java imports:', error);
     return fallbackExtractImports(content);
   }
 };

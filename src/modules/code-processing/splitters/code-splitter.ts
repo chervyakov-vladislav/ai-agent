@@ -5,7 +5,7 @@ import {
   ImportDetails,
   SplitResult,
 } from '@contracts/code-analysis.types';
-import { SPLITTER_CONFIGS, SUPPORTED_JS_EXTENSIONS } from '../processing.constants';
+import { SPLITTER_CONFIGS, SUPPORTED_JS_EXTENSIONS } from '../code-processing.constants';
 import { Document } from '@langchain/core/documents';
 import { removeJsImports } from './remove-js-imports';
 import { removeJavaImports } from './remove-java-imports';

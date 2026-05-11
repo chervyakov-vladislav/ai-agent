@@ -1,7 +1,7 @@
-import { SUPPORTED_JS_EXTENSIONS } from '../processing.constants';
-import { extractJsImports } from './language-extractors/typescript.import-extractor';
+import { SUPPORTED_JS_EXTENSIONS } from '@modules/code-processing/code-processing.constants';
+import { extractJsImports } from 'modules/code-processing/analyzer/extractors/typescript.import-extractor';
 import { ImportDetails } from '@contracts/code-analysis.types';
-import { extractJavaImports } from './language-extractors/java.import-extractor';
+import { extractJavaImports } from 'modules/code-processing/analyzer/extractors/java.import-extractor';
 
 export const extractImports = (content: string, extension: string): ImportDetails[] => {
   let imports: ImportDetails[] = [];
