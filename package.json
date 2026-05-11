@@ -41,7 +41,7 @@
     "@langchain/community": "^1.1.28",
     "@langchain/core": "^1.1.45",
     "@langchain/textsplitters": "^1.0.1",
-    "@qdrant/js-client-rest": "^1.17.0",
+    "@qdrant/js-client-rest": "^1.18.0",
     "axios": "^1.16.0",
     "bullmq": "^5.76.6",
     "express": "^5.2.1",
