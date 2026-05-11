@@ -1,4 +1,4 @@
-import { FilteredFileDiff, GithubFileStatus } from '@application/contracts/github.types';
+import { FilteredFileDiff, GithubFileStatus } from '@contracts/github.types';
 
 interface ReviewFile {
   name: string;

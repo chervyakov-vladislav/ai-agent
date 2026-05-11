@@ -1,14 +1,14 @@
 import { Project, Node } from 'ts-morph';
-import { CodeSymbol, CodeSymbolKind } from '@application/contracts/code-analysis.types';
+import { BaseSymbol, CodeSymbolKind } from '@contracts/code-analysis.types';
 
-export const getJsSymbols = (filename: string, code: string): CodeSymbol[] => {
+export const getJsSymbols = (filename: string, code: string): BaseSymbol[] => {
   const project = new Project({
     useInMemoryFileSystem: true,
     skipLoadingLibFiles: true,
     compilerOptions: { allowJs: true },
   });
   const sourceFile = project.createSourceFile(filename, code, { overwrite: true });
-  const symbols: CodeSymbol[] = [];
+  const symbols: BaseSymbol[] = [];
 
   const addSymbol = (node: Node, kind: CodeSymbolKind, customName?: string) => {
     let name: string | undefined;
@@ -35,7 +35,7 @@ export const getJsSymbols = (filename: string, code: string): CodeSymbol[] => {
         symbols.push({
           name,
           kind,
-          startLine: node.getStartLineNumber(),
+          startLine: node.getStartLineNumber(true),
           endLine: node.getEndLineNumber(),
         });
       }

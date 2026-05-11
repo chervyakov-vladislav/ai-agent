@@ -16,7 +16,10 @@ export enum CodeSymbolKind {
   Unknown = 'Unknown',
 }
 
+export type BaseSymbol = Omit<CodeSymbol, 'symbol_id'>;
+
 export interface CodeSymbol {
+  symbol_id: string;
   name: string;
   kind: CodeSymbolKind;
   startLine: number;
@@ -24,15 +27,21 @@ export interface CodeSymbol {
 }
 
 export interface ChunkMetadata {
+  id: string;
+  parent_id: string;
+  chunkType: 'small' | 'large';
   filename: string;
   fileHash: string;
-  symbolKind: CodeSymbolKind[];
-  symbolName?: string[];
-  symbols?: string[];
+  hasParts: boolean;
+  partIndex: number;
+  symbolId: string;
+  symbolKind: CodeSymbolKind;
+  symbolName?: string;
+  symbols?: string;
   startLine?: number;
-  endLine?: number;
   language?: string;
-  imports: string;
+  imports: ImportDetails[];
+  importsText: string[];
 }
 
 export interface ProcessedChunk {
@@ -42,4 +51,22 @@ export interface ProcessedChunk {
 
 export interface Embedding extends ProcessedChunk {
   embedding: number[];
+}
+
+export interface CodeProcessingPipeline {
+  processFile(path: string, content: string, sha: string, extension: string): Promise<SplitResult>;
+}
+
+export interface ImportDetails {
+  source: string;
+  defaultImport?: string;
+  importedSymbols: string[];
+  type?: 'static' | 'normal';
+  isWildcard?: boolean;
+  isStatic?: boolean;
+}
+
+export interface SplitResult {
+  smallChunks: ProcessedChunk[];
+  largeChunks: ProcessedChunk[];
 }

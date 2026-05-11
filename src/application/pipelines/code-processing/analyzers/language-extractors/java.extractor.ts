@@ -1,6 +1,6 @@
 import { parse, CstNode, IToken } from 'java-parser';
 import { logger } from '@shared/infrastructure/logger';
-import { CodeSymbol, CodeSymbolKind } from '@application/contracts/code-analysis.types';
+import { BaseSymbol, CodeSymbolKind } from '@contracts/code-analysis.types';
 
 const isCstNode = (value: unknown): value is CstNode => {
   return !!value && typeof value === 'object' && 'children' in value;
@@ -20,7 +20,7 @@ const getFirstChild = <T extends CstNode | IToken>(
   return guard(child) ? child : undefined;
 };
 
-export const getJavaSymbols = (code: string): CodeSymbol[] => {
+export const getJavaSymbols = (code: string): BaseSymbol[] => {
   let cst: CstNode;
   try {
     cst = parse(code);
@@ -28,7 +28,7 @@ export const getJavaSymbols = (code: string): CodeSymbol[] => {
     logger.error('Failed to parse Java code:', error);
     return [];
   }
-  const symbols: CodeSymbol[] = [];
+  const symbols: BaseSymbol[] = [];
   const stack: (CstNode | IToken)[] = [cst];
 
   while (stack.length > 0) {

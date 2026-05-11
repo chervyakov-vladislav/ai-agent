@@ -1,4 +1,4 @@
-import { AIReviewResponse } from '@application/contracts/llm.types';
+import { AIReviewResponse } from '@contracts/llm.types';
 import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
 import { validateAndFormatReview } from 'modules/github/github.validators';
 import { LlmPort, PullRequestSourcePort } from './analyze-pr.ports';

@@ -17,7 +17,8 @@
       "@config/*": ["./src/config/*"],
       "@shared/*": ["./src/shared/*"],
       "@modules/*": ["./src/modules/*"],
-      "@application/*": ["./src/application/*"]
+      "@application/*": ["./src/application/*"],
+      "@contracts/*": ["./src/application/contracts/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"],

@@ -5,19 +5,19 @@ import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import {
   EmbeddingPort,
-  ProcessingPort,
   RepoSourcePort,
   SyncStatusPort,
   VectorStorePort,
 } from '@/application/use-cases/repo-sync/repo-sync.ports';
 import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableError';
+import { CodeProcessingPipeline } from '@/application/contracts/code-analysis.types';
 
 interface SyncDependencies {
   statusPort: SyncStatusPort;
   github: RepoSourcePort;
-  processing: ProcessingPort;
   embeddings: EmbeddingPort;
   vectorStore: VectorStorePort;
+  codeProcessingPipeline: CodeProcessingPipeline;
   parallelLimit: number;
 }
 
@@ -42,7 +42,7 @@ const logProgress = (
 export const createSyncFullRepositoryUseCase = ({
   statusPort,
   github,
-  processing,
+  codeProcessingPipeline,
   embeddings,
   vectorStore,
   parallelLimit,
@@ -86,10 +86,26 @@ export const createSyncFullRepositoryUseCase = ({
               2000,
             );
 
-            const chunks = await processing.processFile(file.path, content, file.sha, extension);
-            const chunksWithEmbeddings = await embeddings.generateEmbeddings(chunks);
+            // добавить очередь через bullMQ
+            const chunks = await codeProcessingPipeline.processFile(
+              file.path,
+              content,
+              file.sha,
+              extension,
+            );
 
-            await vectorStore.indexChunks(collectionName, chunksWithEmbeddings, currentSyncId);
+            const smallChunksWithEmbeddings = await embeddings.generateEmbeddings(
+              chunks.smallChunks,
+            );
+            const largeChunksWithEmbeddings = await embeddings.generateEmbeddings(
+              chunks.largeChunks,
+            );
+
+            await vectorStore.indexChunks(
+              collectionName,
+              [...smallChunksWithEmbeddings, ...largeChunksWithEmbeddings],
+              currentSyncId,
+            );
 
             processed++;
 

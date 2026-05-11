@@ -3,7 +3,7 @@ import {
   githubProvider,
   githubDiffProvider,
 } from '@shared/infrastructure/clients/github/github-client';
-import { AIReviewResponse } from '@application/contracts/llm.types';
+import { AIReviewResponse } from '@contracts/llm.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { getGitHubError } from '@shared/infrastructure/clients/github/github-errors';
 import { PayloadTooLargeError } from '@shared/errors/413.PayloadTooLargeError';
@@ -13,7 +13,7 @@ import {
   FilteredFileDiff,
   GithubFileResponse,
   RepositoryMetadata,
-} from '@application/contracts/github.types';
+} from '@contracts/github.types';
 import { filterAndParseDiff, isIgnoredPath, parseRepoFullName } from './github.utils';
 import { githubContentSchema } from './github.validators';
 import { MAX_FILE_SIZE, MAX_REPO_SIZE } from './github.constants';

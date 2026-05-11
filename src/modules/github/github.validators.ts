@@ -2,8 +2,8 @@ import { z } from 'zod';
 import parse from 'parse-diff';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { AiServiceError } from '@shared/errors/502.AiServiceError';
-import { FilteredFileDiff } from '@application/contracts/github.types';
-import { ReviewComment } from '@application/contracts/llm.types';
+import { FilteredFileDiff } from '@contracts/github.types';
+import { ReviewComment } from '@contracts/llm.types';
 
 const rawReviewCommentSchema = z.object({
   file: z.string(),
