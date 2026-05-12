@@ -43,7 +43,7 @@
     "@langchain/textsplitters": "^1.0.1",
     "@qdrant/js-client-rest": "^1.18.0",
     "axios": "^1.16.0",
-    "bullmq": "^5.76.7",
+    "bullmq": "^5.76.8",
     "express": "^5.2.1",
     "java-parser": "^3.0.1",
     "p-limit": "^7.3.0",
