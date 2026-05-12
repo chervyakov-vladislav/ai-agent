@@ -13,7 +13,7 @@ export interface VectorStorePort {
   cleanupOldSyncData(collection: string, syncId: string): Promise<void>;
 }
 
-export interface EmbeddingPort {
+export interface EmbeddingGeneratePort {
   generateEmbeddings(chunks: ProcessedChunk[]): Promise<Embedding[]>;
 }
 

@@ -34,6 +34,7 @@ export interface ChunkMetadata {
   fileHash: string;
   hasParts: boolean;
   partIndex: number;
+  partCount: number;
   symbolId: string;
   symbolKind: CodeSymbolKind;
   symbolName?: string;

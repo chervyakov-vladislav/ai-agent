@@ -70,15 +70,17 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
       const chunks: DiffChunk[] = f.chunks.map((c): DiffChunk => {
         const chunkChanges = c.changes.map((ch) => ch.content).join('\n');
 
-        const cleanCodeForSearch = c.changes
+        const cleanChanges = c.changes
           .filter((ch) => ch.type !== 'del')
-          .map((ch) => ch.content.replace(/^[+-]/, ''))
-          .join('\n');
+          .map((ch) => ch.content.replace(/^[+-]/, '').trim())
+          .filter((line) => line.length > 3);
+
+        const semanticQuery = [`File: ${fileName}`, ...cleanChanges.slice(0, 50)].join('\n');
 
         return {
           header: c.content,
           promptContext: `Context for change in ${f.to || f.from} at ${c.content}:\n${chunkChanges}`,
-          vectorQuery: cleanCodeForSearch || chunkChanges.replace(/^[+-]/gm, ''),
+          vectorQuery: semanticQuery || chunkChanges.replace(/^[+-]/gm, ''),
         };
       });
 

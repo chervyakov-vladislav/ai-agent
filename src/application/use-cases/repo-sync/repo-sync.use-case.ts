@@ -5,7 +5,7 @@ import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import {
-  EmbeddingPort,
+  EmbeddingGeneratePort,
   RepoSourcePort,
   SyncStatusPort,
   VectorStorePort,
@@ -15,7 +15,7 @@ import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableEr
 interface SyncDependencies {
   statusPort: SyncStatusPort;
   github: RepoSourcePort;
-  embeddings: EmbeddingPort;
+  embeddings: EmbeddingGeneratePort;
   vectorStore: VectorStorePort;
   processFilePipeline: (
     path: string,
@@ -53,7 +53,7 @@ export const createSyncFullRepositoryUseCase = ({
   parallelLimit,
   processFilePipeline,
 }: SyncDependencies) => {
-  return async (repoId: string): Promise<void> => {
+  return async (repoId: string, collectionName: string): Promise<void> => {
     // управлять этим через очередина BullMQ
     if (await statusPort.isBusy()) {
       throw new ServiceUnavailableError(
@@ -64,7 +64,6 @@ export const createSyncFullRepositoryUseCase = ({
     await statusPort.setBusy(true);
 
     try {
-      const collectionName = repoId.replace(/\//g, '_');
       const currentSyncId = Date.now().toString();
       const repoUrl = `/repos/${repoId}`;
       const metadata = await github.getRepositoryInfo(repoUrl);

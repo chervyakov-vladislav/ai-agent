@@ -8,11 +8,17 @@ export const extractJsImports = (content: string, extension: string): ImportDeta
   const sourceFile = tsProject.createSourceFile(`temp${crypto.randomUUID()}${extension}`, content);
   const importDeclarations = sourceFile.getImportDeclarations();
 
-  const result = importDeclarations.map((importDecl) => ({
-    source: importDecl.getModuleSpecifierValue(),
-    defaultImport: importDecl.getDefaultImport()?.getText(),
-    importedSymbols: importDecl.getNamedImports().map((s) => s.getName()),
-  }));
+  const result = importDeclarations.map((importDecl) => {
+    const namespaceImport = importDecl.getNamespaceImport();
+    const isWildcard = Boolean(namespaceImport);
+
+    return {
+      source: importDecl.getModuleSpecifierValue(),
+      defaultImport: importDecl.getDefaultImport()?.getText(),
+      importedSymbols: isWildcard ? ['*'] : importDecl.getNamedImports().map((s) => s.getName()),
+      isWildcard,
+    };
+  });
 
   tsProject.removeSourceFile(sourceFile);
   return result;
