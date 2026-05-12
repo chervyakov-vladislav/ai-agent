@@ -10,7 +10,7 @@ export const removeJsImports = (content: string, extension: string): string => {
 
   sourceFile.getImportDeclarations().forEach((decl) => decl.remove());
 
-  const result = sourceFile.getFullText().trim();
+  const result = sourceFile.getText().trim();
 
   project.removeSourceFile(sourceFile);
 
