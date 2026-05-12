@@ -175,6 +175,7 @@ export const searchSmallChunks = async (
   collectionName: string,
   queryEmbedding: number[],
   limit = 5,
+  threshold = 0.6,
 ) => {
   return (await qdrantClient.search(collectionName, {
     vector: queryEmbedding,
@@ -183,6 +184,7 @@ export const searchSmallChunks = async (
     },
     limit,
     with_payload: true,
+    score_threshold: threshold,
   })) as unknown as QdrantChunkPoint[];
 };
 

@@ -1,11 +1,11 @@
 import { BaseSymbol, CodeSymbol, ImportDetails } from '@contracts/code-analysis.types';
-import { SUPPORTED_JS_EXTENSIONS } from '@modules/code-processing/code-processing.constants';
-import { getJsSymbols } from 'modules/code-processing/analyzer/extractors/typescript.extractor';
-import { getJavaSymbols } from 'modules/code-processing/analyzer/extractors/java.extractor';
-import { getSqlSymbols } from 'modules/code-processing/analyzer/extractors/sql.extractor';
+import { SUPPORTED_JS_EXTENSIONS } from 'modules/code-indexing-processing/code-indexing-processing.constants';
+import { getJsSymbols } from 'modules/code-indexing-processing/analyzer/extractors/typescript.extractor';
+import { getJavaSymbols } from 'modules/code-indexing-processing/analyzer/extractors/java.extractor';
+import { getSqlSymbols } from 'modules/code-indexing-processing/analyzer/extractors/sql.extractor';
 import { extractImports } from './extractors/import-extractor';
-import { removeComments } from '@modules/code-processing/code-processing.utils';
-import { makeSymbolId } from '@modules/code-processing/code-processing.utils';
+import { removeComments } from 'modules/code-indexing-processing/code-indexing-processing.utils';
+import { makeSymbolId } from 'modules/code-indexing-processing/code-indexing-processing.utils';
 
 interface FileAnalysis {
   symbols: CodeSymbol[];

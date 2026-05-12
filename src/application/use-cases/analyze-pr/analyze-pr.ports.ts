@@ -1,13 +1,13 @@
 import { AIReviewResponse } from '@contracts/llm.types';
 import { FilteredFileDiff } from '@contracts/github.types';
 import { ReviewContext } from '@contracts/llm.types';
-import { ProcessedChunk } from '@contracts/code-analysis.types';
+import { DiffSearchStrategy, ProcessedChunk } from '@contracts/code-analysis.types';
 
 export interface CodeSearchPort {
   findSimilarNodeIds(
     collectionName: string,
     queryEmbedding: number[],
-    limit?: number,
+    strategy: DiffSearchStrategy,
   ): Promise<string[]>;
 
   getReconstructedChunks(collectionName: string, parentIds: string[]): Promise<ProcessedChunk[]>;
@@ -24,4 +24,18 @@ export interface LlmPort {
 
 export interface EmbeddingQueryPort {
   generateQueryEmbedding(query: string): Promise<number[]>;
+}
+
+export interface SearchCodeStrategyPort {
+  getStrategy({
+    isNew,
+    isRenamed,
+    extension,
+    additions,
+  }: {
+    isNew: boolean;
+    isRenamed: boolean;
+    extension: string;
+    additions: number;
+  }): DiffSearchStrategy;
 }

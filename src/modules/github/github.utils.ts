@@ -95,10 +95,6 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         (acc, c) => acc + c.changes.filter((ch) => ch.type === 'del').length,
         0,
       );
-      // перенести определение стратегии в qdrant service при поиске
-      let strategy = { threshold: 0.7, limit: 4 };
-      if (isNew) strategy = { threshold: 0.6, limit: 5 };
-      if (isRenamed) strategy = { threshold: 0.8, limit: 2 };
 
       return {
         path,
@@ -113,7 +109,6 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         isDeleted,
         isRenamed,
         stats: { additions, deletions },
-        strategy,
       };
     });
 };

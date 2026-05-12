@@ -12,6 +12,7 @@ export const isFilesMapPayload = (payload: unknown): payload is FilesMapPayload 
   );
 };
 
+// перенести в code-searching-processing
 const formatImportsForLLM = (metadata: ChunkMetadata): string => {
   const { imports, language } = metadata;
 
@@ -61,6 +62,7 @@ const formatImportsForLLM = (metadata: ChunkMetadata): string => {
   return Array.from(new Set(formattedLines)).join('\n');
 };
 
+// перенести в code-searching-processing
 export const reconstructChunks = (points: QdrantChunkPoint[]): ProcessedChunk[] => {
   const groups = new Map<string, QdrantChunkPayload[]>();
 

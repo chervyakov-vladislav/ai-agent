@@ -8,6 +8,5 @@ export const githubAdapter: RepoSourcePort & PullRequestSourcePort = {
   getFileContent: githubService.getFileContent,
 
   getPullRequestDiff: githubService.getPullRequestDiff,
-  getChangedFiles: githubService.getChangedFiles,
   createPullRequestReview: githubService.createPullRequestReview,
 };

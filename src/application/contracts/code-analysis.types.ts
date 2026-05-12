@@ -67,3 +67,8 @@ export interface SplitResult {
   smallChunks: ProcessedChunk[];
   largeChunks: ProcessedChunk[];
 }
+
+export interface DiffSearchStrategy {
+  threshold: number;
+  limit: number;
+}

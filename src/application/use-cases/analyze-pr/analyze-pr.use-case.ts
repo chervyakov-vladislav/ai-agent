@@ -1,10 +1,10 @@
-import { AIReviewResponse } from '@contracts/llm.types';
 import { validateAndFormatReview } from '@modules/github/github.validators';
 import {
   CodeSearchPort,
   EmbeddingQueryPort,
   LlmPort,
   PullRequestSourcePort,
+  SearchCodeStrategyPort,
 } from './analyze-pr.ports';
 
 export interface AnalyzePRDependencies {
@@ -12,35 +12,48 @@ export interface AnalyzePRDependencies {
   llm: LlmPort;
   vectorstore: CodeSearchPort;
   embeddings: EmbeddingQueryPort;
+  codeSearching: SearchCodeStrategyPort;
   parallelLimit: number;
 }
 
 export const createAnalyzePullRequestUseCase = ({
   github,
-  llm,
-  vectorstore,
+  codeSearching,
   embeddings,
+  vectorstore,
+  llm,
 }: AnalyzePRDependencies) => {
-  return async (prUrl: string, collectionName: string): Promise<AIReviewResponse> => {
-    const diff = (await github.getPullRequestDiff(prUrl)).slice(3, 4);
+  return async (prUrl: string, collectionName: string) => {
+    const diff = await github.getPullRequestDiff(prUrl);
 
     for (const file of diff) {
+      if (file.isDeleted) {
+        // проверка через Graph Search для поиска неудаленных импортов. пока пропускаем
+        continue;
+      }
+
       const searchQuery = file.chunks
         .map((c) => c.vectorQuery)
         .filter((q) => q.length > 10)
-        .join('\n---\n');
+        .join('\n---\n')
+        .substring(0, 4000);
 
       if (!searchQuery) continue;
 
       const queryVector = await embeddings.generateQueryEmbedding(searchQuery);
 
-      const parentIds = await vectorstore.findSimilarNodeIds(
-        collectionName,
-        queryVector,
-        file.strategy.limit,
-      );
+      const strategy = codeSearching.getStrategy({
+        isNew: file.isNew,
+        isRenamed: file.isRenamed,
+        additions: file.stats.additions,
+        extension: file.extension,
+      });
 
+      const parentIds = await vectorstore.findSimilarNodeIds(collectionName, queryVector, strategy);
       const content = await vectorstore.getReconstructedChunks(collectionName, parentIds);
+
+      console.log(file.promptData);
+      console.log(content);
     }
 
     // const context = {
