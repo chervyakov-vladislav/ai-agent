@@ -41,9 +41,9 @@
     "@langchain/community": "^1.1.28",
     "@langchain/core": "^1.1.45",
     "@langchain/textsplitters": "^1.0.1",
-    "@qdrant/js-client-rest": "^1.17.0",
+    "@qdrant/js-client-rest": "^1.18.0",
     "axios": "^1.16.0",
-    "bullmq": "^5.76.6",
+    "bullmq": "^5.76.7",
     "express": "^5.2.1",
     "java-parser": "^3.0.1",
     "p-limit": "^7.3.0",
@@ -59,7 +59,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.6.0",
+    "@types/node": "^25.7.0",
     "@types/uuid": "^11.0.0",
     "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
@@ -68,7 +68,7 @@
     "prettier": "^3.8.3",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.2",
-    "vite": "^8.0.10"
+    "typescript-eslint": "^8.59.3",
+    "vite": "^8.0.12"
   }
 }
