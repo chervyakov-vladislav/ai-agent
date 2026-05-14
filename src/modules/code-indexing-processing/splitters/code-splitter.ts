@@ -7,8 +7,8 @@ import {
 } from '@contracts/code-analysis.types';
 import { SPLITTER_CONFIGS, SUPPORTED_JS_EXTENSIONS } from '../code-indexing-processing.constants';
 import { Document } from '@langchain/core/documents';
-import { removeJsImports } from './remove-js-imports';
 import { removeJavaImports } from './remove-java-imports';
+import { removeJsImports } from './remove-js-imports';
 
 interface SplitParams {
   filename: string;
@@ -38,8 +38,7 @@ export const splitCodeIntoChunks = async ({
   const docs: Document[] =
     symbols.length > 0
       ? symbols.map((symbol) => {
-          const startLine = symbol.startLine > 0 ? symbol.startLine - 1 : 0;
-          const codeLines = content.split('\n').slice(startLine, symbol.endLine);
+          const codeLines = content.split('\n').slice(symbol.startLine, symbol.endLine);
           let codeBlock = codeLines.join('\n');
 
           if (SUPPORTED_JS_EXTENSIONS.has(extension)) {
@@ -84,10 +83,7 @@ export const splitCodeIntoChunks = async ({
 
     for (const [idx, childDoc] of smallDocs.entries()) {
       const symbolHeader = hasSymbols ? `Symbols: ${symbolKind} ${symbolName}\n` : '';
-      const importsSummary = imports.length
-        ? `Imports: ${imports.map((imp) => imp.source).join(', ')}`
-        : '';
-      const technicalHeader = `File: ${filename}\n${symbolHeader}\n${importsSummary}\n---`;
+      const technicalHeader = `File: ${filename}\n${symbolHeader}\n---`;
       const chunkContent = `${technicalHeader}\n${childDoc.pageContent}`;
 
       smallChunks.push({
@@ -104,9 +100,9 @@ export const splitCodeIntoChunks = async ({
           hasParts: smallDocs.length > 1,
           partIndex: idx,
           partCount: smallDocs.length,
-          symbols: `${symbolKind}:${symbolName}`,
           symbolName,
           symbolKind,
+          allSymbolsInFile: symbols.map((s) => `${s.kind}:${s.name}`),
           importsText: imports.map((imp) => imp.source),
           imports,
         },
@@ -115,10 +111,7 @@ export const splitCodeIntoChunks = async ({
 
     for (const [idx, parentDoc] of largeDocs.entries()) {
       const symbolHeader = hasSymbols ? `Symbols: ${symbolKind} ${symbolName}\n` : '';
-      const importsSummary = imports.length
-        ? `Imports: ${imports.map((imp) => imp.source).join(', ')}`
-        : '';
-      const technicalHeader = `File: ${filename}\n${symbolHeader}\n${importsSummary}\n---`;
+      const technicalHeader = `File: ${filename}\n${symbolHeader}\n---`;
       const chunkContent = `${technicalHeader}\n${parentDoc.pageContent}`;
 
       largeChunks.push({
@@ -135,9 +128,9 @@ export const splitCodeIntoChunks = async ({
           language,
           symbolId,
           startLine,
-          symbols: `${symbolKind}:${symbolName}`,
           symbolName,
           symbolKind,
+          allSymbolsInFile: symbols.map((s) => `${s.kind}:${s.name}`),
           importsText: imports.map((imp) => imp.source),
           imports,
         },

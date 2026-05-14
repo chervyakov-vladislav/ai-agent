@@ -1,7 +1,6 @@
 import pLimit from 'p-limit';
 import type { SplitResult } from '@/application/contracts/code-analysis.types';
 import { logger } from '@shared/infrastructure/logger';
-import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import {
@@ -11,6 +10,8 @@ import {
   VectorStorePort,
 } from '@/application/use-cases/repo-sync/repo-sync.ports';
 import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableError';
+import { mock } from './mock';
+import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
 
 interface SyncDependencies {
   statusPort: SyncStatusPort;
@@ -71,7 +72,7 @@ export const createSyncFullRepositoryUseCase = ({
       const storedFiles = await vectorStore.getStoredFilesMap(collectionName);
       const total = filePaths.length;
       let processed = 0;
-      // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
+      // написать очередь через BullMq + redis
       const limit = pLimit(parallelLimit);
 
       const tasks = filePaths.map((file) =>

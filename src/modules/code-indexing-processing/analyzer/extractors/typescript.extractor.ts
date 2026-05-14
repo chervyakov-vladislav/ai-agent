@@ -35,7 +35,7 @@ export const getJsSymbols = (filename: string, code: string): BaseSymbol[] => {
         symbols.push({
           name,
           kind,
-          startLine: node.getStartLineNumber(true),
+          startLine: node.getStartLineNumber(true) > 0 ? node.getStartLineNumber(true) - 1 : 0,
           endLine: node.getEndLineNumber(),
         });
       }

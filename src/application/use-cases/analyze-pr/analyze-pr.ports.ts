@@ -1,7 +1,11 @@
 import { AIReviewResponse } from '@contracts/llm.types';
 import { FilteredFileDiff } from '@contracts/github.types';
 import { ReviewContext } from '@contracts/llm.types';
-import { DiffSearchStrategy, ProcessedChunk } from '@contracts/code-analysis.types';
+import {
+  DiffSearchStrategy,
+  ProcessedChunk,
+  QdrantChunkPoint,
+} from '@contracts/code-analysis.types';
 
 export interface CodeSearchPort {
   findSimilarNodeIds(
@@ -10,7 +14,7 @@ export interface CodeSearchPort {
     strategy: DiffSearchStrategy,
   ): Promise<string[]>;
 
-  getReconstructedChunks(collectionName: string, parentIds: string[]): Promise<ProcessedChunk[]>;
+  getPoints(collectionName: string, parentIds: string[]): Promise<QdrantChunkPoint[]>;
 }
 
 export interface PullRequestSourcePort {
@@ -38,4 +42,5 @@ export interface SearchCodeStrategyPort {
     extension: string;
     additions: number;
   }): DiffSearchStrategy;
+  reconstructChunks(points: QdrantChunkPoint[]): ProcessedChunk[];
 }

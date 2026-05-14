@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import { v5 as uuidv5 } from 'uuid';
-import { Embedding, ProcessedChunk } from '@contracts/code-analysis.types';
+import { Embedding, QdrantChunkPoint } from '@contracts/code-analysis.types';
 import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { envConfig } from '@config/env-config';
-import { QdrantChunkPoint, QdrantScrollResponse, ScrollOffset } from './qdrant.types';
-import { isFilesMapPayload, reconstructChunks } from './qdrant.utils';
+import { QdrantScrollResponse, ScrollOffset } from './qdrant.types';
+import { isFilesMapPayload } from './qdrant.utils';
 
 const initializedCollections = new Map<string, Promise<void>>();
 
@@ -188,10 +188,10 @@ export const searchSmallChunks = async (
   })) as unknown as QdrantChunkPoint[];
 };
 
-export const getReconstructedChunks = async (
+export const getPoints = async (
   collectionName: string,
   parentIds: string[],
-): Promise<ProcessedChunk[]> => {
+): Promise<QdrantChunkPoint[]> => {
   const response = (await qdrantClient.scroll(collectionName, {
     filter: {
       must: [
@@ -203,5 +203,5 @@ export const getReconstructedChunks = async (
     limit: 100,
   })) as unknown as QdrantScrollResponse;
 
-  return reconstructChunks(response.points);
+  return response.points;
 };

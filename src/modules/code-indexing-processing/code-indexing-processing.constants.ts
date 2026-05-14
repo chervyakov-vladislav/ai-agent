@@ -4,6 +4,6 @@ export const SPLITTER_CONFIGS: Record<
   'nomic' | 'fullDocument',
   { chunkSize: number; chunkOverlap: number }
 > = {
-  nomic: { chunkSize: 1500, chunkOverlap: 0 },
-  fullDocument: { chunkSize: 4000, chunkOverlap: 0 },
+  nomic: { chunkSize: 1200, chunkOverlap: 0 },
+  fullDocument: { chunkSize: 3000, chunkOverlap: 0 },
 };

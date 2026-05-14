@@ -24,11 +24,11 @@ export const createAnalyzePullRequestUseCase = ({
   llm,
 }: AnalyzePRDependencies) => {
   return async (prUrl: string, collectionName: string) => {
-    const diff = await github.getPullRequestDiff(prUrl);
+    const diff = (await github.getPullRequestDiff(prUrl)).splice(3, 4);
 
     for (const file of diff) {
       if (file.isDeleted) {
-        // проверка через Graph Search для поиска неудаленных импортов. пока пропускаем
+        // реализовать проверку через Graph Search для поиска неудаленных импортов. пока пропускаем
         continue;
       }
 
@@ -50,10 +50,11 @@ export const createAnalyzePullRequestUseCase = ({
       });
 
       const parentIds = await vectorstore.findSimilarNodeIds(collectionName, queryVector, strategy);
-      const content = await vectorstore.getReconstructedChunks(collectionName, parentIds);
+      const points = await vectorstore.getPoints(collectionName, parentIds);
+      const content = codeSearching.reconstructChunks(points);
 
       console.log(file.promptData);
-      console.log(content);
+      console.log(content); // убрать дубли
     }
 
     // const context = {

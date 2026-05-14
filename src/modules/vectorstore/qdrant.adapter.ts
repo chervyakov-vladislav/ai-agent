@@ -33,7 +33,7 @@ export const qdrantVectorSearchAdapter: CodeSearchPort = {
     return [...new Set(result.map((p) => p.payload.parent_id))];
   },
 
-  async getReconstructedChunks(collectionName, parentIds) {
-    return await qdrantService.getReconstructedChunks(collectionName, parentIds);
+  async getPoints(collectionName, parentIds) {
+    return await qdrantService.getPoints(collectionName, parentIds);
   },
 };
