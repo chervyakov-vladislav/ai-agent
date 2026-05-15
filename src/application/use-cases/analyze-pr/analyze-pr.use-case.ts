@@ -24,7 +24,7 @@ export const createAnalyzePullRequestUseCase = ({
   llm,
 }: AnalyzePRDependencies) => {
   return async (prUrl: string, collectionName: string) => {
-    const diff = (await github.getPullRequestDiff(prUrl)).splice(3, 4);
+    const diff = await github.getPullRequestDiff(prUrl);
 
     for (const file of diff) {
       if (file.isDeleted) {
@@ -35,8 +35,11 @@ export const createAnalyzePullRequestUseCase = ({
       const searchQuery = file.chunks
         .map((c) => c.vectorQuery)
         .filter((q) => q.length > 10)
-        .join('\n---\n')
-        .substring(0, 4000);
+        .join('\n---\n');
+
+      if (searchQuery.length > 3000) {
+        // идти в langchain и резать
+      }
 
       if (!searchQuery) continue;
 
