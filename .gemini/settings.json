@@ -1,0 +1,7 @@
+{
+  "context": {
+    "includeDirectories": [".gemini/rules"],
+    "loadMemoryFromIncludeDirectories": true,
+    "fileName": ["GEMINI.md", "modules.md"]
+  }
+}

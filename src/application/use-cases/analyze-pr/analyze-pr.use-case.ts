@@ -32,6 +32,7 @@ export const createAnalyzePullRequestUseCase = ({
         continue;
       }
 
+      // возможно не стоит склеивать
       const searchQuery = file.chunks
         .map((c) => c.vectorQuery)
         .filter((q) => q.length > 10)
