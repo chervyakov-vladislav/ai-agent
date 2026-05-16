@@ -1,6 +1,12 @@
 import { Project, Node } from 'ts-morph';
 import crypto from 'node:crypto';
-import { BaseSymbol, CodeSymbolKind, ImportDetails } from '@contracts/code-analysis.types';
+import {
+  BaseSymbol,
+  CodeSymbol,
+  CodeSymbolKind,
+  ImportDetails,
+  DocumentInput,
+} from '@contracts/code-analysis.types';
 
 const project = new Project({
   useInMemoryFileSystem: true,
@@ -138,7 +144,44 @@ export const tsMorphStrategy = {
     const result = sourceFile.getText().trim();
 
     project.removeSourceFile(sourceFile);
-
     return result;
+  },
+
+  prepareDocumentInputs: (
+    filename: string,
+    content: string,
+    symbols: CodeSymbol[],
+  ): DocumentInput[] => {
+    if (symbols.length === 0) {
+      return [
+        {
+          pageContent: content,
+          metadata: {
+            symbolName: filename,
+            symbolKind: CodeSymbolKind.FileContent,
+            startLine: 0,
+            symbolId: 'file-root',
+          },
+        },
+      ];
+    }
+
+    return symbols.map((symbol) => {
+      const codeLines = content.split('\n').slice(symbol.startLine, symbol.endLine);
+      let codeBlock = codeLines.join('\n');
+
+      // Удаляем импорты специфичным для JS/TS способом
+      codeBlock = tsMorphStrategy.removeImports(filename, codeBlock);
+
+      return {
+        pageContent: codeBlock,
+        metadata: {
+          symbolName: symbol.name,
+          symbolKind: symbol.kind,
+          startLine: symbol.startLine,
+          symbolId: symbol.symbol_id,
+        },
+      };
+    });
   },
 };

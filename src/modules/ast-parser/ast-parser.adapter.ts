@@ -7,4 +7,5 @@ export const astParserAdapter = {
   extractSymbols: astParserService.extractSymbols,
   extractImports: astParserService.extractImports,
   removeImports: astParserService.removeImports,
+  prepareDocumentInputs: astParserService.prepareDocumentInputs,
 };

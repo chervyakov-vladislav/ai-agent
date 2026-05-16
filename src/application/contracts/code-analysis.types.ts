@@ -84,3 +84,13 @@ export interface QdrantChunkPoint {
   score?: number;
   shard_key?: string;
 }
+
+export interface DocumentInput {
+  pageContent: string;
+  metadata: {
+    symbolName: string;
+    symbolKind: CodeSymbolKind;
+    startLine: number;
+    symbolId: string;
+  };
+}

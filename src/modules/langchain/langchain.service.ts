@@ -5,17 +5,17 @@ import {
   CodeSymbol,
   ImportDetails,
   SplitResult,
+  DocumentInput,
 } from '@contracts/code-analysis.types';
-import { SPLITTER_CONFIGS, SUPPORTED_JS_EXTENSIONS } from './langchain.constants';
-import { removeJavaImports, removeJsImports } from './langchain.utils';
+import { SPLITTER_CONFIGS } from './langchain.constants';
 
 interface SplitParams {
   filename: string;
-  content: string;
   fileHash: string;
   extension: string;
   symbols: CodeSymbol[];
   imports: ImportDetails[];
+  documentInputs: DocumentInput[];
 }
 
 /**
@@ -23,11 +23,11 @@ interface SplitParams {
  */
 export const splitCodeIntoChunks = async ({
   filename,
-  content,
   fileHash,
   extension,
   symbols,
   imports,
+  documentInputs,
 }: SplitParams): Promise<SplitResult> => {
   const language = extension.replace('.', '') || 'unknown';
 
@@ -37,41 +37,7 @@ export const splitCodeIntoChunks = async ({
   const smallChunks: ProcessedChunk[] = [];
   const largeChunks: ProcessedChunk[] = [];
 
-  const docs: Document[] =
-    symbols.length > 0
-      ? symbols.map((symbol) => {
-          const codeLines = content.split('\n').slice(symbol.startLine, symbol.endLine);
-          let codeBlock = codeLines.join('\n');
-
-          if (SUPPORTED_JS_EXTENSIONS.has(extension)) {
-            codeBlock = removeJsImports(codeBlock, extension);
-          }
-
-          if (extension === '.java') {
-            codeBlock = removeJavaImports(codeBlock);
-          }
-
-          return new Document({
-            pageContent: codeBlock,
-            metadata: {
-              symbolName: symbol.name,
-              symbolKind: symbol.kind,
-              startLine: symbol.startLine,
-              symbolId: symbol.symbol_id,
-            },
-          });
-        })
-      : [
-          new Document({
-            pageContent: content,
-            metadata: {
-              symbolName: filename,
-              symbolKind: 'FileContent',
-              startLine: 0,
-              symbolId: 'file-root',
-            },
-          }),
-        ];
+  const docs = documentInputs.map((input) => new Document(input));
 
   for (const doc of docs) {
     const { symbolKind, symbolName, startLine, symbolId } = doc.metadata;
