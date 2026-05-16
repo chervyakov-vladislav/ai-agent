@@ -10,10 +10,7 @@ import {
 
 const isNode = (node: unknown): node is { type: string } => {
   return (
-    typeof node === 'object' &&
-    node !== null &&
-    'type' in node &&
-    typeof (node as any).type === 'string'
+    typeof node === 'object' && node !== null && 'type' in node && typeof node.type === 'string'
   );
 };
 
@@ -34,8 +31,8 @@ const hasRange = (node: unknown): node is { range: [number, number] } => {
     typeof node === 'object' &&
     node !== null &&
     'range' in node &&
-    Array.isArray((node as any).range) &&
-    (node as any).range.length === 2
+    Array.isArray(node.range) &&
+    node.range.length === 2
   );
 };
 
@@ -65,8 +62,8 @@ const getEntityNameString = (node: unknown): string => {
     return obj && prop ? `${obj}.${prop}` : obj || prop;
   }
 
-  if (isNode(node) && node.type === 'bigquery_quoted_member_expr' && 'expr' in (node as any)) {
-    return getEntityNameString((node as any).expr);
+  if (isNode(node) && node.type === 'bigquery_quoted_member_expr' && 'expr' in node) {
+    return getEntityNameString(node.expr);
   }
 
   return '';
@@ -105,16 +102,13 @@ export const sqlStrategy = {
           case 'create_view_stmt':
           case 'create_function_stmt':
             if ('name' in stmt) {
-              pushSymbol(getEntityNameString((stmt as any).name), getKind(stmt.type));
+              pushSymbol(getEntityNameString(stmt.name), getKind(stmt.type));
             }
             break;
 
           case 'alter_table_stmt':
             if ('name' in stmt) {
-              pushSymbol(
-                `ALTER ${getEntityNameString((stmt as any).name)}`,
-                CodeSymbolKind.Modification,
-              );
+              pushSymbol(`ALTER ${getEntityNameString(stmt.name)}`, CodeSymbolKind.Modification);
             }
             break;
 
@@ -132,7 +126,7 @@ export const sqlStrategy = {
 
           default: {
             const label = stmt.type.replace(/_stmt$/, '').toUpperCase();
-            const name = 'name' in stmt ? getEntityNameString((stmt as any).name) : '';
+            const name = 'name' in stmt ? getEntityNameString(stmt.name) : '';
             pushSymbol(name ? `${label} ${name}` : label, CodeSymbolKind.Modification);
             break;
           }

@@ -1,22 +1,31 @@
-import { CodeSymbol, ImportDetails, SplitResult } from '@contracts/code-analysis.types';
+import {
+  SplitResult,
+  DocumentInput,
+  CodeSymbol,
+  ImportDetails,
+} from '@contracts/code-analysis.types';
 
-export interface CodeAnalysisResult {
-  symbols: CodeSymbol[];
-  imports: ImportDetails[];
-  cleanedContent: string;
+export type CodeProcessingPipeline = (
+  filename: string,
+  rawContent: string,
+  fileHash: string,
+  extension: string,
+) => Promise<SplitResult>;
+
+export interface AstParserPort {
+  extractSymbols(filename: string, content: string): any[]; // BaseSymbol[]
+  makeSymbolId(filename: string, symbol: any): string;
+  extractImports(filename: string, content: string): ImportDetails[];
+  prepareDocumentInputs(filename: string, content: string, symbols: CodeSymbol[]): DocumentInput[];
 }
 
-export type CodeAnalyzerFn = (
-  content: string,
-  filename: string,
-  extension: string,
-) => CodeAnalysisResult;
-
-export type CodeSplitterFn = (params: {
-  filename: string;
-  content: string;
-  fileHash: string;
-  extension: string;
-  symbols: CodeSymbol[];
-  imports: ImportDetails[];
-}) => Promise<SplitResult>;
+export interface LangChainPort {
+  splitCodeIntoChunks(params: {
+    filename: string;
+    fileHash: string;
+    extension: string;
+    symbols: CodeSymbol[];
+    imports: ImportDetails[];
+    documentInputs: DocumentInput[];
+  }): Promise<SplitResult>;
+}
