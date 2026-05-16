@@ -3,6 +3,7 @@ import {
   DocumentInput,
   CodeSymbol,
   ImportDetails,
+  BaseSymbol,
 } from '@contracts/code-analysis.types';
 
 export type CodeProcessingPipeline = (
@@ -13,8 +14,8 @@ export type CodeProcessingPipeline = (
 ) => Promise<SplitResult>;
 
 export interface AstParserPort {
-  extractSymbols(filename: string, content: string): any[]; // BaseSymbol[]
-  makeSymbolId(filename: string, symbol: any): string;
+  extractSymbols(filename: string, content: string): BaseSymbol[];
+  makeSymbolId(filename: string, symbol: BaseSymbol): string;
   extractImports(filename: string, content: string): ImportDetails[];
   prepareDocumentInputs(filename: string, content: string, symbols: CodeSymbol[]): DocumentInput[];
 }
