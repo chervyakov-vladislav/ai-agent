@@ -4,11 +4,11 @@ import { githubPRAdapter } from 'modules/github/github.adapter';
 import { qdrantVectorSearchAdapter } from '@modules/vectorstore/qdrant.adapter';
 import { embeddingsQueryAdapter } from '@modules/embeddings/embeddings.adapter';
 import { envConfig } from '@config/env-config';
-import { codeSearchingProcessingDiffAdapter } from '@modules/code-searching-processing/code-searching-processing.adapter';
+import { astParserSearchAdapter } from '@modules/ast-parser/ast-parser.adapter';
 
 export const analyzePullRequestUseCase = createAnalyzePullRequestUseCase({
   github: githubPRAdapter,
-  codeSearching: codeSearchingProcessingDiffAdapter,
+  codeSearching: astParserSearchAdapter,
   embeddings: embeddingsQueryAdapter,
   vectorstore: qdrantVectorSearchAdapter,
   llm: geminiAdapter,
