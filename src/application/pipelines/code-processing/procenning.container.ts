@@ -1,8 +1,11 @@
-import { analyzeRawContent } from 'modules/code-processing/analyzer/file-analyzer';
-import { splitCodeIntoChunks } from '@modules/code-processing/splitters/code-splitter';
+import { astParserIndexingAdapter } from '@modules/ast-parser/ast-parser.adapter';
+import { langchainAdapter } from '@modules/langchain/langchain.adapter';
 import { createProcessFilePipeline } from '@application/pipelines/code-processing/processing.pipeline';
 
+/**
+ * Контейнер для внедрения зависимостей в пайплайн обработки файлов.
+ */
 export const processFilePipeline = createProcessFilePipeline(
-  analyzeRawContent,
-  splitCodeIntoChunks,
+  astParserIndexingAdapter,
+  langchainAdapter,
 );

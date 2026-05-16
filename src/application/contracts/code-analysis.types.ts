@@ -34,10 +34,11 @@ export interface ChunkMetadata {
   fileHash: string;
   hasParts: boolean;
   partIndex: number;
+  partCount: number;
   symbolId: string;
   symbolKind: CodeSymbolKind;
   symbolName?: string;
-  symbols?: string;
+  allSymbolsInFile: string[];
   startLine?: number;
   language?: string;
   imports: ImportDetails[];
@@ -65,4 +66,31 @@ export interface ImportDetails {
 export interface SplitResult {
   smallChunks: ProcessedChunk[];
   largeChunks: ProcessedChunk[];
+}
+
+export interface DiffSearchStrategy {
+  threshold: number;
+  limit: number;
+}
+
+export type QdrantChunkPayload = ChunkMetadata & {
+  content: string;
+};
+
+export interface QdrantChunkPoint {
+  id: string | number;
+  payload: QdrantChunkPayload;
+  vector?: number[] | Record<string, number[]>;
+  score?: number;
+  shard_key?: string;
+}
+
+export interface DocumentInput {
+  pageContent: string;
+  metadata: {
+    symbolName: string;
+    symbolKind: CodeSymbolKind;
+    startLine: number;
+    symbolId: string;
+  };
 }

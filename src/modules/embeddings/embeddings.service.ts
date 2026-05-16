@@ -19,3 +19,7 @@ export const generateChunksEmbeddings = async (chunks: ProcessedChunk[]) => {
     ),
   );
 };
+
+export const generateQueryEmbedding = async (query: string): Promise<number[]> => {
+  return await getEmbedding(query, 'query');
+};

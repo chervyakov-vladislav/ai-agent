@@ -1,0 +1,10 @@
+pre-commit:
+  jobs:
+    - name: prettier
+      run: npm run format
+
+    - name: lint
+      run: npm run lint
+
+    - name: typecheck
+      run: npm run typecheck

@@ -1,10 +1,10 @@
 import { createHash } from 'node:crypto';
 import { v5 as uuidv5 } from 'uuid';
-import { Embedding } from '@contracts/code-analysis.types';
+import { Embedding, QdrantChunkPoint } from '@contracts/code-analysis.types';
 import { qdrantClient } from '@shared/infrastructure/clients/qdrant-client';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { envConfig } from '@config/env-config';
-import { ScrollOffset } from './qdrant.types';
+import { QdrantScrollResponse, ScrollOffset } from './qdrant.types';
 import { isFilesMapPayload } from './qdrant.utils';
 
 const initializedCollections = new Map<string, Promise<void>>();
@@ -30,6 +30,12 @@ const ensureCollection = async (collectionName: string) => {
 
         await qdrantClient.createPayloadIndex(collectionName, {
           field_name: 'filename',
+          field_schema: 'keyword',
+          wait: true,
+        });
+
+        await qdrantClient.createPayloadIndex(collectionName, {
+          field_name: 'parent_id',
           field_schema: 'keyword',
           wait: true,
         });
@@ -163,4 +169,39 @@ export const indexChunks = async (
       filename: chunks[0]?.metadata.filename,
     });
   }
+};
+
+export const searchSmallChunks = async (
+  collectionName: string,
+  queryEmbedding: number[],
+  limit = 5,
+  threshold = 0.6,
+) => {
+  return (await qdrantClient.search(collectionName, {
+    vector: queryEmbedding,
+    filter: {
+      must: [{ key: 'chunkType', match: { value: 'small' } }],
+    },
+    limit,
+    with_payload: true,
+    score_threshold: threshold,
+  })) as unknown as QdrantChunkPoint[];
+};
+
+export const getPoints = async (
+  collectionName: string,
+  parentIds: string[],
+): Promise<QdrantChunkPoint[]> => {
+  const response = (await qdrantClient.scroll(collectionName, {
+    filter: {
+      must: [
+        { key: 'chunkType', match: { value: 'large' } },
+        { key: 'parent_id', match: { any: parentIds } },
+      ],
+    },
+    with_payload: true,
+    limit: 100,
+  })) as unknown as QdrantScrollResponse;
+
+  return response.points;
 };

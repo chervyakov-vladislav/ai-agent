@@ -1,21 +1,22 @@
 import pLimit from 'p-limit';
 import type { SplitResult } from '@/application/contracts/code-analysis.types';
 import { logger } from '@shared/infrastructure/logger';
-import { withRetry } from '@/shared/infrastructure/clients/http-client.utils';
 import { InternalServerError } from '@/shared/errors/500.InternalServerError';
 import { AppError } from '@shared/errors/AppError';
 import {
-  EmbeddingPort,
+  EmbeddingGeneratePort,
   RepoSourcePort,
   SyncStatusPort,
   VectorStorePort,
 } from '@/application/use-cases/repo-sync/repo-sync.ports';
 import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableError';
+// import { mock } from './mock';
+import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
 
 interface SyncDependencies {
   statusPort: SyncStatusPort;
   github: RepoSourcePort;
-  embeddings: EmbeddingPort;
+  embeddings: EmbeddingGeneratePort;
   vectorStore: VectorStorePort;
   processFilePipeline: (
     path: string,
@@ -53,7 +54,7 @@ export const createSyncFullRepositoryUseCase = ({
   parallelLimit,
   processFilePipeline,
 }: SyncDependencies) => {
-  return async (repoId: string): Promise<void> => {
+  return async (repoId: string, collectionName: string): Promise<void> => {
     // управлять этим через очередина BullMQ
     if (await statusPort.isBusy()) {
       throw new ServiceUnavailableError(
@@ -64,7 +65,6 @@ export const createSyncFullRepositoryUseCase = ({
     await statusPort.setBusy(true);
 
     try {
-      const collectionName = repoId.replace(/\//g, '_');
       const currentSyncId = Date.now().toString();
       const repoUrl = `/repos/${repoId}`;
       const metadata = await github.getRepositoryInfo(repoUrl);
@@ -72,7 +72,7 @@ export const createSyncFullRepositoryUseCase = ({
       const storedFiles = await vectorStore.getStoredFilesMap(collectionName);
       const total = filePaths.length;
       let processed = 0;
-      // рассмотреть возможность перехода с p-limit на работу с очередью через BullMq + redis
+      // написать очередь через BullMq + redis
       const limit = pLimit(parallelLimit);
 
       const tasks = filePaths.map((file) =>

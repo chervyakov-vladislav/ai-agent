@@ -47,7 +47,6 @@ export interface FilteredFileDiff {
   isDeleted: boolean;
   isRenamed: boolean;
   stats: FileDiffStats;
-  strategy: SearchStrategy;
 }
 
 export interface DiffChunk {
@@ -59,9 +58,4 @@ export interface DiffChunk {
 interface FileDiffStats {
   additions: number;
   deletions: number;
-}
-
-interface SearchStrategy {
-  threshold: number;
-  limit: number;
 }

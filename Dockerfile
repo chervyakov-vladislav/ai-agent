@@ -4,11 +4,7 @@ COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY . .
 
-FROM base AS checker
-RUN npm run lint
-RUN npm run typecheck
-
-FROM checker AS builder
+FROM base AS builder
 RUN npm run build
 
 FROM node:24-alpine AS runner
