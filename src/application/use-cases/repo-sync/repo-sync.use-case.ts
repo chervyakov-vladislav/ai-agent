@@ -10,7 +10,7 @@ import {
   VectorStorePort,
 } from '@/application/use-cases/repo-sync/repo-sync.ports';
 import { ServiceUnavailableError } from '@shared/errors/503.ServiceUnavailableError';
-import { mock } from './mock';
+// import { mock } from './mock';
 import { withRetry } from '@shared/infrastructure/clients/http-client.utils';
 
 interface SyncDependencies {

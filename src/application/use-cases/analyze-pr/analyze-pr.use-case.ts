@@ -1,4 +1,4 @@
-import { validateAndFormatReview } from '@modules/github/github.validators';
+// import { validateAndFormatReview } from '@modules/github/github.validators';
 import {
   CodeSearchPort,
   EmbeddingQueryPort,
@@ -21,7 +21,7 @@ export const createAnalyzePullRequestUseCase = ({
   codeSearching,
   embeddings,
   vectorstore,
-  llm,
+  // llm,
 }: AnalyzePRDependencies) => {
   return async (prUrl: string, collectionName: string) => {
     const diff = await github.getPullRequestDiff(prUrl);
