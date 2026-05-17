@@ -53,7 +53,12 @@ export const createAnalyzePullRequestUseCase = ({
         extension: file.extension,
       });
 
-      const parentIds = await vectorstore.findSimilarNodeIds(collectionName, queryVector, strategy);
+      const parentIds = await vectorstore.findHybridSimilarNodeIds(
+        collectionName,
+        queryVector,
+        searchQuery,
+        strategy,
+      );
       const points = await vectorstore.getPoints(collectionName, parentIds);
       const content = codeSearching.reconstructChunks(points);
 

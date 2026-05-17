@@ -9,6 +9,8 @@ export const healthController = async (_req: Request, res: Response) => {
     checkRedisHealth(),
   ]);
 
+  const isHealthy = isQdrantHealthy && isRedisHealthy;
+
   const qdrantStatus = {
     is_healthy: isQdrantHealthy,
     status_text: isQdrantHealthy ? 'healthy' : 'unhealthy',
@@ -22,7 +24,7 @@ export const healthController = async (_req: Request, res: Response) => {
   };
 
   const appStatus = {
-    status: isQdrantHealthy ? 'ok' : 'error',
+    status: isHealthy ? 'ok' : 'error',
     timestamp: new Date().toISOString(),
     node_version: process.version,
     app_version: envConfig.APP_VERSION,
@@ -36,5 +38,5 @@ export const healthController = async (_req: Request, res: Response) => {
     },
   };
 
-  res.status(isQdrantHealthy ? 200 : 503).json(response);
+  res.status(isHealthy ? 200 : 503).json(response);
 };

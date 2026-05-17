@@ -170,7 +170,6 @@ export const tsMorphStrategy = {
       const codeLines = content.split('\n').slice(symbol.startLine, symbol.endLine);
       let codeBlock = codeLines.join('\n');
 
-      // Удаляем импорты специфичным для JS/TS способом
       codeBlock = tsMorphStrategy.removeImports(filename, codeBlock);
 
       return {

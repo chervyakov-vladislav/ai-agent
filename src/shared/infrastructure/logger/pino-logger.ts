@@ -22,8 +22,10 @@ class PinoLogger {
     };
 
     const getTransport = () => {
+      const targets: pino.TransportTargetOptions[] = [];
+
       if (isDev) {
-        return pino.transport({
+        targets.push({
           target: 'pino-pretty',
           level: envConfig.LOG_LEVEL,
           options: {
@@ -36,6 +38,26 @@ class PinoLogger {
           },
         });
       }
+
+      if (envConfig.IS_LOCAL_LOG && isDev) {
+        targets.push({
+          target: 'pino-roll',
+          level: envConfig.LOG_LEVEL,
+          options: {
+            file: './logs/app',
+            extension: '.log',
+            frequency: 'daily',
+            dateFormat: 'yyyy-MM-dd',
+            size: '10k',
+            interval: '1d',
+            mkdir: true,
+          },
+        });
+      }
+
+      return pino.transport({
+        targets,
+      });
     };
 
     this.logger = pino(

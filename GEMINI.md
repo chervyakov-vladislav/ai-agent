@@ -14,7 +14,7 @@
   - **Runtime:** Node.js 24 (ES Modules).
   - **Язык:** TypeScript 6.
   - **AI:** Google Gemini (@google/genai), LangChain для RAG-пайплайнов.
-  - **Инфраструктура:** Qdrant (Vector DB), Ollama (локальные эмбеддинги), Redis (BullMQ для фоновых задач).
+  - **Инфраструктура:** Qdrant (гибридный поиск: плотные векторы + BM25/Sparse), Ollama (локальные эмбеддинги), Redis (BullMQ для фоновых задач).
   - **Web Framework:** Express 5.
   - **Валидация:** Zod.
   - **Логирование:** Pino.
