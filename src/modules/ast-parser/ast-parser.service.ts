@@ -211,19 +211,16 @@ export const reconstructChunks = (points: QdrantChunkPoint[]): ProcessedChunk[] 
   }
 
   return Array.from(groups.values()).map((parts) => {
-    const sorted = parts.sort((a, b) => a.partIndex - b.partIndex);
-    const meta = sorted[0];
+    const sortedCode = parts.sort((a, b) => a.partIndex - b.partIndex);
+    const meta = sortedCode[0];
 
     const importsCode = formatImportsForLLM(meta);
 
-    const cleanCode = sorted
-      .map((p) => {
-        const contentParts = p.content.split('---\n');
-        return contentParts.length > 1 ? contentParts.slice(1).join('---\n') : p.content;
-      })
-      .join('\n');
+    const symbolHeader = meta.symbolHeader?.trim() || '';
+    const technicalHeader = meta.technicalHeader || '';
+    const rawTextCode = sortedCode.map((part) => part.content).join('\n');
 
-    const fullContent = [`// File: ${meta.filename}`, importsCode, '', cleanCode]
+    const fullContent = [technicalHeader, symbolHeader, importsCode, '', rawTextCode]
       .filter(Boolean)
       .join('\n');
 

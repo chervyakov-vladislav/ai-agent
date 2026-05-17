@@ -43,6 +43,8 @@ export interface ChunkMetadata {
   language?: string;
   imports: ImportDetails[];
   importsText: string[];
+  technicalHeader?: string;
+  symbolHeader?: string;
 }
 
 export interface ProcessedChunk {

@@ -71,15 +71,18 @@ const ensureCollection = async (collectionName: string) => {
   const vectorbase = initVectorBase();
 
   initializedCollections.set(collectionName, vectorbase);
+
+  return vectorbase;
 };
 
 export const getStoredFilesMap = async (collectionName: string): Promise<Map<string, string>> => {
   const filesMap = new Map<string, string>();
-  let offset: ScrollOffset = undefined;
+  let offset: ScrollOffset = null;
 
   try {
     await ensureCollection(collectionName);
-    while (offset !== null) {
+
+    while (true) {
       const response = await qdrantClient.scroll(collectionName, {
         with_payload: ['filename', 'fileHash'],
         limit: 1000,
@@ -87,15 +90,12 @@ export const getStoredFilesMap = async (collectionName: string): Promise<Map<str
       });
 
       for (const point of response.points) {
-        const payload = point.payload;
-
-        if (isFilesMapPayload(payload)) {
-          filesMap.set(payload.filename, payload.fileHash);
+        if (isFilesMapPayload(point.payload)) {
+          filesMap.set(point.payload.filename, point.payload.fileHash);
         }
       }
 
       offset = response.next_page_offset;
-
       if (!offset) break;
     }
 

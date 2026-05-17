@@ -1,4 +1,5 @@
 // import { validateAndFormatReview } from '@modules/github/github.validators';
+import { logger } from '@shared/infrastructure/logger';
 import {
   CodeSearchPort,
   EmbeddingQueryPort,
@@ -62,8 +63,8 @@ export const createAnalyzePullRequestUseCase = ({
       const points = await vectorstore.getPoints(collectionName, parentIds);
       const content = codeSearching.reconstructChunks(points);
 
-      console.log(file.promptData);
-      console.log(content); // убрать дубли
+      logger.info('diff content \n' + file.promptData);
+      logger.info('vector content \n' + content.map((c) => c.content).join('---\n')); // убрать дубли
     }
 
     // const context = {
