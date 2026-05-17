@@ -22,12 +22,12 @@ export const qdrantAdapter: VectorStorePort = {
 };
 
 export const qdrantVectorSearchAdapter: CodeSearchPort = {
-  async findSimilarNodeIds(collectionName, queryEmbedding, strategy) {
-    const result = await qdrantService.searchSmallChunks(
+  async findHybridSimilarNodeIds(collectionName, queryEmbedding, queryText, strategy) {
+    const result = await qdrantService.hybridSearch(
       collectionName,
       queryEmbedding,
+      queryText,
       strategy.limit,
-      strategy.threshold,
     );
 
     return [...new Set(result.map((p) => p.payload.parent_id))];

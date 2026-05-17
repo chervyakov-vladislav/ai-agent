@@ -23,8 +23,21 @@ const ensureCollection = async (collectionName: string) => {
         logger.info(`Creating collection: ${collectionName}`);
         await qdrantClient.createCollection(collectionName, {
           vectors: {
-            size: 768,
-            distance: 'Cosine',
+            dense: {
+              size: 768,
+              distance: 'Cosine',
+              hnsw_config: {
+                m: 32,
+                ef_construct: 128,
+              },
+            },
+          },
+          sparse_vectors: {
+            bm25: {
+              index: {
+                on_disk: false,
+              },
+            },
           },
         });
 
@@ -40,6 +53,12 @@ const ensureCollection = async (collectionName: string) => {
           wait: true,
         });
 
+        await qdrantClient.createPayloadIndex(collectionName, {
+          field_name: 'content',
+          field_schema: 'text',
+          wait: true,
+        });
+
         logger.info(`Collection ${collectionName} created successfully.`);
       }
     } catch (error) {
@@ -52,7 +71,6 @@ const ensureCollection = async (collectionName: string) => {
   const vectorbase = initVectorBase();
 
   initializedCollections.set(collectionName, vectorbase);
-  return vectorbase;
 };
 
 export const getStoredFilesMap = async (collectionName: string): Promise<Map<string, string>> => {
@@ -148,7 +166,14 @@ export const indexChunks = async (
 
       return {
         id: uuidv5(`${chunk.metadata.filename}_${contentHash}`, envConfig.QDRANT_SEED_ID),
-        vector: chunk.embedding,
+        vector: {
+          dense: chunk.embedding,
+        },
+        sparse_vectors: {
+          bm25: {
+            text: chunk.content,
+          },
+        },
         payload: {
           ...chunk.metadata,
           content: chunk.content,
@@ -171,21 +196,36 @@ export const indexChunks = async (
   }
 };
 
-export const searchSmallChunks = async (
+export const hybridSearch = async (
   collectionName: string,
   queryEmbedding: number[],
-  limit = 5,
-  threshold = 0.6,
-) => {
-  return (await qdrantClient.search(collectionName, {
-    vector: queryEmbedding,
-    filter: {
-      must: [{ key: 'chunkType', match: { value: 'small' } }],
+  queryText: string,
+  limit = 20,
+): Promise<QdrantChunkPoint[]> => {
+  const response = await qdrantClient.query(collectionName, {
+    prefetch: [
+      {
+        query: queryEmbedding,
+        using: 'dense',
+        limit: limit * 2,
+      },
+      {
+        query: {
+          text: queryText,
+          model: 'qdrant/bm25',
+        },
+        using: 'bm25',
+        limit: limit * 2,
+      },
+    ],
+    query: {
+      fusion: 'rrf',
     },
     limit,
     with_payload: true,
-    score_threshold: threshold,
-  })) as unknown as QdrantChunkPoint[];
+  });
+
+  return response.points as unknown as QdrantChunkPoint[];
 };
 
 export const getPoints = async (

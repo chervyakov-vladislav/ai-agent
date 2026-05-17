@@ -8,9 +8,10 @@ import {
 } from '@contracts/code-analysis.types';
 
 export interface CodeSearchPort {
-  findSimilarNodeIds(
+  findHybridSimilarNodeIds(
     collectionName: string,
     queryEmbedding: number[],
+    queryText: string,
     strategy: DiffSearchStrategy,
   ): Promise<string[]>;
 

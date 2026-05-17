@@ -1,7 +1,13 @@
 {
-  "context": {
-    "includeDirectories": [".gemini/rules"],
-    "loadMemoryFromIncludeDirectories": true,
-    "fileName": ["GEMINI.md", "modules.md"]
+  "experimental": {
+    "contextManagement": true
+  },
+  "advanced": {
+    "ignoreLocalEnv": true
+  },
+  "security": {
+    "environmentVariableRedaction": {
+      "enabled": true
+    }
   }
 }
