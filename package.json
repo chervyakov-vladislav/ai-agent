@@ -1,7 +1,7 @@
 {
   "name": "ai-agent",
   "version": "0.0.1",
-  "description": "AI-powered Code Review Agent with RAG and Jira integration",
+  "description": "AI-powered Code Review Agent with RAG",
   "author": "Vladislav Chervyakov <chervyakovve@mail.ru>",
   "license": "MIT",
   "homepage": "https://github.com/chervyakov-vladislav/ai-agent#readme",

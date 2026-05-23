@@ -34,6 +34,11 @@ export interface RepositoryMetadata {
   defaultBranch: string;
 }
 
+export interface Range {
+  start: number;
+  end: number;
+}
+
 export interface FilteredFileDiff {
   path: string;
   fileName: string;
@@ -41,21 +46,21 @@ export interface FilteredFileDiff {
   rawDiff: string;
   promptData: string;
   chunksCount: number;
-  chunks: DiffChunk[];
   oldPath?: string;
   isNew: boolean;
   isDeleted: boolean;
   isRenamed: boolean;
   stats: FileDiffStats;
-}
-
-export interface DiffChunk {
-  header: string;
-  promptContext: string;
-  vectorQuery: string;
+  changedRanges: Range[];
 }
 
 interface FileDiffStats {
   additions: number;
   deletions: number;
+}
+
+export interface GetFileContentParams {
+  repoUrl: string;
+  filePath: string;
+  branch?: string;
 }

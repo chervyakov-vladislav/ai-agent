@@ -27,17 +27,22 @@ export const githubWebhookController = async (req: Request, res: Response, next:
        * и не имеет механизмов ретраев при сбоях LLM.
        * Ожидаемая реализация: await analyzeQueue.add('analyze-pr', normalizedData);
        */
-      analyzePullRequestUseCase(analyzeCommand.prUrl, analyzeCommand.collectionName).catch(
-        (err: unknown) => logger.error('Background analysis error:', err),
-      );
+      analyzePullRequestUseCase({
+        prUrl: analyzeCommand.prUrl,
+        currentBranch: analyzeCommand.currentBranch,
+        collectionName: metadata.collectionName,
+        repoUrl: metadata.repoUrl,
+      }).catch((err: unknown) => logger.error('Background analysis error:', err));
     }
 
     if (syncCommand) {
-      logger.info(`Starting sync for repo ${syncCommand.repoId}`);
+      logger.info(`Starting sync for repo ${metadata.repoId}`);
 
-      syncFullRepositoryUseCase(syncCommand.repoId, syncCommand.collectionName).catch((err) =>
-        logger.error('Background sync error:', err),
-      );
+      syncFullRepositoryUseCase({
+        collectionName: metadata.collectionName,
+        repoId: metadata.repoId,
+        repoUrl: metadata.repoUrl,
+      }).catch((err) => logger.error('Background sync error:', err));
     }
 
     return res.status(202).send({ status: 'accepted' });

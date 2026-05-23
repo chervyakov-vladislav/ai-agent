@@ -11,6 +11,7 @@ import { GitHubError } from '@shared/errors/502.GithubError';
 import {
   ChangedFile,
   FilteredFileDiff,
+  GetFileContentParams,
   GithubFileResponse,
   RepositoryMetadata,
 } from '@contracts/github.types';
@@ -186,15 +187,25 @@ export const getRepositoryTree = async (repoUrl: string, branch: string) => {
     });
 };
 
-export const getFileContent = async (
-  repoUrl: string,
-  filePath: string,
-): Promise<{ content: string; extension: string }> => {
-  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${filePath}`, {
+export const getFileContent = async ({
+  filePath,
+  repoUrl,
+  branch,
+}: GetFileContentParams): Promise<{ content: string }> => {
+  const config: {
+    headers: Record<string, string>;
+    responseType: 'text';
+    params?: { ref: string };
+  } = {
     headers: { Accept: 'application/vnd.github.v3.raw' },
     responseType: 'text',
-  });
-  const extension = path.extname(filePath).toLowerCase();
+  };
+
+  if (branch) {
+    config.params = { ref: branch };
+  }
+
+  const { data } = await githubProvider.get<string>(`${repoUrl}/contents/${filePath}`, config);
   const result = githubContentSchema.safeParse(data);
 
   if (!result.success) {
@@ -204,6 +215,5 @@ export const getFileContent = async (
 
   return {
     content: result.data,
-    extension,
   };
 };

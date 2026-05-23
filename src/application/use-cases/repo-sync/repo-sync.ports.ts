@@ -1,9 +1,13 @@
 import { ProcessedChunk, Embedding } from '@contracts/code-analysis.types';
+import { GetFileContentParams } from '@application/contracts/github.types';
 
 export interface RepoSourcePort {
   getRepositoryInfo(repoUrl: string): Promise<{ defaultBranch: string }>;
-  getRepositoryTree(repoId: string, branch: string): Promise<{ path: string; sha: string }[]>;
-  getFileContent(repoUrl: string, path: string): Promise<{ content: string; extension: string }>;
+  getRepositoryTree(
+    repoId: string,
+    branch: string,
+  ): Promise<{ path: string; sha: string; extension: string }[]>;
+  getFileContent(params: GetFileContentParams): Promise<{ content: string }>;
 }
 
 export interface VectorStorePort {

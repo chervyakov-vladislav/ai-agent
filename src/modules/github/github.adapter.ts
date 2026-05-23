@@ -11,4 +11,5 @@ export const githubRepoAdapter: RepoSourcePort = {
 export const githubPRAdapter: PullRequestSourcePort = {
   getPullRequestDiff: githubService.getPullRequestDiff,
   createPullRequestReview: githubService.createPullRequestReview,
+  getFileContent: githubService.getFileContent,
 };
