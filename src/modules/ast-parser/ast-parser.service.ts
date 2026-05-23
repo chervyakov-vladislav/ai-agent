@@ -244,8 +244,11 @@ export const extractChangedCodeBlocks = (
   const allSymbols = extractSymbols(filename, content);
 
   if (allSymbols.length === 0) {
+    const searchQuery = `File: ${filename} Symbols: ${CodeSymbolKind.FileContent}-${filename}\n---\n${content}`;
+
     return [
       {
+        searchQuery,
         code: content,
         symbolName: filename,
         symbolKind: CodeSymbolKind.FileContent,
@@ -293,9 +296,11 @@ export const extractChangedCodeBlocks = (
   return deepestChangedSymbols.map((symbol) => {
     const block = fileLines.slice(symbol.startLine, symbol.endLine + 1).join('\n');
     const cleanCode = removeImports(filename, block);
+    const searchQuery = `File: ${filename} Symbols: ${symbol.kind}-${symbol.name}\n---\n${cleanCode}`;
 
     return {
       code: cleanCode,
+      searchQuery,
       symbolName: symbol.name,
       symbolKind: symbol.kind,
     };

@@ -99,6 +99,7 @@ export interface DocumentInput {
 
 export interface ChangedCodeBlock {
   code: string;
+  searchQuery: string;
   symbolName: string;
   symbolKind: CodeSymbolKind;
 }

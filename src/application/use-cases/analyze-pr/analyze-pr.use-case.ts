@@ -59,7 +59,7 @@ export const createAnalyzePullRequestUseCase = ({
           continue;
         }
 
-        const searchQuery = `File: ${file.path} Symbols: ${block.symbolKind}-${block.symbolName}\n---\n${block.code}`;
+        const searchQuery = block.searchQuery;
 
         if (!searchQuery.trim()) continue;
 
