@@ -96,3 +96,9 @@ export interface DocumentInput {
     symbolId: string;
   };
 }
+
+export interface ChangedCodeBlock {
+  code: string;
+  symbolName: string;
+  symbolKind: CodeSymbolKind;
+}

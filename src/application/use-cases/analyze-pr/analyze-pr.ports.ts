@@ -1,7 +1,7 @@
-import { AIReviewResponse } from '@contracts/llm.types';
-import { FilteredFileDiff, GetFileContentParams } from '@contracts/github.types';
-import { ReviewContext } from '@contracts/llm.types';
+import { AIReviewResponse, ReviewContext } from '@contracts/llm.types';
+import { FilteredFileDiff, GetFileContentParams, Range } from '@contracts/github.types';
 import {
+  ChangedCodeBlock,
   DiffSearchStrategy,
   ProcessedChunk,
   QdrantChunkPoint,
@@ -45,4 +45,9 @@ export interface SearchCodeStrategyPort {
     additions: number;
   }): DiffSearchStrategy;
   reconstructChunks(points: QdrantChunkPoint[]): ProcessedChunk[];
+  extractChangedCodeBlocks(
+    filename: string,
+    content: string,
+    changedRanges: Range[],
+  ): ChangedCodeBlock[];
 }

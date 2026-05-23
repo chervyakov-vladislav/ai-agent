@@ -41,46 +41,57 @@ export const createAnalyzePullRequestUseCase = ({
         repoUrl,
       });
 
-      console.log(file.promptData);
-      console.log(file.changedRanges);
-      // console.log(JSON.stringify(file.promptData, null, 2));
-
-      // continue;
-
       if (file.isDeleted) {
         // реализовать проверку через Graph Search для поиска неудаленных импортов. пока пропускаем
         continue;
       }
 
-      // возможно не стоит склеивать
-      const searchQuery = fullFileContent.content;
-
-      if (searchQuery.length > 3000) {
-        // идти в langchain и резать
-      }
-
-      if (!searchQuery) continue;
-
-      const queryVector = await embeddings.generateQueryEmbedding(searchQuery);
-
-      const strategy = codeSearching.getStrategy({
-        isNew: file.isNew,
-        isRenamed: file.isRenamed,
-        additions: file.stats.additions,
-        extension: file.extension,
-      });
-
-      const parentIds = await vectorstore.findHybridSimilarNodeIds(
-        collectionName,
-        queryVector,
-        searchQuery,
-        strategy,
+      const changedBlocks = codeSearching.extractChangedCodeBlocks(
+        file.path,
+        fullFileContent.content,
+        file.changedRanges,
       );
-      const points = await vectorstore.getPoints(collectionName, parentIds);
-      const content = codeSearching.reconstructChunks(points);
 
-      logger.info('diff content \n' + file.promptData);
-      logger.info('vector content \n' + content.map((c) => c.content).join('---\n')); // убрать дубли
+      if (changedBlocks.length === 0) continue;
+
+      for (const block of changedBlocks) {
+        if (block.code.trim().length < 20) {
+          continue;
+        }
+
+        const searchQuery = `File: ${file.path} Symbols: ${block.symbolKind}-${block.symbolName}\n---\n${block.code}`;
+
+        if (!searchQuery.trim()) continue;
+
+        if (searchQuery.length > 3000) {
+          // идти в langchain и резать, если блок слишком большой
+        }
+
+        logger.info(file.promptData);
+        logger.info(JSON.stringify({ searchQuery }, null, 2));
+        continue;
+
+        const queryVector = await embeddings.generateQueryEmbedding(searchQuery);
+
+        const strategy = codeSearching.getStrategy({
+          isNew: file.isNew,
+          isRenamed: file.isRenamed,
+          additions: file.stats.additions,
+          extension: file.extension,
+        });
+
+        const parentIds = await vectorstore.findHybridSimilarNodeIds(
+          collectionName,
+          queryVector,
+          searchQuery,
+          strategy,
+        );
+        const points = await vectorstore.getPoints(collectionName, parentIds);
+        const content = codeSearching.reconstructChunks(points);
+
+        logger.info('diff content \n' + file.promptData);
+        logger.info('vector content \n' + content.map((c) => c.content).join('---\n')); // убрать дубли
+      }
     }
   };
 };

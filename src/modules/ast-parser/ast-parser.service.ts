@@ -10,6 +10,7 @@ import {
   ProcessedChunk,
   ChunkMetadata,
   QdrantChunkPayload,
+  ChangedCodeBlock,
 } from '@contracts/code-analysis.types';
 import {
   SUPPORTED_JS_EXTENSIONS,
@@ -21,6 +22,7 @@ import { javaStrategy } from './strategies/java/java.strategy';
 import { sqlStrategy } from './strategies/sql/sql.strategy';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import * as astUtils from './ast-parser.utils';
+import { Range } from '@application/contracts/github.types';
 
 /**
  * Тип для стратегии парсинга.
@@ -227,6 +229,75 @@ export const reconstructChunks = (points: QdrantChunkPoint[]): ProcessedChunk[] 
     return {
       content: fullContent,
       metadata: { ...meta, hasParts: false },
+    };
+  });
+};
+
+/**
+ * Находит и собирает только те куски кода (символы), которые были изменены в PR.
+ */
+export const extractChangedCodeBlocks = (
+  filename: string,
+  content: string,
+  changedRanges: Range[],
+): ChangedCodeBlock[] => {
+  const allSymbols = extractSymbols(filename, content);
+
+  if (allSymbols.length === 0) {
+    return [
+      {
+        code: content,
+        symbolName: filename,
+        symbolKind: CodeSymbolKind.FileContent,
+      },
+    ];
+  }
+
+  const initialChangedSymbols = allSymbols.filter((symbol) => {
+    return changedRanges.some((range) => {
+      const gitFrom = Number(range.start) - 1;
+      const gitTo = Number(range.end) - 1;
+      return symbol.startLine <= gitTo && symbol.endLine >= gitFrom;
+    });
+  });
+
+  const deepestChangedSymbols = initialChangedSymbols.filter((currentSymbol) => {
+    const hasChildInList = initialChangedSymbols.some((otherSymbol) => {
+      if (currentSymbol === otherSymbol) return false;
+
+      const isEmbedded =
+        otherSymbol.startLine >= currentSymbol.startLine &&
+        otherSymbol.endLine <= currentSymbol.endLine;
+
+      const isSmaller =
+        otherSymbol.endLine - otherSymbol.startLine <
+        currentSymbol.endLine - currentSymbol.startLine;
+
+      return (
+        isEmbedded &&
+        (currentSymbol.startLine !== otherSymbol.startLine ||
+          currentSymbol.endLine !== otherSymbol.endLine ||
+          isSmaller)
+      );
+    });
+
+    return !hasChildInList;
+  });
+
+  if (deepestChangedSymbols.length === 0) {
+    return [];
+  }
+
+  const fileLines = content.split('\n');
+
+  return deepestChangedSymbols.map((symbol) => {
+    const block = fileLines.slice(symbol.startLine, symbol.endLine + 1).join('\n');
+    const cleanCode = removeImports(filename, block);
+
+    return {
+      code: cleanCode,
+      symbolName: symbol.name,
+      symbolKind: symbol.kind,
     };
   });
 };
