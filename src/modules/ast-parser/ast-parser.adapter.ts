@@ -20,4 +20,5 @@ export const astParserIndexingAdapter = {
 export const astParserSearchAdapter: SearchCodeStrategyPort = {
   getStrategy: astParserService.getSearchStrategy,
   reconstructChunks: astParserService.reconstructChunks,
+  extractChangedCodeBlocks: astParserService.extractChangedCodeBlocks,
 };

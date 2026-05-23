@@ -1,5 +1,6 @@
 export enum CodeSymbolKind {
   Class = 'class',
+  Constructor = 'constructor',
   Function = 'function',
   Interface = 'interface',
   Type = 'type',
@@ -95,4 +96,11 @@ export interface DocumentInput {
     startLine: number;
     symbolId: string;
   };
+}
+
+export interface ChangedCodeBlock {
+  code: string;
+  searchQuery: string;
+  symbolName: string;
+  symbolKind: CodeSymbolKind;
 }
