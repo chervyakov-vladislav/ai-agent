@@ -37,22 +37,27 @@ export const tsMorphStrategy = {
       }
 
       if (name) {
-        const isDuplicate = symbols.some(
-          (s) => s.name === name && s.startLine === node.getStartLineNumber(),
-        );
+        const realStartLine =
+          node.getStartLineNumber(true) > 0 ? node.getStartLineNumber(true) - 1 : 0;
+        const isDuplicate = symbols.some((s) => s.name === name && s.startLine === realStartLine);
 
         if (!isDuplicate) {
           symbols.push({
             name,
             kind,
-            startLine: node.getStartLineNumber(true) > 0 ? node.getStartLineNumber(true) - 1 : 0,
+            startLine: realStartLine,
             endLine: node.getEndLineNumber(),
           });
         }
       }
     };
 
-    sourceFile.getClasses().forEach((c) => addSymbol(c, CodeSymbolKind.Class));
+    sourceFile.getClasses().forEach((c) => {
+      c.getConstructors().forEach((contsructor) =>
+        addSymbol(contsructor, CodeSymbolKind.Method, CodeSymbolKind.Constructor),
+      );
+      addSymbol(c, CodeSymbolKind.Class);
+    });
     sourceFile.getFunctions().forEach((f) => addSymbol(f, CodeSymbolKind.Function));
     sourceFile.getInterfaces().forEach((i) => addSymbol(i, CodeSymbolKind.Interface));
     sourceFile.getTypeAliases().forEach((t) => addSymbol(t, CodeSymbolKind.Type));
@@ -76,12 +81,12 @@ export const tsMorphStrategy = {
       }
     }
 
-    sourceFile.getVariableDeclarations().forEach((v) => {
-      const initializer = v.getInitializer();
+    sourceFile.getVariableDeclarations().forEach((varDecl) => {
+      const initializer = varDecl.getInitializer();
       if (!initializer) return;
 
-      const name = v.getName();
-      const parentStatement = v.getVariableStatement();
+      const name = varDecl.getName();
+      const parentStatement = varDecl.getVariableStatement();
       const isExported =
         parentStatement?.isExported() || sourceFile.getExportedDeclarations().has(name);
 
@@ -93,19 +98,19 @@ export const tsMorphStrategy = {
         Node.isCallExpression(initializer) || Node.isNewExpression(initializer);
 
       if (isFunction || isFunctionalAction) {
-        return addSymbol(v, CodeSymbolKind.ConstFunc);
+        return addSymbol(varDecl, CodeSymbolKind.ConstFunc);
       }
 
       const isObject = Node.isObjectLiteralExpression(initializer);
       if (isObject) {
-        return addSymbol(v, CodeSymbolKind.Variable);
+        return addSymbol(varDecl, CodeSymbolKind.Variable);
       }
 
       if (Node.isStringLiteral(initializer) || Node.isNumericLiteral(initializer)) {
         return;
       }
 
-      addSymbol(v, CodeSymbolKind.Variable);
+      addSymbol(varDecl, CodeSymbolKind.Variable);
     });
 
     project.removeSourceFile(sourceFile);

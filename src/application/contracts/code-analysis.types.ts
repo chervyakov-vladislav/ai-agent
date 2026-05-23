@@ -1,5 +1,6 @@
 export enum CodeSymbolKind {
   Class = 'class',
+  Constructor = 'constructor',
   Function = 'function',
   Interface = 'interface',
   Type = 'type',
