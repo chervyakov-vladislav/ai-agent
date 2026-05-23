@@ -53,24 +53,24 @@ export const GithubWebhookSchema = z
     const isDefaultBranch = pr.base.ref === repo.default_branch;
     const shouldSync = isMerged && isDefaultBranch;
     const collectionName = repo.full_name.replace(/\//g, '_');
+    const repoUrl = `/repos/${repo.full_name}`;
 
     return {
       analyzeCommand: shouldAnalyze
         ? {
             prUrl: pr.url,
-            collectionName,
+            currentBranch: pr.base.ref,
           }
         : null,
-      syncCommand: shouldSync
-        ? {
-            repoId: repo.full_name,
-            collectionName,
-          }
-        : null,
+      syncCommand: shouldSync,
       metadata: {
+        collectionName,
         prNumber: pr.number,
         author: pr.user.login,
         commitHash: pr.head.sha,
+        branch: pr.head.ref,
+        repoId: repo.full_name,
+        repoUrl,
       },
     };
   });

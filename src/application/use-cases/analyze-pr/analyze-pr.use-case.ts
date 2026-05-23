@@ -1,4 +1,5 @@
 // import { validateAndFormatReview } from '@modules/github/github.validators';
+import { logger } from '@shared/infrastructure/logger';
 import {
   CodeSearchPort,
   EmbeddingQueryPort,
@@ -7,13 +8,20 @@ import {
   SearchCodeStrategyPort,
 } from './analyze-pr.ports';
 
-export interface AnalyzePRDependencies {
+interface AnalyzePRDependencies {
   github: PullRequestSourcePort;
   llm: LlmPort;
   vectorstore: CodeSearchPort;
   embeddings: EmbeddingQueryPort;
   codeSearching: SearchCodeStrategyPort;
   parallelLimit: number;
+}
+
+interface AnalyzePullRequestInput {
+  prUrl: string;
+  collectionName: string;
+  currentBranch: string;
+  repoUrl: string;
 }
 
 export const createAnalyzePullRequestUseCase = ({
@@ -23,20 +31,29 @@ export const createAnalyzePullRequestUseCase = ({
   vectorstore,
   // llm,
 }: AnalyzePRDependencies) => {
-  return async (prUrl: string, collectionName: string) => {
+  return async ({ prUrl, collectionName, currentBranch, repoUrl }: AnalyzePullRequestInput) => {
     const diff = await github.getPullRequestDiff(prUrl);
 
     for (const file of diff) {
+      const fullFileContent = await github.getFileContent({
+        filePath: file.path,
+        branch: currentBranch,
+        repoUrl,
+      });
+
+      console.log(file.promptData);
+      console.log(file.changedRanges);
+      // console.log(JSON.stringify(file.promptData, null, 2));
+
+      // continue;
+
       if (file.isDeleted) {
         // реализовать проверку через Graph Search для поиска неудаленных импортов. пока пропускаем
         continue;
       }
 
       // возможно не стоит склеивать
-      const searchQuery = file.chunks
-        .map((c) => c.vectorQuery)
-        .filter((q) => q.length > 10)
-        .join('\n---\n');
+      const searchQuery = fullFileContent.content;
 
       if (searchQuery.length > 3000) {
         // идти в langchain и резать
@@ -62,33 +79,8 @@ export const createAnalyzePullRequestUseCase = ({
       const points = await vectorstore.getPoints(collectionName, parentIds);
       const content = codeSearching.reconstructChunks(points);
 
-      console.log(file.promptData);
-      console.log(content); // убрать дубли
+      logger.info('diff content \n' + file.promptData);
+      logger.info('vector content \n' + content.map((c) => c.content).join('---\n')); // убрать дубли
     }
-
-    // const context = {
-    //   project: {
-    //     name: repoInfo.fullName,
-    //     description: repoInfo.description,
-    //     techStack: repoInfo.topics,
-    //   },
-    //   diff,
-    //   files: files.map((f) => ({
-    //     name: f.filename,
-    //     action: f.status,
-    //     body: f.content,
-    //   })),
-    // };
-
-    // const result = await withRetry(() => llm.reviewCode(context));
-    // const { summary, reviews } = validateAndFormatReview(result, diff);
-
-    // await github.createPullRequestReview(prUrl, {
-    //   verdict: 'COMMENT',
-    //   summary,
-    //   reviews,
-    // });
-
-    // return result;
   };
 };

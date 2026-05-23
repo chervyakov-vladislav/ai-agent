@@ -1,5 +1,5 @@
 import { AIReviewResponse } from '@contracts/llm.types';
-import { FilteredFileDiff } from '@contracts/github.types';
+import { FilteredFileDiff, GetFileContentParams } from '@contracts/github.types';
 import { ReviewContext } from '@contracts/llm.types';
 import {
   DiffSearchStrategy,
@@ -21,6 +21,7 @@ export interface CodeSearchPort {
 export interface PullRequestSourcePort {
   getPullRequestDiff(prUrl: string): Promise<FilteredFileDiff[]>;
   createPullRequestReview(prUrl: string, review: AIReviewResponse): Promise<void>;
+  getFileContent(params: GetFileContentParams): Promise<{ content: string }>;
 }
 
 export interface LlmPort {

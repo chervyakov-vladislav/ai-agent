@@ -79,17 +79,18 @@ export const splitCodeIntoChunks = async ({
 
     for (const [idx, parentDoc] of largeDocs.entries()) {
       const symbolHeader = hasSymbols ? `Symbols: ${symbolKind} ${symbolName}\n` : '';
-      const technicalHeader = `File: ${filename}\n${symbolHeader}\n---`;
-      const chunkContent = `${technicalHeader}\n${parentDoc.pageContent}`;
+      const technicalHeader = `// File: ${filename}\n${symbolHeader}\n---`;
 
       largeChunks.push({
-        content: chunkContent,
+        content: parentDoc.pageContent,
         metadata: {
           id: `${baseId}:large:${idx}`,
           parent_id: baseId,
           chunkType: 'large',
           filename,
           fileHash,
+          technicalHeader,
+          symbolHeader,
           hasParts: largeDocs.length > 1,
           partIndex: idx,
           partCount: largeDocs.length,

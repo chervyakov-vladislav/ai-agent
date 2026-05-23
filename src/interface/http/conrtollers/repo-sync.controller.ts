@@ -10,7 +10,11 @@ export const repoSyncController = async (req: Request, res: Response, next: Next
       return res.status(400).json({ errors: result.error.issues });
     }
 
-    syncFullRepositoryUseCase(result.data.repoId, result.data.repoId.replace(/\//g, '_'))
+    syncFullRepositoryUseCase({
+      repoId: result.data.repoId,
+      collectionName: result.data.repoId.replace(/\//g, '_'),
+      repoUrl: `/repos/${result.data.repoId}`,
+    })
       .then(() => {
         logger.info('Repository sync completed successfully', { repoId: result.data.repoId });
       })

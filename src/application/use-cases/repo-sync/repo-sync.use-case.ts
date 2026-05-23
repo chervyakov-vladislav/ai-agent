@@ -27,6 +27,13 @@ interface SyncDependencies {
   parallelLimit: number;
 }
 
+interface SyncFullRepositoryInput {
+  repoId: string;
+  repoUrl: string;
+  collectionName: string;
+  branch?: string;
+}
+
 const logProgress = (
   current: number,
   total: number,
@@ -54,7 +61,7 @@ export const createSyncFullRepositoryUseCase = ({
   parallelLimit,
   processFilePipeline,
 }: SyncDependencies) => {
-  return async (repoId: string, collectionName: string): Promise<void> => {
+  return async ({ repoId, collectionName, repoUrl }: SyncFullRepositoryInput): Promise<void> => {
     // управлять этим через очередина BullMQ
     if (await statusPort.isBusy()) {
       throw new ServiceUnavailableError(
@@ -66,7 +73,6 @@ export const createSyncFullRepositoryUseCase = ({
 
     try {
       const currentSyncId = Date.now().toString();
-      const repoUrl = `/repos/${repoId}`;
       const metadata = await github.getRepositoryInfo(repoUrl);
       const filePaths = await github.getRepositoryTree(repoId, metadata.defaultBranch);
       const storedFiles = await vectorStore.getStoredFilesMap(collectionName);
@@ -86,14 +92,14 @@ export const createSyncFullRepositoryUseCase = ({
               return;
             }
 
-            const { content, extension } = await withRetry(
-              () => github.getFileContent(repoUrl, file.path),
+            const { content } = await withRetry(
+              () => github.getFileContent({ filePath: file.path, repoUrl }),
               3,
               2000,
             );
 
             // добавить очередь через bullMQ
-            const chunks = await processFilePipeline(file.path, content, file.sha, extension);
+            const chunks = await processFilePipeline(file.path, content, file.sha, file.extension);
 
             const smallChunksWithEmbeddings = await embeddings.generateEmbeddings(
               chunks.smallChunks,

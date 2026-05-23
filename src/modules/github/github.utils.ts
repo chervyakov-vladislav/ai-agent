@@ -1,20 +1,7 @@
 import parse from 'parse-diff';
-import { DiffChunk, FilteredFileDiff } from '@contracts/github.types';
+import { FilteredFileDiff } from '@contracts/github.types';
 import { IGNORED_EXTENSIONS, IGNORED_FILES, IGNORED_DIRECTORIES } from './github.constants';
-
-export interface NormalizedPR {
-  id: number;
-  number: number;
-  title: string;
-  author: string;
-  url: string;
-  repoUrl: string;
-  diffUrl: string;
-  branch: string;
-  repoId: string;
-  shouldAnalyze: boolean;
-  shouldSync: boolean;
-}
+import path from 'node:path';
 
 export const parseRepoFullName = (url: string): string => {
   return url
@@ -44,18 +31,22 @@ export const isIgnoredPath = (path: string): boolean => {
   return false;
 };
 
+/**
+ * Парсит сырой гит-дифф, фильтрует мусорные файлы и собирает точные номера
+ * измененных строк в НОВОМ файле (ref: head ветка PR) для последующего AST анализа.
+ */
 export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
   const files = parse(rawDiff);
 
   return files
     .filter((file) => {
-      const path = (file.to || file.from || '').toLowerCase();
-      return !isIgnoredPath(path);
+      const filePath = (file.to || file.from || '').toLowerCase();
+      return !isIgnoredPath(filePath);
     })
     .map((f) => {
-      const path = f.to || f.from || '';
-      const fileName = path.split('/').pop() || '';
-      const extension = fileName.includes('.') ? fileName.split('.').pop() || '' : '';
+      const filePath = f.to || f.from || '';
+      const extension = path.extname(filePath).toLowerCase();
+      const fileName = filePath.split('/').pop() || '';
       const fromPath = f.from === '/dev/null' ? '/dev/null' : `a/${f.from}`;
       const toPath = f.to === '/dev/null' ? '/dev/null' : `b/${f.to}`;
 
@@ -65,28 +56,17 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         `+++ ${f.to === '/dev/null' ? '/dev/null' : 'b/' + f.to}`,
         ...f.chunks.map((c) => [c.content, ...c.changes.map((ch) => ch.content)].join('\n')),
       ].join('\n');
-      const promptData = `FILE: ${path}\n\`\`\`diff\n${fileDiffString}\n\`\`\``;
+      const promptData = `FILE: ${filePath}\n\`\`\`diff\n${fileDiffString}\n\`\`\``;
 
-      const chunks: DiffChunk[] = f.chunks.map((c): DiffChunk => {
-        const chunkChanges = c.changes.map((ch) => ch.content).join('\n');
-
-        const cleanChanges = c.changes
-          .filter((ch) => ch.type !== 'del')
-          .map((ch) => ch.content.replace(/^[+-]/, '').trim())
-          .filter((line) => line.length > 3);
-
-        const semanticQuery = [`File: ${fileName}`, ...cleanChanges.slice(0, 50)].join('\n');
-
-        return {
-          header: c.content,
-          promptContext: `Context for change in ${f.to || f.from} at ${c.content}:\n${chunkChanges}`,
-          vectorQuery: semanticQuery || chunkChanges.replace(/^[+-]/gm, ''),
-        };
-      });
+      const changedRanges = f.chunks.map((c) => ({
+        start: c.newStart,
+        end: c.newStart + Math.max(c.newLines - 1, 0),
+      }));
 
       const isNew = f.new || f.from === '/dev/null';
       const isDeleted = f.deleted || f.to === '/dev/null';
       const isRenamed = f.from !== f.to && f.from !== '/dev/null' && f.to !== '/dev/null';
+
       const additions = f.chunks.reduce(
         (acc, c) => acc + c.changes.filter((ch) => ch.type === 'add').length,
         0,
@@ -97,11 +77,10 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
       );
 
       return {
-        path,
+        path: filePath,
         fileName,
         extension,
         promptData,
-        chunks,
         rawDiff: fileDiffString,
         chunksCount: f.chunks.length,
         oldPath: isRenamed ? f.from : undefined,
@@ -109,6 +88,7 @@ export const filterAndParseDiff = (rawDiff: string): FilteredFileDiff[] => {
         isDeleted,
         isRenamed,
         stats: { additions, deletions },
+        changedRanges,
       };
     });
 };

@@ -48,7 +48,7 @@ class PinoLogger {
             extension: '.log',
             frequency: 'daily',
             dateFormat: 'yyyy-MM-dd',
-            size: '10k',
+            size: '10m',
             interval: '1d',
             mkdir: true,
           },
