@@ -8,11 +8,32 @@ import {
   DocumentInput,
 } from '@contracts/code-analysis.types';
 
-const project = new Project({
-  useInMemoryFileSystem: true,
-  skipLoadingLibFiles: true,
-  compilerOptions: { allowJs: true },
-});
+let project = createNewProject();
+let filesProcessedSinceReset = 0;
+
+function createNewProject() {
+  return new Project({
+    useInMemoryFileSystem: true,
+    skipLoadingLibFiles: true,
+    compilerOptions: { allowJs: true },
+  });
+}
+
+const resetTsMorphProject = () => {
+  project = createNewProject();
+  filesProcessedSinceReset = 0;
+  if (global.gc) {
+    global.gc();
+  }
+};
+
+const incrementOperationsCounter = () => {
+  filesProcessedSinceReset++;
+
+  if (filesProcessedSinceReset >= 150) {
+    resetTsMorphProject();
+  }
+};
 
 export const tsMorphStrategy = {
   extractSymbols: (filename: string, code: string): BaseSymbol[] => {
@@ -53,8 +74,9 @@ export const tsMorphStrategy = {
     };
 
     sourceFile.getClasses().forEach((c) => {
+      const className = c.getName() || 'AnonymousClass';
       c.getConstructors().forEach((contsructor) =>
-        addSymbol(contsructor, CodeSymbolKind.Method, CodeSymbolKind.Constructor),
+        addSymbol(contsructor, CodeSymbolKind.Method, `${className}-${CodeSymbolKind.Constructor}`),
       );
       addSymbol(c, CodeSymbolKind.Class);
     });
@@ -113,7 +135,10 @@ export const tsMorphStrategy = {
       addSymbol(varDecl, CodeSymbolKind.Variable);
     });
 
+    sourceFile.forget();
     project.removeSourceFile(sourceFile);
+
+    incrementOperationsCounter();
     return symbols;
   },
 
@@ -135,7 +160,10 @@ export const tsMorphStrategy = {
       };
     });
 
+    sourceFile.forget();
     project.removeSourceFile(sourceFile);
+
+    incrementOperationsCounter();
     return result;
   },
 
@@ -148,7 +176,10 @@ export const tsMorphStrategy = {
 
     const result = sourceFile.getText().trim();
 
+    sourceFile.forget();
     project.removeSourceFile(sourceFile);
+
+    incrementOperationsCounter();
     return result;
   },
 
@@ -157,10 +188,14 @@ export const tsMorphStrategy = {
     content: string,
     symbols: CodeSymbol[],
   ): DocumentInput[] => {
+    const originalLines = content.split('\n');
+
     if (symbols.length === 0) {
+      const cleanContent = tsMorphStrategy.removeImports(filename, content);
+
       return [
         {
-          pageContent: content,
+          pageContent: cleanContent,
           metadata: {
             symbolName: filename,
             symbolKind: CodeSymbolKind.FileContent,
@@ -172,10 +207,8 @@ export const tsMorphStrategy = {
     }
 
     return symbols.map((symbol) => {
-      const codeLines = content.split('\n').slice(symbol.startLine, symbol.endLine);
-      let codeBlock = codeLines.join('\n');
-
-      codeBlock = tsMorphStrategy.removeImports(filename, codeBlock);
+      const codeLines = originalLines.slice(symbol.startLine, symbol.endLine);
+      const codeBlock = tsMorphStrategy.removeImports(filename, codeLines.join('\n'));
 
       return {
         pageContent: codeBlock,
