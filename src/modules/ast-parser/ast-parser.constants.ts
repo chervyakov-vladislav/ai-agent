@@ -1,3 +1,3 @@
-export const SUPPORTED_JS_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
-export const SUPPORTED_JAVA_EXTENSIONS = new Set(['.java']);
-export const SUPPORTED_SQL_EXTENSIONS = new Set(['.sql']);
+export const SUPPORTED_JS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
+export const SUPPORTED_JAVA_EXTENSIONS = ['.java'];
+export const SUPPORTED_SQL_EXTENSIONS = ['.sql'];

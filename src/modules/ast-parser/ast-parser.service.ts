@@ -41,15 +41,15 @@ interface ParserStrategy {
 const getStrategy = (filename: string): ParserStrategy | null => {
   const ext = path.extname(filename).toLowerCase();
 
-  if (SUPPORTED_JS_EXTENSIONS.has(ext)) {
+  if (SUPPORTED_JS_EXTENSIONS.includes(ext)) {
     return tsMorphStrategy;
   }
 
-  if (SUPPORTED_JAVA_EXTENSIONS.has(ext)) {
+  if (SUPPORTED_JAVA_EXTENSIONS.includes(ext)) {
     return javaStrategy;
   }
 
-  if (SUPPORTED_SQL_EXTENSIONS.has(ext)) {
+  if (SUPPORTED_SQL_EXTENSIONS.includes(ext)) {
     return sqlStrategy;
   }
 
@@ -170,7 +170,7 @@ const formatImportsForLLM = (metadata: ChunkMetadata): string => {
       language === 'js' ||
       language === 'typescript' ||
       language === 'javascript' ||
-      SUPPORTED_JS_EXTENSIONS.has(`.${language}`);
+      SUPPORTED_JS_EXTENSIONS.includes(`.${language}`);
 
     if (isTSorJS) {
       if (imp.isWildcard) {
