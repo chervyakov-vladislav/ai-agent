@@ -6,6 +6,7 @@ import {
   ImportDetails,
   SplitResult,
   DocumentInput,
+  SplitSearchQueryParam,
 } from '@contracts/code-analysis.types';
 import { SPLITTER_CONFIGS } from './langchain.constants';
 
@@ -108,4 +109,36 @@ export const splitCodeIntoChunks = async ({
   }
 
   return { smallChunks, largeChunks };
+};
+
+/**
+ * Метод для разбиения длинных поисковых запросов
+ * с сохранением технического контекста (заголовка) в каждом чанке.
+ */
+export const splitSearchQuery = async ({
+  searchQuery,
+  chunkSize = 2000,
+  chunkOverlap = 200,
+}: SplitSearchQueryParam): Promise<string[]> => {
+  const delimiter = '\n---\n';
+  const parts = searchQuery.split(delimiter);
+  const separators = ['\n  ', '\n\n', '\n', ' '];
+
+  if (parts.length < 2) {
+    const rawSplitter = new RecursiveCharacterTextSplitter({ chunkSize, chunkOverlap, separators });
+    return rawSplitter.splitText(searchQuery);
+  }
+
+  const technicalHeader = parts[0] + delimiter;
+  const codeContent = parts.slice(1).join(delimiter);
+
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize,
+    chunkOverlap,
+    separators,
+  });
+
+  const codeChunks = await splitter.splitText(codeContent);
+
+  return codeChunks.map((chunk) => `${technicalHeader}${chunk}`);
 };

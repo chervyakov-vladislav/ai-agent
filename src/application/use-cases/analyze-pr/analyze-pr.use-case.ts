@@ -2,6 +2,7 @@
 import { logger } from '@shared/infrastructure/logger';
 import {
   CodeSearchPort,
+  CodeSplitterSearchQueryPort,
   EmbeddingQueryPort,
   LlmPort,
   PullRequestSourcePort,
@@ -14,6 +15,7 @@ interface AnalyzePRDependencies {
   vectorstore: CodeSearchPort;
   embeddings: EmbeddingQueryPort;
   codeSearching: SearchCodeStrategyPort;
+  codeSplitter: CodeSplitterSearchQueryPort;
   parallelLimit: number;
 }
 
@@ -29,6 +31,7 @@ export const createAnalyzePullRequestUseCase = ({
   codeSearching,
   embeddings,
   vectorstore,
+  codeSplitter,
   // llm,
 }: AnalyzePRDependencies) => {
   return async ({ prUrl, collectionName, currentBranch, repoUrl }: AnalyzePullRequestInput) => {
@@ -63,16 +66,17 @@ export const createAnalyzePullRequestUseCase = ({
 
         if (!searchQuery.trim()) continue;
 
+        let searchQueries: string[] = [searchQuery];
+
         if (searchQuery.length > 3000) {
-          // идти в langchain и резать, если блок слишком большой
+          searchQueries = await codeSplitter.splitSearchQuery({
+            searchQuery,
+            chunkSize: 2500,
+            chunkOverlap: 250,
+          });
         }
 
-        logger.info(file.promptData);
-        logger.info(JSON.stringify({ searchQuery }, null, 2));
-        continue;
-
-        const queryVector = await embeddings.generateQueryEmbedding(searchQuery);
-
+        const allParentIds = new Set<string>();
         const strategy = codeSearching.getStrategy({
           isNew: file.isNew,
           isRenamed: file.isRenamed,
@@ -80,13 +84,27 @@ export const createAnalyzePullRequestUseCase = ({
           extension: file.extension,
         });
 
-        const parentIds = await vectorstore.findHybridSimilarNodeIds(
-          collectionName,
-          queryVector,
-          searchQuery,
-          strategy,
-        );
-        const points = await vectorstore.getPoints(collectionName, parentIds);
+        for (const queryChunk of searchQueries) {
+          logger.info(`Processing query chunk (Length: ${queryChunk.length})`);
+
+          const queryVector = await embeddings.generateQueryEmbedding(queryChunk);
+
+          const parentIds = await vectorstore.findHybridSimilarNodeIds(
+            collectionName,
+            queryVector,
+            searchQuery,
+            strategy,
+          );
+
+          for (const id of parentIds) {
+            allParentIds.add(id);
+          }
+        }
+
+        if (allParentIds.size === 0) continue;
+
+        const uniqueParentIds = Array.from(allParentIds);
+        const points = await vectorstore.getPoints(collectionName, uniqueParentIds);
         const content = codeSearching.reconstructChunks(points);
 
         logger.info('diff content \n' + file.promptData);

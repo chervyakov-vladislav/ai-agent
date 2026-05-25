@@ -104,3 +104,9 @@ export interface ChangedCodeBlock {
   symbolName: string;
   symbolKind: CodeSymbolKind;
 }
+
+export interface SplitSearchQueryParam {
+  searchQuery: string;
+  chunkSize?: number;
+  chunkOverlap?: number;
+}

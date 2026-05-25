@@ -20,7 +20,7 @@ export interface AstParserPort {
   prepareDocumentInputs(filename: string, content: string, symbols: CodeSymbol[]): DocumentInput[];
 }
 
-export interface LangChainPort {
+export interface LangChainProcessingPort {
   splitCodeIntoChunks(params: {
     filename: string;
     fileHash: string;

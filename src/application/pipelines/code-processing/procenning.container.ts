@@ -1,5 +1,5 @@
 import { astParserIndexingAdapter } from '@modules/ast-parser/ast-parser.adapter';
-import { langchainAdapter } from '@modules/langchain/langchain.adapter';
+import { langchainIndexAdapter } from '@modules/langchain/langchain.adapter';
 import { createProcessFilePipeline } from '@application/pipelines/code-processing/processing.pipeline';
 
 /**
@@ -7,5 +7,5 @@ import { createProcessFilePipeline } from '@application/pipelines/code-processin
  */
 export const processFilePipeline = createProcessFilePipeline(
   astParserIndexingAdapter,
-  langchainAdapter,
+  langchainIndexAdapter,
 );

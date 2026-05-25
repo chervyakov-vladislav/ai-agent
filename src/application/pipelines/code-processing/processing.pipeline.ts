@@ -1,12 +1,16 @@
 import { SplitResult, CodeSymbol } from '@contracts/code-analysis.types';
-import { AstParserPort, LangChainPort, CodeProcessingPipeline } from './processing.contracts';
+import {
+  AstParserPort,
+  LangChainProcessingPort,
+  CodeProcessingPipeline,
+} from './processing.contracts';
 
 /**
  * Создает пайплайн обработки файлов, оркеструя работу AST-парсера и LangChain.
  */
 export const createProcessFilePipeline = (
   astParser: AstParserPort,
-  langchain: LangChainPort,
+  langchain: LangChainProcessingPort,
 ): CodeProcessingPipeline => {
   return async (
     filename: string,
