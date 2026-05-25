@@ -218,13 +218,11 @@ export const reconstructChunks = (points: QdrantChunkPoint[]): ProcessedChunk[] 
 
     const importsCode = formatImportsForLLM(meta);
 
-    const symbolHeader = meta.symbolHeader?.trim() || '';
+    // const symbolHeader = meta.symbolHeader?.trim() || '';
     const technicalHeader = meta.technicalHeader || '';
     const rawTextCode = sortedCode.map((part) => part.content).join('\n');
 
-    const fullContent = [technicalHeader, symbolHeader, importsCode, '', rawTextCode]
-      .filter(Boolean)
-      .join('\n');
+    const fullContent = [technicalHeader, importsCode, '', rawTextCode].filter(Boolean).join('\n');
 
     return {
       content: fullContent,

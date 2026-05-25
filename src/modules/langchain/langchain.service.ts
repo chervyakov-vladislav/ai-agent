@@ -80,7 +80,7 @@ export const splitCodeIntoChunks = async ({
 
     for (const [idx, parentDoc] of largeDocs.entries()) {
       const symbolHeader = hasSymbols ? `Symbols: ${symbolKind} ${symbolName}\n` : '';
-      const technicalHeader = `// File: ${filename}\n${symbolHeader}\n---`;
+      const technicalHeader = `// File: ${filename}\n${symbolHeader}---`;
 
       largeChunks.push({
         content: parentDoc.pageContent,

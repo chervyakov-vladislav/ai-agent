@@ -108,7 +108,7 @@ export const createAnalyzePullRequestUseCase = ({
         const content = codeSearching.reconstructChunks(points);
 
         logger.info('diff content \n' + file.promptData);
-        logger.info('vector content \n' + content.map((c) => c.content).join('---\n')); // убрать дубли
+        logger.info('vector content \n' + content.map((c) => c.content).join('\n\n')); // убрать дубли через reranking
       }
     }
   };
