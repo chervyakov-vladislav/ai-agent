@@ -5,6 +5,7 @@ import { qdrantVectorSearchAdapter } from '@modules/vectorstore/qdrant.adapter';
 import { embeddingsQueryAdapter } from '@modules/embeddings/embeddings.adapter';
 import { envConfig } from '@config/env-config';
 import { astParserSearchAdapter } from '@modules/ast-parser/ast-parser.adapter';
+import { langchainSearchQueryAdapter } from '@modules/langchain/langchain.adapter';
 
 export const analyzePullRequestUseCase = createAnalyzePullRequestUseCase({
   github: githubPRAdapter,
@@ -12,5 +13,6 @@ export const analyzePullRequestUseCase = createAnalyzePullRequestUseCase({
   embeddings: embeddingsQueryAdapter,
   vectorstore: qdrantVectorSearchAdapter,
   llm: geminiAdapter,
+  codeSplitter: langchainSearchQueryAdapter,
   parallelLimit: envConfig.OLLAMA_NUM_PARALLEL,
 });

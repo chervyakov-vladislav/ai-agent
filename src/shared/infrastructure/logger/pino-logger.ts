@@ -5,10 +5,63 @@ class PinoLogger {
   public readonly logger: pino.Logger;
 
   constructor() {
+    const transport = this.createTransport();
+
+    this.logger = pino(
+      {
+        level: envConfig.LOG_LEVEL,
+        redact: this.getRedactConfig(),
+        base: {
+          env: envConfig.NODE_ENV,
+          service: envConfig.SERVICE_NAME,
+          current_log_level: envConfig.LOG_LEVEL,
+        },
+      },
+      transport,
+    );
+  }
+
+  private createTransport() {
     const isDev = envConfig.NODE_ENV !== 'production';
     const isDebug = envConfig.LOG_LEVEL === 'debug';
+    const targets: pino.TransportTargetOptions[] = [];
 
-    const redactConfig = {
+    if (isDev) {
+      targets.push({
+        target: 'pino-pretty',
+        level: envConfig.LOG_LEVEL,
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss Z',
+          messageFormat: '{msg}',
+          singleLine: !isDebug,
+          ignore: 'pid,hostname',
+          errorLikeObjectKeys: ['err', 'error'],
+        },
+      });
+    }
+
+    if (envConfig.IS_LOCAL_LOG && isDev) {
+      targets.push({
+        target: 'pino-roll',
+        level: envConfig.LOG_LEVEL,
+        options: {
+          file: './logs/app',
+          extension: '.log',
+          frequency: 'daily',
+          dateFormat: 'yyyy-MM-dd',
+          size: '10m',
+          interval: '1d',
+          mkdir: true,
+        },
+      });
+    }
+
+    return pino.transport({ targets });
+  }
+
+  private getRedactConfig() {
+    return {
       paths: [
         'err.config.headers.Authorization',
         'context.headers.Authorization',
@@ -20,58 +73,6 @@ class PinoLogger {
       ],
       placeholder: '[REDACTED]',
     };
-
-    const getTransport = () => {
-      const targets: pino.TransportTargetOptions[] = [];
-
-      if (isDev) {
-        targets.push({
-          target: 'pino-pretty',
-          level: envConfig.LOG_LEVEL,
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            messageFormat: '{msg}',
-            singleLine: !isDebug,
-            ignore: 'pid,hostname',
-            errorLikeObjectKeys: ['err', 'error'],
-          },
-        });
-      }
-
-      if (envConfig.IS_LOCAL_LOG && isDev) {
-        targets.push({
-          target: 'pino-roll',
-          level: envConfig.LOG_LEVEL,
-          options: {
-            file: './logs/app',
-            extension: '.log',
-            frequency: 'daily',
-            dateFormat: 'yyyy-MM-dd',
-            size: '10m',
-            interval: '1d',
-            mkdir: true,
-          },
-        });
-      }
-
-      return pino.transport({
-        targets,
-      });
-    };
-
-    this.logger = pino(
-      {
-        level: envConfig.LOG_LEVEL,
-        redact: redactConfig,
-        base: {
-          env: envConfig.NODE_ENV,
-          service: envConfig.SERVICE_NAME,
-          current_log_level: envConfig.LOG_LEVEL,
-        },
-      },
-      getTransport(),
-    );
   }
 
   info(msg: string, context?: object) {

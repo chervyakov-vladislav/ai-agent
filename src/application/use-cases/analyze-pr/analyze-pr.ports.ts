@@ -5,6 +5,7 @@ import {
   DiffSearchStrategy,
   ProcessedChunk,
   QdrantChunkPoint,
+  SplitSearchQueryParam,
 } from '@contracts/code-analysis.types';
 
 export interface CodeSearchPort {
@@ -50,4 +51,12 @@ export interface SearchCodeStrategyPort {
     content: string,
     changedRanges: Range[],
   ): ChangedCodeBlock[];
+}
+
+export interface CodeSplitterSearchQueryPort {
+  splitSearchQuery: ({
+    searchQuery,
+    chunkSize,
+    chunkOverlap,
+  }: SplitSearchQueryParam) => Promise<string[]>;
 }
