@@ -1,5 +1,4 @@
-import { ReviewComment, ReviewContext } from '@contracts/llm.types';
-import { FilteredFileDiff } from '@application/contracts/github.types';
+import { ReviewComment } from '@contracts/llm.types';
 
 export const GEMINI_STEP1_SYSTEM_INSTRUCTION = `
   Ты — экспертный Senior Fullstack Developer. Твоя задача — провести глубокий аудит конкретного измененного файла в Pull Request.
@@ -41,19 +40,12 @@ export const GEMINI_STEP1_SYSTEM_INSTRUCTION = `
   Пиши на русском языке. Будь краток и конструктивен.
 `;
 
-export const getStep1Prompt = (
-  file: FilteredFileDiff,
-  vectorContext: string,
-  project: { name: string },
-) => `
-  Проект: ${project.name}
-  Файл на анализ: ${file.path}
-
+export const getStep1Prompt = (promptData: string, vectorContext: string) => `
   ### 1. РЕЛЕВАНТНЫЙ КОД ИЗ БАЗЫ ЗНАНИЙ (ДЛЯ СРАВНЕНИЯ):
-  ${vectorContext ? vectorContext : 'Релевантный контекст для этого файла не найден.'}
+  ${vectorContext}
 
   ### 2. ИЗМЕНЕНИЯ В ПУЛЛ РЕКВЕСТЕ (git diff):
-  ${file.promptData}
+  ${promptData}
 
   ### ИНСТРУКЦИЯ:
   Сравни изменения в ПР с релевантным кодом из базы знаний. Проверь на предмет дублирования логики и соответствия паттернам. Сгенерируй массив замечаний "reviews" строго по правилам. 
@@ -89,12 +81,7 @@ export const GEMINI_STEP2_SYSTEM_INSTRUCTION = `
   Пиши на русском языке.
 `;
 
-export const getStep2Prompt = (
-  step1Outputs: { reviews: ReviewComment[] }[],
-  context: ReviewContext,
-) => `
-  Проект: ${context.project.name}
-
+export const getStep2Prompt = (step1Outputs: { reviews: ReviewComment[] }[]) => `
   ### ИСХОДНЫЕ ЗАМЕЧАНИЯ ОТ СТАРШИХ РАЗРАБОТЧИКОВ:
   ${JSON.stringify(step1Outputs, null, 2)}
 

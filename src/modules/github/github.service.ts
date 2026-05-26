@@ -97,7 +97,8 @@ export const createPullRequestReview = async (
   try {
     await githubProvider.post(`${prUrl}/reviews`, {
       body: review.summary,
-      event: review.verdict,
+      event: 'COMMENT',
+      // event: review.verdict,
       comments: comments.length > 0 ? comments : undefined,
     });
   } catch (error) {
@@ -115,7 +116,8 @@ export const createPullRequestReview = async (
       ].join('\n');
 
       return await githubProvider.post(`${prUrl}/reviews`, {
-        event: review.verdict,
+        event: 'COMMENT',
+        // event: review.verdict,
         body: summaryWithComments,
       });
     }
