@@ -95,8 +95,6 @@ export const createPullRequestReview = async (
     side: 'RIGHT',
   }));
 
-  logger.info(JSON.stringify(comments, null, 2));
-
   try {
     await githubProvider.post(`${prUrl}/reviews`, {
       commit_id: commitHash,
@@ -121,12 +119,19 @@ export const createPullRequestReview = async (
 
       logger.info('summaryWithComments ' + JSON.stringify(summaryWithComments, null, 2));
 
-      return await githubProvider.post(`${prUrl}/reviews`, {
-        commit_id: commitHash,
-        event: 'COMMENT',
-        // event: review.verdict,
-        body: summaryWithComments,
-      });
+      try {
+        return await githubProvider.post(`${prUrl}/reviews`, {
+          commit_id: commitHash,
+          event: 'COMMENT',
+          body: summaryWithComments,
+        });
+      } catch (fallbackError) {
+        const ghFallbackError = getGitHubError(fallbackError);
+        logger.error(
+          `Critical: Fallback review failed too. GitHub infrastructure issue: ${JSON.stringify(ghFallbackError?.errors || fallbackError)}`,
+        );
+        throw fallbackError;
+      }
     }
 
     throw error;

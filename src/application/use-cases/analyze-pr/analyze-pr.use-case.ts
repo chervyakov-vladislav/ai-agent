@@ -3,6 +3,7 @@ import { Logger, logger } from '@shared/infrastructure/logger';
 import {
   CodeSearchPort,
   CodeSplitterSearchQueryPort,
+  EmbeddingCachePort,
   EmbeddingQueryPort,
   PullRequestSourcePort,
   SearchCodeStrategyPort,
@@ -14,6 +15,7 @@ interface AnalyzePRDependencies {
   github: PullRequestSourcePort;
   vectorstore: CodeSearchPort;
   embeddings: EmbeddingQueryPort;
+  cache: EmbeddingCachePort;
   codeSearching: SearchCodeStrategyPort;
   codeSplitter: CodeSplitterSearchQueryPort;
   prReviewPipeline: PrReviewPipeline;
@@ -33,6 +35,7 @@ export const createAnalyzePullRequestUseCase = ({
   github,
   codeSearching,
   embeddings,
+  cache,
   vectorstore,
   codeSplitter,
   prReviewPipeline,
@@ -97,7 +100,16 @@ export const createAnalyzePullRequestUseCase = ({
         for (const queryChunk of searchQueries) {
           logger.info(`Processing query chunk (Length: ${queryChunk.length})`);
 
-          const queryVector = await embeddings.generateQueryEmbedding(queryChunk);
+          let queryVector = await cache.get(queryChunk);
+
+          if (!queryVector) {
+            logger.info('Cache miss. Generating new embedding...');
+            queryVector = await embeddings.generateQueryEmbedding(queryChunk);
+
+            await cache.save(queryChunk, queryVector);
+          } else {
+            logger.info('Cache hit! Using cached embedding.');
+          }
 
           const parentIds = await vectorstore.findHybridSimilarNodeIds(
             collectionName,

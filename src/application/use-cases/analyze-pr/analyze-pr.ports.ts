@@ -64,3 +64,8 @@ export interface CodeSplitterSearchQueryPort {
     chunkOverlap,
   }: SplitSearchQueryParam) => Promise<string[]>;
 }
+
+export interface EmbeddingCachePort {
+  get(text: string): Promise<number[] | null>;
+  save(text: string, vector: number[]): Promise<void>;
+}
