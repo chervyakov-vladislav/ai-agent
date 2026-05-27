@@ -21,7 +21,11 @@ export interface CodeSearchPort {
 
 export interface PullRequestSourcePort {
   getPullRequestDiff(prUrl: string): Promise<FilteredFileDiff[]>;
-  createPullRequestReview(prUrl: string, review: AIReviewResponse): Promise<void>;
+  createPullRequestReview(
+    prUrl: string,
+    review: AIReviewResponse,
+    commitHash: string,
+  ): Promise<void>;
   getFileContent(params: GetFileContentParams): Promise<{ content: string }>;
 }
 

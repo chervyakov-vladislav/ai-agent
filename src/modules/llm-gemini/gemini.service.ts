@@ -71,7 +71,7 @@ export const reviewSingleFile = async (
       const text = await withRetry(
         () => callModel(modelName, prompt, GEMINI_STEP1_SYSTEM_INSTRUCTION),
         5,
-        20_000,
+        10_000,
       );
       const validation = aiSingleFileReviewResponseSchema.safeParse(text);
 
@@ -104,7 +104,7 @@ export const generateSummary = async (
       const text = await withRetry(
         () => callModel(modelName, prompt, GEMINI_STEP2_SYSTEM_INSTRUCTION),
         5,
-        20_000,
+        10_000,
       );
       const validation = aiReviewResponseSchema.safeParse(text);
 

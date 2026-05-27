@@ -25,6 +25,7 @@ interface AnalyzePullRequestInput {
   prUrl: string;
   collectionName: string;
   currentBranch: string;
+  commitHash: string;
   repoUrl: string;
 }
 
@@ -36,7 +37,13 @@ export const createAnalyzePullRequestUseCase = ({
   codeSplitter,
   prReviewPipeline,
 }: AnalyzePRDependencies) => {
-  return async ({ prUrl, collectionName, currentBranch, repoUrl }: AnalyzePullRequestInput) => {
+  return async ({
+    prUrl,
+    collectionName,
+    currentBranch,
+    repoUrl,
+    commitHash,
+  }: AnalyzePullRequestInput) => {
     const diff = await github.getPullRequestDiff(prUrl);
     const diffsWithContext: DiffWithContext[] = [];
 
@@ -118,6 +125,6 @@ export const createAnalyzePullRequestUseCase = ({
     }
 
     const reviewResult = await prReviewPipeline(diffsWithContext);
-    await github.createPullRequestReview(prUrl, reviewResult);
+    await github.createPullRequestReview(prUrl, reviewResult, commitHash);
   };
 };
