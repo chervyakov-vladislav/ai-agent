@@ -59,7 +59,7 @@ export const GithubWebhookSchema = z
       analyzeCommand: shouldAnalyze
         ? {
             prUrl: pr.url,
-            currentBranch: pr.base.ref,
+            currentBranch: pr.head.ref,
           }
         : null,
       syncCommand: shouldSync,
