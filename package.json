@@ -33,7 +33,7 @@
     "typecheck": "tsc",
     "sshtunnel": "ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -R :3005:localhost:3005 veesp",
     "docker:clean": "docker compose down -v",
-    "docker:up:local": "docker compose up -d qdrant ollama redis"
+    "docker:up:local": "docker compose up -d qdrant ollama redis redis-commander"
   },
   "dependencies": {
     "@google/genai": "^2.6.0",

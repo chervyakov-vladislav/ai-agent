@@ -36,6 +36,19 @@ services:
     networks:
       - ai-network
 
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis_commander
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:${REDIS_PASSWORD}
+    ports:
+      - '8081:8081'
+    networks:
+      - ai-network
+    depends_on:
+      - redis
+
   qdrant:
     image: qdrant/qdrant:latest
     container_name: qdrant
