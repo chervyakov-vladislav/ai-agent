@@ -32,6 +32,7 @@ export const githubWebhookController = async (req: Request, res: Response, next:
         currentBranch: analyzeCommand.currentBranch,
         collectionName: metadata.collectionName,
         repoUrl: metadata.repoUrl,
+        commitHash: metadata.commitHash,
       }).catch((err: unknown) => logger.error('Background analysis error:', err));
     }
 

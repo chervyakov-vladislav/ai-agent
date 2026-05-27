@@ -1,19 +1,29 @@
 import { GoogleGenAI } from '@google/genai';
 import { envConfig } from '@config/env-config';
-import { AIReviewResponse } from '@contracts/llm.types';
+import { AIReviewResponse, ReviewComment } from '@contracts/llm.types';
 import { AiServiceError } from '@shared/errors/502.AiServiceError';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
 import { withRetry, isRetryable } from '@shared/infrastructure/clients/http-client.utils';
-import { GEMINI_SYSTEM_INSTRUCTION, getReviewPrompt } from './prompts/review.prompt';
+
+import {
+  GEMINI_STEP1_SYSTEM_INSTRUCTION,
+  getStep1Prompt,
+  GEMINI_STEP2_SYSTEM_INSTRUCTION,
+  getStep2Prompt,
+} from './prompts/review.pipeline.prompt';
+
 import { MODEL_FALLBACKS } from './gemini.constants';
-import { aiReviewResponseSchema } from './gemini.validator';
-import { ReviewContext } from '@contracts/llm.types';
+import { aiReviewResponseSchema, aiSingleFileReviewResponseSchema } from './gemini.validator';
 
 const ai = new GoogleGenAI({
   apiKey: envConfig.GEMINI_API_KEY,
 });
 
-const callModel = async (modelName: string, prompt: string): Promise<string> => {
+const callModel = async (
+  modelName: string,
+  prompt: string,
+  systemInstruction: string,
+): Promise<string> => {
   const startTime = Date.now();
 
   logger.debug(`[LLM Request] Model: ${modelName}`, {
@@ -26,7 +36,7 @@ const callModel = async (modelName: string, prompt: string): Promise<string> => 
       model: modelName,
       contents: prompt,
       config: {
-        systemInstruction: GEMINI_SYSTEM_INSTRUCTION,
+        systemInstruction: systemInstruction,
         responseMimeType: 'application/json',
       },
     });
@@ -40,60 +50,79 @@ const callModel = async (modelName: string, prompt: string): Promise<string> => 
       );
     }
 
-    logger.info(`[LLM Response] Model: ${modelName} Success`, {
-      duration: `${duration}ms`,
-      responseLength: response.text.length,
-      usage: response.usageMetadata,
-    });
+    logger.info(`[LLM Response] Model: ${modelName} Success`, { duration: `${duration}ms` });
 
     return response.text;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const duration = Date.now() - startTime;
-    logger.error(`[LLM Error] Model: ${modelName}`, error, {
-      duration: `${duration}ms`,
-      message: errorMessage,
-    });
+    logger.error(`[LLM Error] Model: ${modelName}`, error, { message: errorMessage });
     throw error;
   }
 };
 
-export const reviewCode = async (context: ReviewContext): Promise<AIReviewResponse> => {
-  const prompt = getReviewPrompt(context);
+export const reviewSingleFile = async (
+  diffData: string,
+  vectorContext: string,
+): Promise<{ reviews: ReviewComment[] }> => {
+  const prompt = getStep1Prompt(diffData, vectorContext);
 
   for (const modelName of MODEL_FALLBACKS) {
     try {
-      const text = await withRetry(() => callModel(modelName, prompt), 1, 2000);
-
-      const validation = aiReviewResponseSchema.safeParse(text);
+      const text = await withRetry(
+        () => callModel(modelName, prompt, GEMINI_STEP1_SYSTEM_INSTRUCTION),
+        5,
+        10_000,
+      );
+      const validation = aiSingleFileReviewResponseSchema.safeParse(text);
 
       if (!validation.success) {
-        logger.error('LLM returned invalid JSON structure', {
-          model: modelName,
+        logger.error('LLM returned invalid JSON structure for single file', {
           errors: validation.error.issues,
-          rawOutput: text,
         });
         continue;
       }
-
       return validation.data;
     } catch (error: unknown) {
-      if (isRetryable(error) && error.status === 429) {
-        logger.warn(`Model ${modelName} rate limited. Trying next available model...`);
-        continue;
-      }
-
-      if (error instanceof SyntaxError) {
-        logger.error('Failed to parse Gemini response', error);
-        throw error;
-      }
-
+      if (isRetryable(error) && error.status === 429) continue;
+      if (error instanceof SyntaxError) throw error;
       throw error;
     }
   }
-
   throw new AiServiceError(
-    'All Gemini models exhausted their rate limits',
+    'All Gemini models exhausted their rate limits (Step 1)',
+    'ALL_MODELS_RATE_LIMITED',
+  );
+};
+
+export const generateSummary = async (
+  step1Outputs: { reviews: ReviewComment[] }[],
+): Promise<AIReviewResponse> => {
+  const prompt = getStep2Prompt(step1Outputs);
+
+  for (const modelName of MODEL_FALLBACKS) {
+    try {
+      const text = await withRetry(
+        () => callModel(modelName, prompt, GEMINI_STEP2_SYSTEM_INSTRUCTION),
+        5,
+        10_000,
+      );
+      const validation = aiReviewResponseSchema.safeParse(text);
+
+      if (!validation.success) {
+        logger.error('LLM returned invalid JSON structure for summary', {
+          errors: validation.error.issues,
+        });
+        continue;
+      }
+      return validation.data;
+    } catch (error: unknown) {
+      if (isRetryable(error) && error.status === 429) continue;
+      if (error instanceof SyntaxError) throw error;
+      throw error;
+    }
+  }
+  throw new AiServiceError(
+    'All Gemini models exhausted their rate limits (Step 2)',
     'ALL_MODELS_RATE_LIMITED',
   );
 };

@@ -19,8 +19,9 @@ export const isRetryable = (error: unknown): error is Retryable => {
 
 export const withRetry = async <T>(
   fn: () => Promise<T>,
-  retries = 3,
-  delay = Number(envConfig.RETRY_DELAY) || 2000,
+  maxRetries = 3,
+  baseDelay = Number(envConfig.RETRY_DELAY) || 2000,
+  attempt = 1,
 ): Promise<T> => {
   try {
     return await fn();
@@ -38,16 +39,17 @@ export const withRetry = async <T>(
       (status !== undefined && status >= 500 && status <= 504) ||
       code === 'ECONNABORTED';
 
-    if (retries > 0 && shouldRetry) {
-      const currentDelay = delay * (4 - retries);
+    if (attempt <= maxRetries && shouldRetry) {
+      const currentDelay = baseDelay * Math.pow(2, attempt - 1);
 
       logger.warn(
         `Retry triggered (Status: ${status ?? 'Network Error'}). ` +
-          `Retrying in ${currentDelay}ms... (Attempts left: ${retries})`,
+          `Retrying in ${currentDelay}ms... (Attempt ${attempt} of ${maxRetries})`,
       );
 
       await new Promise((resolve) => setTimeout(resolve, currentDelay));
-      return withRetry(fn, retries - 1, delay);
+
+      return withRetry(fn, maxRetries, baseDelay, attempt + 1);
     }
 
     throw error;

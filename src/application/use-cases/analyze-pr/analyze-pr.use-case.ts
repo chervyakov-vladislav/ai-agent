@@ -1,28 +1,31 @@
 // import { validateAndFormatReview } from '@modules/github/github.validators';
-import { logger } from '@shared/infrastructure/logger';
+import { Logger, logger } from '@shared/infrastructure/logger';
 import {
   CodeSearchPort,
   CodeSplitterSearchQueryPort,
   EmbeddingQueryPort,
-  LlmPort,
   PullRequestSourcePort,
   SearchCodeStrategyPort,
 } from './analyze-pr.ports';
+import { DiffWithContext } from '@application/contracts/code-analysis.types';
+import { PrReviewPipeline } from '@application/pipelines/pr-review/pr-review.contracts';
 
 interface AnalyzePRDependencies {
   github: PullRequestSourcePort;
-  llm: LlmPort;
   vectorstore: CodeSearchPort;
   embeddings: EmbeddingQueryPort;
   codeSearching: SearchCodeStrategyPort;
   codeSplitter: CodeSplitterSearchQueryPort;
+  prReviewPipeline: PrReviewPipeline;
   parallelLimit: number;
+  logger: Logger;
 }
 
 interface AnalyzePullRequestInput {
   prUrl: string;
   collectionName: string;
   currentBranch: string;
+  commitHash: string;
   repoUrl: string;
 }
 
@@ -32,10 +35,17 @@ export const createAnalyzePullRequestUseCase = ({
   embeddings,
   vectorstore,
   codeSplitter,
-  // llm,
+  prReviewPipeline,
 }: AnalyzePRDependencies) => {
-  return async ({ prUrl, collectionName, currentBranch, repoUrl }: AnalyzePullRequestInput) => {
+  return async ({
+    prUrl,
+    collectionName,
+    currentBranch,
+    repoUrl,
+    commitHash,
+  }: AnalyzePullRequestInput) => {
     const diff = await github.getPullRequestDiff(prUrl);
+    const diffsWithContext: DiffWithContext[] = [];
 
     for (const file of diff) {
       const fullFileContent = await github.getFileContent({
@@ -105,11 +115,16 @@ export const createAnalyzePullRequestUseCase = ({
 
         const uniqueParentIds = Array.from(allParentIds);
         const points = await vectorstore.getPoints(collectionName, uniqueParentIds);
-        const content = codeSearching.reconstructChunks(points);
+        const content = codeSearching.reconstructChunks(points); // убрать дубли через reranking
 
-        logger.info('diff content \n' + file.promptData);
-        logger.info('vector content \n' + content.map((c) => c.content).join('\n\n')); // убрать дубли через reranking
+        diffsWithContext.push({
+          diffData: file.promptData,
+          relevantCode: content.map((c) => c.content).join('\n\n'),
+        });
       }
     }
+
+    const reviewResult = await prReviewPipeline(diffsWithContext);
+    await github.createPullRequestReview(prUrl, reviewResult, commitHash);
   };
 };

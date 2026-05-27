@@ -86,6 +86,7 @@ export const getRepositoryInfo = async (repoUrl: string): Promise<RepositoryMeta
 export const createPullRequestReview = async (
   prUrl: string,
   review: AIReviewResponse,
+  commitHash: string,
 ): Promise<void> => {
   const comments = review.reviews.map((c) => ({
     path: c.file,
@@ -94,10 +95,14 @@ export const createPullRequestReview = async (
     side: 'RIGHT',
   }));
 
+  logger.info(JSON.stringify(comments, null, 2));
+
   try {
     await githubProvider.post(`${prUrl}/reviews`, {
+      commit_id: commitHash,
       body: review.summary,
-      event: review.verdict,
+      event: 'COMMENT',
+      // event: review.verdict,
       comments: comments.length > 0 ? comments : undefined,
     });
   } catch (error) {
@@ -114,8 +119,12 @@ export const createPullRequestReview = async (
         ...review.reviews.map((c) => `* **${c.file}:${c.line}**: ${c.comment}`),
       ].join('\n');
 
+      logger.info('summaryWithComments ' + JSON.stringify(summaryWithComments, null, 2));
+
       return await githubProvider.post(`${prUrl}/reviews`, {
-        event: review.verdict,
+        commit_id: commitHash,
+        event: 'COMMENT',
+        // event: review.verdict,
         body: summaryWithComments,
       });
     }

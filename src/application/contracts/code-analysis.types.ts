@@ -110,3 +110,8 @@ export interface SplitSearchQueryParam {
   chunkSize?: number;
   chunkOverlap?: number;
 }
+
+export interface DiffWithContext {
+  diffData: string;
+  relevantCode: string;
+}
