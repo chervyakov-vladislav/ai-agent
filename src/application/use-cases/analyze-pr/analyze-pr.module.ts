@@ -2,6 +2,7 @@ import { createAnalyzePullRequestUseCase } from '@application/use-cases/analyze-
 import { githubPRAdapter } from '@modules/github/github.adapter';
 import { qdrantVectorSearchAdapter } from '@modules/vectorstore/qdrant.adapter';
 import { embeddingsQueryAdapter } from '@modules/embeddings/embeddings.adapter';
+import { cacheAdapter } from '@modules/cache/cache.adapter';
 import { envConfig } from '@config/env-config';
 import { astParserSearchAdapter } from '@modules/ast-parser/ast-parser.adapter';
 import { langchainSearchQueryAdapter } from '@modules/langchain/langchain.adapter';
@@ -12,6 +13,7 @@ export const analyzePullRequestUseCase = createAnalyzePullRequestUseCase({
   github: githubPRAdapter,
   codeSearching: astParserSearchAdapter,
   embeddings: embeddingsQueryAdapter,
+  cache: cacheAdapter,
   vectorstore: qdrantVectorSearchAdapter,
   codeSplitter: langchainSearchQueryAdapter,
   parallelLimit: envConfig.OLLAMA_NUM_PARALLEL,
