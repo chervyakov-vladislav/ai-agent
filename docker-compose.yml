@@ -18,18 +18,19 @@ services:
     networks:
       - ai-network
 
-  # добавить ui контейнер для redis, когда начну работать с кешированием
   redis:
     image: redis:7-alpine
     container_name: redis_cache
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    # При переполнении памяти ля bullMQ нужен --maxmemory-policy noeviction, что бы он не терял события в очереди
+    # если обычный кеш будет переполняться, прийдется создать еще один инстнанс Redis с флагом --maxmemory-policy allkeys-lru
+    command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory-policy ${REDIS_POLICY}
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', '--no-auth-warning', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5

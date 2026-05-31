@@ -11,6 +11,9 @@ export const cacheRedis = new Redis({
   ...baseConfig,
   db: 0,
   keyPrefix: 'cache:',
+  lazyConnect: true,
+  connectTimeout: 5000,
+  commandTimeout: 2000,
 });
 
 export const queueRedis = new Redis({
