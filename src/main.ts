@@ -4,6 +4,7 @@ import { envConfig } from './config/env-config';
 import { createRootRouter } from './interface/http/root-router';
 import { setupProcessHandlers } from './shared/infrastructure/process-handlers';
 import { initInfrastructure } from './shared/infrastructure/init-infrastructure';
+import { initWorkers } from './interface/workers';
 
 async function bootstrap() {
   setupProcessHandlers();
@@ -12,6 +13,7 @@ async function bootstrap() {
     logger.info('Starting AI-Agent initialization...');
 
     await initInfrastructure();
+    initWorkers();
 
     const rootRouter = createRootRouter();
     const app = new App(rootRouter);

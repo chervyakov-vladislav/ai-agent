@@ -4,8 +4,8 @@ import { queueLockAdapter } from '@modules/queues/queues.adapter';
 import { QUEUE_NAMES } from '@modules/queues/queues.constants';
 import { IndexingPayload } from '@application/contracts/queues.types';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-// Импортируем вашу бизнес-логику (Use Case)
-// import { startIndexingUseCase } from '@application/use-cases/start-indexing.use-case';
+import { LockConflictError } from '@shared/errors/423.LockConflictError';
+import { WorkerError } from '@shared/errors/500.WorkerError';
 
 export const initIndexingWorker = (): Worker => {
   const worker = new Worker(
@@ -15,7 +15,7 @@ export const initIndexingWorker = (): Worker => {
       const jobId = job.id;
 
       if (!jobId) {
-        throw new Error();
+        throw new WorkerError('[Worker] Job ID is missing');
       }
 
       logger.info(`[Worker] Starting indexing job ${jobId} for repo ${repoId}`);
@@ -23,7 +23,7 @@ export const initIndexingWorker = (): Worker => {
       const hasLock = await queueLockAdapter.acquireRepoLock(repoId, jobId);
 
       if (!hasLock) {
-        throw new Error(`[Lock] Repository ${repoId} is currently locked. Rescheduling.`);
+        throw new LockConflictError(`Repository ${repoId} is currently locked. Rescheduling.`);
       }
 
       try {
@@ -37,10 +37,10 @@ export const initIndexingWorker = (): Worker => {
   );
 
   worker.on('failed', (job, error) => {
-    if (error.message.includes('[Lock]')) {
-      logger.debug(`[Worker] Job ${job?.id} is waiting for lock to release.`);
+    if (error instanceof LockConflictError) {
+      logger.debug(`[Worker] Indexing job ${job?.id} is waiting for lock: ${error.message}`);
     } else {
-      logger.error(`[Worker] Job ${job?.id} failed with critical error:`, error);
+      logger.error(`[Worker] Indexing job ${job?.id} failed with critical error:`, error);
     }
   });
 

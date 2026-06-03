@@ -1,7 +1,7 @@
 export interface IndexingPayload {
   repoId: string;
   repoUrl: string;
-  commitHash: string;
+  commitHash?: string;
 }
 
 export interface AnalysisPayload {
