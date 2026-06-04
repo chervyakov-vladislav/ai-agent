@@ -17,7 +17,7 @@ export const indexingQueue = new Queue(QUEUE_NAMES.INDEXING, {
   connection: queueRedis,
   defaultJobOptions: {
     attempts: 100,
-    backoff: { type: 'fixed', delay: 15000 }, // Чуть реже для фоновой индексации
+    backoff: { type: 'fixed', delay: 15000 },
     removeOnComplete: true,
   },
 });
@@ -57,7 +57,6 @@ export const releaseRepoLock = async (repoId: string, jobId: string): Promise<vo
   `;
 
   try {
-    // В ioredis eval принимает script, количество ключей, затем ключи и аргументы
     await cacheRedis.eval(script, 1, key, jobId);
   } catch (error) {
     logger.error(`[Redis] Failed to release lock for ${repoId}`, error);
