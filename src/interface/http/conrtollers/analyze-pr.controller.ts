@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { GithubWebhookSchema } from '../dto-validators/analyze-pr.schema';
 import { logger } from '@shared/infrastructure/logger/pino-logger';
-import { analyzePullRequestUseCase } from '@application/use-cases/analyze-pr/analyze-pr.module';
-import { syncFullRepositoryUseCase } from '@application/use-cases/repo-sync/repo-sync.module';
+import { queuesAdapter } from '@modules/queues/queues.adapter';
 
 export const githubWebhookController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -12,38 +11,28 @@ export const githubWebhookController = async (req: Request, res: Response, next:
     });
 
     if (!validation.success || !validation.data) {
-      logger.error('ads', validation.error);
+      logger.error('Invalid Webhook Data', validation.error);
       return res.status(202).send({ status: 'ignored' });
     }
 
     const { analyzeCommand, syncCommand, metadata } = validation.data;
 
     if (analyzeCommand) {
-      logger.info(`Starting analysis for PR #${metadata.prNumber}`);
-
-      /**
-       * TODO: Рефакторинг на BullMQ.
-       * Текущий подход через .catch() не гарантирует выполнение при перезагрузке сервера
-       * и не имеет механизмов ретраев при сбоях LLM.
-       * Ожидаемая реализация: await analyzeQueue.add('analyze-pr', normalizedData);
-       */
-      analyzePullRequestUseCase({
+      await queuesAdapter.dispatchAnalysis({
+        repoId: metadata.repoId,
+        prId: String(metadata.prNumber),
         prUrl: analyzeCommand.prUrl,
-        currentBranch: analyzeCommand.currentBranch,
-        collectionName: metadata.collectionName,
-        repoUrl: metadata.repoUrl,
-        commitHash: metadata.commitHash,
-      }).catch((err: unknown) => logger.error('Background analysis error:', err));
+      });
+      logger.info(`[Controller] Dispatched analysis job for PR #${metadata.prNumber}`);
     }
 
     if (syncCommand) {
-      logger.info(`Starting sync for repo ${metadata.repoId}`);
-
-      syncFullRepositoryUseCase({
-        collectionName: metadata.collectionName,
+      await queuesAdapter.dispatchIndexing({
         repoId: metadata.repoId,
         repoUrl: metadata.repoUrl,
-      }).catch((err) => logger.error('Background sync error:', err));
+        commitHash: metadata.commitHash,
+      });
+      logger.info(`[Controller] Dispatched indexing job for repo ${metadata.repoId}`);
     }
 
     return res.status(202).send({ status: 'accepted' });
