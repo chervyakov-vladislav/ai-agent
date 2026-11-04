@@ -42,4 +42,5 @@
 - [ ] GitHub-флоу работает на каркасе без изменения поведения (webhook → 202 → ревью)
 - [ ] Подпись вебхука проверяется; без секрета в production — 401
 - [ ] Заглушки-схемы gitlab/bitbucket валидируют fixtures и выдают `WebhookCommands`
+- [ ] Юнит-тесты вебхук-схем на fixtures всех VCS (Task 16)
 - [ ] `lint` + `typecheck` чистые
