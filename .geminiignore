@@ -1,7 +1,0 @@
-node_modules
-dist
-.github
-package-lock.json
-LICENSE
-.env.development
-.env
