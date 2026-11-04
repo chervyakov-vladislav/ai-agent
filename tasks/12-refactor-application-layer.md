@@ -67,8 +67,8 @@ Pino ему удовлетворяет структурно — отдельны
 
 Закрывает авторский TODO «вынести в пайплайны и сделать embeddingsPipeline и indexingPipeline».
 
-- Перенести пофайловую обработку: sha-кеш (`storedFiles`) → контент → `processFilePipeline` → эмбеддинги small/large → `indexChunks`; `pLimit(parallelLimit)` уходит в пайплайн; генерация `syncId` (`Date.now()`) — тоже.
-- `repo-sync.use-case.ts` остаётся: busy-статус (`statusPort`), получение дерева файлов, запуск пайплайна, `cleanupOldSyncData`, сводный лог.
+- Перенести пофайловую обработку: sha-кеш (`storedFiles`) → контент → `processFilePipeline` → эмбеддинги small/large → `indexChunks`; параллельность файлов обеспечивают BullMQ Flows (Task 14) — `p-limit` в пайплайн не переносится и удаляется в Task 14; генерация `syncId` (`Date.now()`) — тоже.
+- `repo-sync.use-case.ts` остаётся: получение дерева файлов, запуск пайплайна, `cleanupOldSyncData`, сводный лог. Busy-статус (`statusPort`) не сохраняем — удаляется в Task 14 (замена: per-repo Redis-локи).
 
 ### 5. Ретраи — в адаптер
 
@@ -87,7 +87,7 @@ Pino ему удовлетворяет структурно — отдельны
 
 ## Технические заметки
 
-- **BullMQ-очереди — вне этой задачи** (TODO в `repo-sync` фиксируем как отложенное; воркеры `interface/workers/` уже существуют, их не трогаем).
+- **BullMQ-очереди — вне этой задачи** (внедрение — Task 14; воркеры `interface/workers/` уже существуют, здесь их не трогаем).
 - Доменный слой не заводим — только чистка `application/`.
 - Чистый рефакторинг: поведение системы не меняется, новые фичи не добавляются.
 - Task 02 (rules-sync) желательно делать после этой: `findRelevantRules` встроится в retrieval-пайплайн, а не в раздутый use-case.

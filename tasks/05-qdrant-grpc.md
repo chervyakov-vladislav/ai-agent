@@ -27,6 +27,7 @@
 - scroll с filter / offset / with_payload
 - setPayload, delete по filter
 - auth по API key
+- `updateCollectionAliases` / `listAliases` — нужны для blue-green из Task 13 (миграция не должна их потерять)
 
 Если parity нет (особенно prefetch+RRF) — задача закрывается решением «остаёмся на REST», это допустимый исход. Решение зафиксировать в этом файле.
 
