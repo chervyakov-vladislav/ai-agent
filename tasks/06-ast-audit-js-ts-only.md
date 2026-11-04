@@ -29,6 +29,8 @@
 - `contracts/code-analysis.types.ts`: убрать SQL-специфичные `CodeSymbolKind` (`Table`, `Index`, `View`, `Modification`, `Transaction`) — предварительно проверить использование
 - Найти, где задаётся `NODE_OPTIONS=--expose-gc`, проверить dev-запуск без него; если работает — убрать из скриптов/доков (`AGENTS.md`, README)
 
+**Что сохраняем при удалении:** сам паттерн стратегий — интерфейс `ParserStrategy`, диспетчер `getStrategy` и структуру `strategies/<lang>/`. Удаляются только реализации java/sql, механизм остаётся. Добавление нового языка = папка `strategies/<lang>/` + константа расширений, без правок `ast-parser.service.ts` — тот же принцип, что у LLM-стратегий в Task 08.
+
 ### 2. YAML-стратегия для Helm
 
 - `npm i yaml`
@@ -44,10 +46,16 @@
 
 - README / корневой `AGENTS.md`: зафиксировать скоуп «JS/TS + YAML (Helm)», остальные языки — out of scope
 
+## Технические заметки
+
+- Паттерн стратегий (`ParserStrategy` + `getStrategy`) — задел под возврат других языков (java, мобильные платформы), если продуктовый скоуп расширится; сейчас реализуются только ts-morph и yaml
+- Возврат языка = новая стратегия + пакет + константа; диспетчер и сервис не меняются
+
 ## Критерии приёмки (DoD)
 
 - [ ] `java-parser`, `sql-parser-cst`, `web-tree-sitter` удалены, `npm ci` проходит
 - [ ] Java/SQL стратегии и константы удалены, `formatImportsForLLM` почищен
+- [ ] Паттерн стратегий сохранён: `ParserStrategy`, `getStrategy`, `strategies/`; добавление нового языка не требует правок `ast-parser.service.ts`
 - [ ] Решение по `--expose-gc` проверено и зафиксировано (убрано или обосновано)
 - [ ] repo-sync репозитория с Helm-чартом: values.yaml индексирован по-секционно, дифф в values.yaml даёт changed block по конкретному ключу
 - [ ] Go-шаблон в templates/ не роняет индексацию (fallback работает)
